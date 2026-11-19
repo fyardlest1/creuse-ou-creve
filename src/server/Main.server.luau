@@ -11,6 +11,7 @@ local Services = script.Parent:WaitForChild("Services")
 local orderedServices: { [number]: { name: string, module: Service } } = {
 	{ name = "PlayerDataService", module = require(Services.PlayerDataService) :: any },
 	{ name = "PlotService", module = require(Services.PlotService) :: any },
+	{ name = "LootService", module = require(Services.LootService) :: any },
 }
 
 for _, entry in orderedServices do
