@@ -1,1 +1,0 @@
-print("[Serveur] Creuse ou Creve est pret par yayad")
