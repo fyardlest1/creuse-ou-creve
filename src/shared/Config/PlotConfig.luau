@@ -31,7 +31,9 @@ local PlotConfig = {
 	GROUND_MATERIAL = Enum.Material.Grass,
 
 	SIGN_HEIGHT = 7, -- studs au-dessus du socle
-	SIGN_MAX_DISTANCE = 150,
+	SIGN_WIDTH = 18, -- studs (le panneau rapetisse avec la distance)
+	SIGN_TEXT_HEIGHT = 3, -- studs
+	SIGN_MAX_DISTANCE = 120,
 }
 
 return table.freeze(PlotConfig)

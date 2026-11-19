@@ -154,7 +154,7 @@ local function createPlot(index: number, parent: Instance): PlotState
 
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "Sign"
-	billboard.Size = UDim2.fromOffset(240, 50)
+	billboard.Size = UDim2.fromScale(PlotConfig.SIGN_WIDTH, PlotConfig.SIGN_TEXT_HEIGHT) -- en studs
 	billboard.MaxDistance = PlotConfig.SIGN_MAX_DISTANCE
 	billboard.Active = false
 	billboard.Adornee = signAnchor
