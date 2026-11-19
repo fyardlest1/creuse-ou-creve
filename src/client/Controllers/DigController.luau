@@ -12,6 +12,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
+local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 
@@ -151,6 +152,12 @@ local function tryDig(screenPosition: Vector2)
 
 	lastRequestTime = now
 	digRequest:FireServer(cellIndex)
+
+	-- Inventaire plein : le serveur refusera le coup et affichera le bandeau, pas d'effet de creusage.
+	local inventoryCount = player:GetAttribute("InventoryCount")
+	if typeof(inventoryCount) == "number" and inventoryCount >= PlayerConfig.INVENTORY_LIMIT then
+		return
+	end
 
 	shakeCell(cell)
 	emitDirt(cell, UiConfig.DIRT_PARTICLES_PER_HIT)

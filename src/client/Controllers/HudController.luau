@@ -21,7 +21,8 @@ local PILL_MAX_TEXT_SIZE = 22
 local TEXT_DEPTH = "Profondeur : %d m"
 local TEXT_LAYER = "Couche %d"
 local TEXT_INVENTORY = "Sac : %d/%d"
-local TEXT_INVENTORY_FULL = "Inventaire plein ! Les objets trouvés sont perdus."
+-- Semaine 2 : remplacer par « Vends tes objets au marchand ».
+local TEXT_INVENTORY_FULL = "Inventaire plein !"
 local TEXT_LAYER_CLEARED = "Couche %d atteinte ! (%d m)"
 
 local player = Players.LocalPlayer

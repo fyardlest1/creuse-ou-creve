@@ -109,7 +109,8 @@ Une requête invalide est ignorée sans erreur, et loggée en mode Studio seulem
 **DigService**
 
 - Écoute `DigRequest`, applique toutes les validations du tableau de la section 5.
-- Décrémente `HitsLeft`. À 0 : la case disparaît, `LootService.roll`, `PlayerDataService.addItem`, puis `ItemRevealed` (ou `InventoryFull`).
+- Inventaire plein : refuse le `DigRequest` sans consommer de coup, la case reste intacte, et envoie `InventoryFull`. Un joueur ne perd jamais un objet.
+- Sinon décrémente `HitsLeft`. À 0 : `LootService.roll`, `PlayerDataService.addItem`, la case disparaît, puis `ItemRevealed`.
 - Quand les 64 cases sont creusées : couche +1, profondeur +10 m, `PlotService.resetLayer`, puis `LayerCleared`.
 - Incrémente les statistiques du joueur.
 
@@ -126,7 +127,7 @@ Une requête invalide est ignorée sans erreur, et loggée en mode Studio seulem
 **HudController (client)**
 
 - Affiche en haut : profondeur, couche, compteur d'inventaire (`12/30`).
-- Bandeau "Inventaire plein" sur `InventoryFull`.
+- Bandeau "Inventaire plein" sur `InventoryFull` (semaine 2 : "Vends tes objets au marchand").
 
 ## 7. Ordre des tâches pour Claude Code
 

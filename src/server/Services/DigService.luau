@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local PlotConfig = require(Shared.Config.PlotConfig)
+local PlayerConfig = require(Shared.Config.PlayerConfig)
 local Items = require(Shared.Config.Items)
 local Shovels = require(Shared.Config.Shovels)
 local Remotes = require(Shared.Remotes)
@@ -71,29 +72,35 @@ local function clearLayer(player: Player, data: Types.PlayerData)
 	end)
 end
 
-local function digOut(player: Player, data: Types.PlayerData, cell: BasePart)
-	PlotService.removeCell(cell)
-	data.stats.totalDigs += 1
-
+-- Retourne true si la case a été vidée. Un objet n'est jamais perdu : si l'ajout échoue,
+-- la case garde un coup restant et le joueur est prévenu.
+local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, index: number): boolean
 	local item = LootService.roll(player)
-	if PlayerDataService.addItem(player, item) then
-		data.stats.foundByRarity[item.rarity] = (data.stats.foundByRarity[item.rarity] or 0) + 1
-		local payload: Types.RevealPayload = {
-			itemId = item.itemId,
-			name = Items.byId[item.itemId].name,
-			rarity = item.rarity,
-			mutation = item.mutation,
-			value = item.value,
-			inventoryCount = #data.inventory,
-		}
-		remotes.itemRevealed:FireClient(player, payload)
-	else
+	if not PlayerDataService.addItem(player, item) then
+		cell:SetAttribute(HITS_ATTRIBUTE, 1)
+		remotes.cellHit:FireClient(player, index, 1)
 		remotes.inventoryFull:FireClient(player)
+		return false
 	end
+
+	PlotService.removeCell(cell)
+	remotes.cellHit:FireClient(player, index, 0)
+	data.stats.totalDigs += 1
+	data.stats.foundByRarity[item.rarity] = (data.stats.foundByRarity[item.rarity] or 0) + 1
+	local payload: Types.RevealPayload = {
+		itemId = item.itemId,
+		name = Items.byId[item.itemId].name,
+		rarity = item.rarity,
+		mutation = item.mutation,
+		value = item.value,
+		inventoryCount = #data.inventory,
+	}
+	remotes.itemRevealed:FireClient(player, payload)
 
 	if PlotService.countRemainingCells(player) == 0 then
 		clearLayer(player, data)
 	end
+	return true
 end
 
 local function onDigRequest(player: Player, cellIndex: unknown)
@@ -136,14 +143,21 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 	end
 	lastHitTime[player] = now
 
+	-- Inventaire plein : on refuse le coup sans rien consommer, la case reste intacte.
+	if #data.inventory >= PlayerConfig.INVENTORY_LIMIT then
+		reject(player, "inventaire plein")
+		remotes.inventoryFull:FireClient(player)
+		return
+	end
+
 	local shovel = Shovels.byId[Shovels.DEFAULT_ID]
 	local newHitsLeft = math.max(hitsLeft - shovel.power, 0)
+	if newHitsLeft == 0 then
+		digOut(player, data, cell, index)
+		return
+	end
 	cell:SetAttribute(HITS_ATTRIBUTE, newHitsLeft)
 	remotes.cellHit:FireClient(player, index, newHitsLeft)
-
-	if newHitsLeft == 0 then
-		digOut(player, data, cell)
-	end
 end
 
 function DigService.init()
