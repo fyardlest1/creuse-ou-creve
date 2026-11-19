@@ -3,6 +3,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -190,7 +191,16 @@ end
 
 local function teleportToPlot(plot: PlotState, character: Model)
 	local rootPart = character:WaitForChild("HumanoidRootPart", CHARACTER_WAIT_TIMEOUT)
-	if rootPart == nil or plot.owner == nil then
+	if rootPart == nil then
+		return
+	end
+	-- À la réapparition, le moteur place le personnage sur le point d'apparition par défaut
+	-- après CharacterAdded : on attend qu'il soit dans le Workspace, puis une frame, avant de téléporter.
+	if not character:IsDescendantOf(Workspace) then
+		character.AncestryChanged:Wait()
+	end
+	RunService.Heartbeat:Wait()
+	if plot.owner == nil or character.Parent == nil then
 		return
 	end
 	character:PivotTo(plot.spawnCFrame)
