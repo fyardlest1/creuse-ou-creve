@@ -80,6 +80,8 @@ local function onPlayerAdded(player: Player)
 		)
 	)
 
+	PlayerDataService.refreshAttributes(player)
+
 	for _, callback in loadedCallbacks do
 		task.spawn(callback, player, data)
 	end
@@ -108,7 +110,19 @@ function PlayerDataService.addItem(player: Player, item: Types.ItemInstance): bo
 		return false
 	end
 	table.insert(data.inventory, item)
+	PlayerDataService.refreshAttributes(player)
 	return true
+end
+
+-- Recopie l'état affiché par le HUD dans des attributs du Player (lecture seule côté client).
+function PlayerDataService.refreshAttributes(player: Player)
+	local data = PlayerDataService.getData(player)
+	if data == nil then
+		return
+	end
+	player:SetAttribute("Layer", data.layer)
+	player:SetAttribute("Depth", data.depth)
+	player:SetAttribute("InventoryCount", #data.inventory)
 end
 
 -- Appelle le callback pour chaque joueur dont le profil est chargé (y compris ceux déjà chargés).

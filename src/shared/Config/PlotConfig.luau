@@ -18,6 +18,7 @@ local PlotConfig = {
 	MAX_DIG_DISTANCE = 30, -- studs entre le joueur et la case
 	DIG_COOLDOWN = 0.2, -- secondes minimum entre deux coups
 	DEPTH_PER_LAYER = 10, -- mètres gagnés par couche terminée
+	LAYER_RESET_DELAY = 1, -- secondes avant que la nouvelle couche apparaisse
 	SPAWN_OFFSET = 4, -- studs entre le bord de la parcelle et le point d'apparition
 	SPAWN_HEIGHT = 3, -- hauteur du HumanoidRootPart au-dessus du sol
 

@@ -275,6 +275,30 @@ function PlotService.resetLayer(player: Player)
 	end
 end
 
+-- Fait disparaître une case creusée (elle reste en mémoire pour la couche suivante).
+function PlotService.removeCell(cell: BasePart)
+	cell:SetAttribute(HITS_ATTRIBUTE, 0)
+	cell.Transparency = 1
+	cell.CanCollide = false
+	cell.CanQuery = false
+end
+
+-- Nombre de cases encore intactes sur la parcelle du joueur.
+function PlotService.countRemainingCells(player: Player): number
+	local plot = plotByPlayer[player]
+	if plot == nil then
+		return 0
+	end
+	local remaining = 0
+	for _, cell in plot.cells do
+		local hitsLeft = cell:GetAttribute(HITS_ATTRIBUTE)
+		if typeof(hitsLeft) == "number" and hitsLeft > 0 then
+			remaining += 1
+		end
+	end
+	return remaining
+end
+
 function PlotService.init()
 	plotAssignedRemote = Remotes.get(Remotes.Names.PlotAssigned)
 
