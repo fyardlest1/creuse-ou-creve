@@ -41,7 +41,7 @@
 |---|---|---|---|---|
 | Bois | Gratuite | 3 | 0 % | Terre |
 | Fer | 500 | 2 | +5 % | Argile |
-| Acier | 5 000 | 2 | +15 % | Roche |
+| Acier | 25 000 (ajusté, voir section 7) | 2 | +15 % | Roche |
 
 **Couches (`Strata.luau`, nouveau fichier) :** `id`, nom français, profondeur min et max, pelle requise, multiplicateur de valeur, couleur des cases (Terre brun clair, Argile orange brique, Roche gris).
 
@@ -126,6 +126,42 @@ Lancé à la main en Studio, il simule un joueur qui creuse au rythme de **2 sec
 - Temps pour atteindre 50 m (entrée en Roche).
 
 Moyenne sur 1 000 simulations. **Cibles :** Pelle en fer avant 3 minutes de jeu, Pelle en acier entre 8 et 15 minutes, entrée en Roche avant 30 minutes. Si les résultats sortent des cibles, ajuster les prix et les multiplicateurs dans la config (pas les probabilités de rareté du GDD) et noter les nouvelles valeurs dans ce fichier.
+
+La simulation tourne en deux variantes. **A (référence)** : le joueur n'utilise que "Tout vendre", les favoris automatiques (Légendaires et Secrets) restent dans le coffre. **B** : le joueur vend tout, favoris compris.
+
+### Résultats et ajustement (semaine 2)
+
+**Premier passage, valeurs du plan** (Fer 500, Acier 5 000, multiplicateurs Terre x1, Argile x2, Roche x4) :
+
+| | A | B |
+|---|---|---|
+| Pièces/min Terre / Argile / Roche | 1 380 / 2 868 / 5 155 | 2 726 / 5 848 / 11 274 |
+| Pelle en fer (moyenne) | 1 min 20 s | 1 min 20 s |
+| Pelle en acier (moyenne) | 4 min 10 s | 3 min 23 s |
+| Entrée en Roche (moyenne) | 14 min 15 s | 14 min 00 s |
+
+L'acier arrivait 2 à 3 fois trop tôt. Le temps de la Pelle en fer ne dépend pas de son prix (premier coffre plein : 30 x 2 s + 20 s = 80 s) et l'entrée en Roche ne dépend que du creusage (5 parcelles).
+
+**Décision : Pelle en acier à 25 000 Pièces.** Rien d'autre ne change (Fer 500, multiplicateurs inchangés).
+
+**Second passage, Acier à 25 000** (1 000 simulations de 60 min par variante) :
+
+| | A (référence) | B |
+|---|---|---|
+| Pièces/min Terre / Argile / Roche | 1 378 / 2 756 / 5 164 | 2 676 / 5 690 / 11 251 |
+| Pelle en fer (moyenne) | 1 min 20 s | 1 min 20 s |
+| Pelle en acier : moyenne | **11 min 39 s** | **7 min 57 s** |
+| Pelle en acier : médiane / 10 % / 90 % | 11 min 42 s / 9 min 20 s / 13 min 44 s | 8 min 00 s / 5 min 20 s / 10 min 40 s |
+| Pelle en acier : au plus tôt | 6 min 22 s | 1 min 20 s |
+| Parties avec l'acier avant 5 min | 0 / 1 000 | 84 / 1 000 |
+| Entrée en Roche (moyenne) | **14 min 22 s** | 14 min 00 s |
+
+Critères d'acceptation :
+
+- [x] A : acier en moyenne entre 8 et 15 min (11 min 39 s).
+- [x] A : entrée en Roche sous 30 min (14 min 22 s).
+- [x] B : acier pas avant 5 min **en moyenne** (7 min 57 s).
+- [ ] B : acier pas avant 5 min **dans chaque partie** : 8,4 % des parties l'achètent plus tôt. Ce sont des parties avec un Secret trouvé tôt (25 000 Pièces en Terre, 50 000 en Argile) : aucun prix d'acier compatible avec la cible A ne l'empêche sans toucher aux valeurs de rareté du GDD. **Interprétation à confirmer.**
 
 ## 8. Ordre des tâches pour Claude Code
 

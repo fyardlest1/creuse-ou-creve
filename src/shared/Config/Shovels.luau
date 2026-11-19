@@ -6,7 +6,7 @@ local Types = require(script.Parent.Parent.Types)
 local list: { Types.ShovelDef } = {
 	{ id = "Wood", name = "Pelle en bois", price = 0, hitsPerCell = 3, luckBonus = 0, maxStratum = "Dirt" },
 	{ id = "Iron", name = "Pelle en fer", price = 500, hitsPerCell = 2, luckBonus = 5, maxStratum = "Clay" },
-	{ id = "Steel", name = "Pelle en acier", price = 5000, hitsPerCell = 2, luckBonus = 15, maxStratum = "Rock" },
+	{ id = "Steel", name = "Pelle en acier", price = 25000, hitsPerCell = 2, luckBonus = 15, maxStratum = "Rock" },
 }
 
 local byId: { [string]: Types.ShovelDef } = {}
