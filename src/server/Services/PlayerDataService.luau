@@ -195,6 +195,7 @@ function PlayerDataService.refreshAttributes(player: Player)
 	player:SetAttribute("Layer", stratum.layer)
 	player:SetAttribute("Stratum", stratum.id)
 	player:SetAttribute("EquippedShovel", data.equippedShovel)
+	player:SetAttribute("OwnedShovels", table.concat(data.ownedShovels, ","))
 	player:SetAttribute("InventoryCount", #data.inventory)
 end
 

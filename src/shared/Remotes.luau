@@ -18,6 +18,8 @@ local Names = table.freeze({
 	SellRequest = "SellRequest", -- client -> serveur : SellRequestPayload
 	SellResult = "SellResult", -- serveur -> client : SellResultPayload
 	ToggleFavorite = "ToggleFavorite", -- client -> serveur : uid
+	BuyShovel = "BuyShovel", -- client -> serveur : shovelId
+	ShovelChanged = "ShovelChanged", -- serveur -> client : shovelId
 })
 
 local function getFolderOnServer(): Folder

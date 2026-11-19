@@ -9,9 +9,9 @@ local Types = require(Shared.Types)
 local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Items = require(Shared.Config.Items)
-local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local ShopService = require(script.Parent.ShopService)
 
 local PERCENT = 100
 
@@ -85,7 +85,7 @@ end
 function LootService.roll(player: Player): Types.ItemInstance
 	local data = PlayerDataService.getData(player)
 	local layer = Strata.fromDepth(if data ~= nil then data.depth else 0).layer
-	local shovel = Shovels.byId[Shovels.DEFAULT_ID]
+	local shovel = ShopService.getEquippedShovel(player)
 	return LootService.rollItem(layer, shovel.luckBonus)
 end
 

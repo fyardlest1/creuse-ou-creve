@@ -10,12 +10,12 @@ local Types = require(Shared.Types)
 local PlotConfig = require(Shared.Config.PlotConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local Items = require(Shared.Config.Items)
-local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local PlotService = require(script.Parent.PlotService)
 local LootService = require(script.Parent.LootService)
+local ShopService = require(script.Parent.ShopService)
 
 local CELL_COUNT = PlotConfig.GRID_SIZE * PlotConfig.GRID_SIZE
 local HITS_ATTRIBUTE = "HitsLeft"
@@ -151,7 +151,7 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 		return
 	end
 
-	local shovel = Shovels.byId[Shovels.DEFAULT_ID]
+	local shovel = ShopService.getEquippedShovel(player)
 	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.
 	local power = PlotConfig.HITS_PER_CELL / shovel.hitsPerCell
 	local newHitsLeft = math.max(hitsLeft - power, 0)

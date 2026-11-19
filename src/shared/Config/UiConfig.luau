@@ -38,6 +38,10 @@ local UiConfig = {
 	CHEST_STAR_SIZE = 36, -- pixels, zone tactile de l'étoile de favori
 	HUD_CHEST_BUTTON_SIZE = 64, -- pixels
 
+	-- Forge
+	FORGE_PANEL_MAX_SIZE = Vector2.new(760, 440), -- pixels
+	FORGE_ROW_HEIGHT = 96, -- pixels
+
 	-- Vente au Marchand
 	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance
 	SELL_COIN_COUNT = 8, -- pièces animées après une vente
