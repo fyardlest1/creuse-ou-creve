@@ -90,9 +90,11 @@ Un objet Secret + Arc-en-ciel est la trouvaille ultime. Elle doit être quasi im
 | --- | --- | --- | --- |
 | Bois | Gratuite | 3 | 0 % |
 | Fer | 500 | 2 | +5 % |
-| Acier | 5 000 | 2 | +15 % |
+| Acier | 25 000 | 2 | +15 % |
 | Diamant | 50 000 | 1 | +30 % |
 | Cosmique | 500 000 | 1 | +60 % |
+
+Prix de la Pelle en acier recalibré à 25 000 après la simulation d'équilibrage de la semaine 2 (5 000 la faisait arriver en 4 minutes). Les prix des pelles Diamant et Cosmique seront fixés par la même simulation quand elles seront développées.
 
 ### 4.5 Le vol (cycle jour et nuit)
 
