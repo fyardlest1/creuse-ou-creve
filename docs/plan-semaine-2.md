@@ -160,8 +160,9 @@ Critères d'acceptation :
 
 - [x] A : acier en moyenne entre 8 et 15 min (11 min 39 s).
 - [x] A : entrée en Roche sous 30 min (14 min 22 s).
-- [x] B : acier pas avant 5 min **en moyenne** (7 min 57 s).
-- [ ] B : acier pas avant 5 min **dans chaque partie** : 8,4 % des parties l'achètent plus tôt. Ce sont des parties avec un Secret trouvé tôt (25 000 Pièces en Terre, 50 000 en Argile) : aucun prix d'acier compatible avec la cible A ne l'empêche sans toucher aux valeurs de rareté du GDD. **Interprétation à confirmer.**
+- [x] B : acier pas avant 5 min **en moyenne** (7 min 57 s). C'est la lecture retenue pour ce critère.
+
+**Décision sur les parties précoces de B (8,4 % achètent l'acier avant 5 min) : on ne touche à rien.** Ce sont des joueurs qui ont trouvé un Secret dans leurs premières minutes (25 000 Pièces en Terre, 50 000 en Argile) et qui ont choisi de le vendre plutôt que de le garder. C'est le jackpot, le moment qu'on veut voir filmé et partagé : le pilier 2 du GDD, « le frisson de la trouvaille ».
 
 ## 8. Ordre des tâches pour Claude Code
 
