@@ -16,7 +16,8 @@ local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local ChestController = require(script.Parent.ChestController)
 
-local COIN_TEXT = "🪙"
+local COIN_COLOR = Color3.fromRGB(255, 200, 40)
+local COIN_STROKE_COLOR = Color3.fromRGB(180, 120, 20)
 
 local player = Players.LocalPlayer
 
@@ -81,19 +82,25 @@ end
 local function playCoinAnimation()
 	for index = 1, UiConfig.SELL_COIN_COUNT do
 		task.delay((index - 1) * UiConfig.SELL_COIN_STAGGER, function()
-			local coin = Instance.new("TextLabel")
-			coin.BackgroundTransparency = 1
+			-- Pièce dessinée (les emojis ne s'affichent pas partout).
+			local coin = Instance.new("Frame")
+			coin.BackgroundColor3 = COIN_COLOR
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0.5, 0)
+			corner.Parent = coin
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = COIN_STROKE_COLOR
+			stroke.Thickness = 2
+			stroke.Parent = coin
 			coin.AnchorPoint = Vector2.new(0.5, 0.5)
 			coin.Size = UDim2.fromOffset(UiConfig.SELL_COIN_SIZE, UiConfig.SELL_COIN_SIZE)
 			local spread = UiConfig.SELL_COIN_SPREAD
 			coin.Position = UDim2.new(0.5, math.random(-spread.X, spread.X), 0.5, math.random(-spread.Y, spread.Y))
-			coin.Text = COIN_TEXT
-			coin.TextScaled = true
 			coin.Parent = effectsGui
 			local tween = TweenService:Create(
 				coin,
 				TweenInfo.new(UiConfig.SELL_COIN_FLIGHT_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-				{ Position = UiConfig.SELL_COIN_TARGET, TextTransparency = 0.3 }
+				{ Position = UiConfig.SELL_COIN_TARGET, BackgroundTransparency = 0.3 }
 			)
 			tween.Completed:Connect(function()
 				coin:Destroy()
@@ -129,7 +136,7 @@ function MerchantController.init()
 	effectsGui.Name = "SellEffectsGui"
 	effectsGui.ResetOnSpawn = false
 	effectsGui.DisplayOrder = 20
-	effectsGui.IgnoreGuiInset = true
+	effectsGui.IgnoreGuiInset = false -- même repère que le HUD, pour viser le compteur de Pièces
 	effectsGui.Parent = player:WaitForChild("PlayerGui")
 end
 

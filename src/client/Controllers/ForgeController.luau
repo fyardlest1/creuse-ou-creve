@@ -115,7 +115,10 @@ local function createRow(shovel: Types.ShovelDef, order: number, owned: { [strin
 	local row = Instance.new("Frame")
 	row.Name = shovel.id
 	row.LayoutOrder = order
-	row.Size = UDim2.new(1, -12, 0, UiConfig.FORGE_ROW_HEIGHT)
+	local camera = workspace.CurrentCamera
+	local compact = camera ~= nil and camera.ViewportSize.Y < UiConfig.COMPACT_SCREEN_HEIGHT
+	local rowHeight = if compact then UiConfig.FORGE_ROW_HEIGHT_COMPACT else UiConfig.FORGE_ROW_HEIGHT
+	row.Size = UDim2.new(1, -12, 0, rowHeight)
 	row.BackgroundColor3 = ROW_BACKGROUND
 	addCorner(row, 0.12)
 
@@ -154,7 +157,7 @@ local function createRow(shovel: Types.ShovelDef, order: number, owned: { [strin
 	button.Name = "Action"
 	button.AnchorPoint = Vector2.new(1, 0.5)
 	button.Position = UDim2.fromScale(1, 0.5)
-	button.Size = UDim2.new(0.36, 0, 0, UiConfig.CHEST_BUTTON_MIN_HEIGHT + 8)
+	button.Size = UDim2.new(0.36, 0, 0, UiConfig.CHEST_BUTTON_MIN_HEIGHT)
 	button.BackgroundColor3 = color
 	button.AutoButtonColor = enabled
 	button.Font = Enum.Font.FredokaOne
@@ -213,8 +216,8 @@ local function buildUi()
 	local panel = Instance.new("Frame")
 	panel.Name = "Panel"
 	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.55)
-	panel.Size = UDim2.fromScale(0.92, 0.8)
+	panel.Position = UDim2.fromScale(0.5, 0.5)
+	panel.Size = UDim2.fromScale(UiConfig.PANEL_SIZE_SCALE.X, UiConfig.PANEL_SIZE_SCALE.Y)
 	panel.BackgroundColor3 = PANEL_BACKGROUND
 	panel.BackgroundTransparency = 0.05
 	panel.Parent = gui

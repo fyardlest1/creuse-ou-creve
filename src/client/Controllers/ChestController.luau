@@ -62,6 +62,7 @@ local counterLabel: TextLabel
 local sellAllButton: TextButton
 local grid: ScrollingFrame
 local emptyLabel: TextLabel
+local gridLayout: UIGridLayout
 
 -- 12345 -> "12 345"
 local function formatNumber(value: number): string
@@ -202,6 +203,9 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 		sellButton.AnchorPoint = Vector2.new(0.5, 1)
 		sellButton.Position = UDim2.fromScale(0.5, 1)
 		sellButton.Size = UDim2.new(0.9, 0, 0.22, 0)
+		local minHeight = Instance.new("UISizeConstraint")
+		minHeight.MinSize = Vector2.new(0, UiConfig.CHEST_CARD_BUTTON_MIN_HEIGHT)
+		minHeight.Parent = sellButton
 		sellButton.Activated:Connect(function()
 			if sellCallbacks ~= nil then
 				sellCallbacks.sellOne(item.uid)
@@ -247,8 +251,8 @@ local function buildUi()
 	local panel = Instance.new("Frame")
 	panel.Name = "Panel"
 	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.55)
-	panel.Size = UDim2.fromScale(0.92, 0.8)
+	panel.Position = UDim2.fromScale(0.5, 0.5)
+	panel.Size = UDim2.fromScale(UiConfig.PANEL_SIZE_SCALE.X, UiConfig.PANEL_SIZE_SCALE.Y)
 	panel.BackgroundColor3 = PANEL_BACKGROUND
 	panel.BackgroundTransparency = 0.05
 	panel.Parent = gui
@@ -306,7 +310,7 @@ local function buildUi()
 	grid.Parent = panel
 
 	local layout = Instance.new("UIGridLayout")
-	layout.CellSize = UDim2.fromOffset(UiConfig.CHEST_CARD_SIZE.X, UiConfig.CHEST_CARD_SIZE.Y)
+	gridLayout = layout
 	layout.CellPadding = UDim2.fromOffset(UiConfig.CHEST_CARD_PADDING, UiConfig.CHEST_CARD_PADDING)
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -335,7 +339,16 @@ local function layoutGrid()
 	grid.Size = UDim2.new(1, 0, 1, -top)
 end
 
+-- Cartes plus petites sur les écrans bas, pour voir deux rangées sur un téléphone en paysage.
+local function updateCardSize()
+	local camera = workspace.CurrentCamera
+	local compact = camera ~= nil and camera.ViewportSize.Y < UiConfig.COMPACT_SCREEN_HEIGHT
+	local size = if compact then UiConfig.CHEST_CARD_SIZE_COMPACT else UiConfig.CHEST_CARD_SIZE
+	gridLayout.CellSize = UDim2.fromOffset(size.X, size.Y)
+end
+
 function ChestController.open(newMode: ChestMode, callbacks: SellCallbacks?)
+	updateCardSize()
 	mode = newMode
 	sellCallbacks = callbacks
 	gui.Enabled = true

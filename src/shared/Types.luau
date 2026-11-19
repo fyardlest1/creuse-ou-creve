@@ -48,6 +48,7 @@ export type StratumDef = {
 	id: StratumId,
 	layer: number, -- numéro de couche, utilisé par ItemDef.layer
 	name: string,
+	nameWithArticle: string, -- "l'Argile", pour les phrases affichées
 	minDepth: number, -- mètres, inclus
 	maxDepth: number, -- mètres, exclu
 	requiredShovel: ShovelId,
