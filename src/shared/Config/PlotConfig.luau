@@ -13,7 +13,7 @@ local PlotConfig = {
 	PLOT_ORIGIN = Vector3.new(0, 0, 0), -- centre de l'ensemble des parcelles, au niveau du sol
 	GROUND_MARGIN = 40, -- studs de sol autour des parcelles
 	GROUND_THICKNESS = 4,
-	HITS_PER_CELL = 3, -- coups nécessaires avec une pelle de puissance 1
+	HITS_PER_CELL = 3, -- unités de travail d'une case (chaque pelle la vide en hitsPerCell coups)
 
 	MAX_DIG_DISTANCE = 30, -- studs entre le joueur et la case
 	DIG_COOLDOWN = 0.2, -- secondes minimum entre deux coups

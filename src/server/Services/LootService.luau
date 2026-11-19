@@ -10,6 +10,7 @@ local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Items = require(Shared.Config.Items)
 local Shovels = require(Shared.Config.Shovels)
+local Strata = require(Shared.Config.Strata)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local PERCENT = 100
@@ -51,20 +52,12 @@ function LootService.rollMutation(): Types.MutationId?
 	return nil
 end
 
--- Choisit un objet de la rareté donnée. Si la couche n'a pas d'objet de cette rareté,
--- on prend la couche la plus profonde en dessous qui en a.
+-- Choisit un objet de la rareté donnée, parmi ceux de la couche (chaque couche a toutes les raretés).
 function LootService.pickItem(layer: number, rarity: Types.RarityId): Types.ItemDef
-	local bestLayer = 0
 	local candidates: { Types.ItemDef } = {}
 	for _, item in Items.list do
-		if item.rarity == rarity and item.layer <= layer then
-			if item.layer > bestLayer then
-				bestLayer = item.layer
-				candidates = {}
-			end
-			if item.layer == bestLayer then
-				table.insert(candidates, item)
-			end
+		if item.rarity == rarity and item.layer == layer then
+			table.insert(candidates, item)
 		end
 	end
 	assert(#candidates > 0, "[LootService] Aucun objet " .. rarity .. " pour la couche " .. layer)
@@ -90,7 +83,7 @@ end
 -- Tirage pour un joueur : utilise sa couche et le bonus de chance de sa pelle.
 function LootService.roll(player: Player): Types.ItemInstance
 	local data = PlayerDataService.getData(player)
-	local layer = if data ~= nil then data.layer else 1
+	local layer = Strata.fromDepth(if data ~= nil then data.depth else 0).layer
 	local shovel = Shovels.byId[Shovels.DEFAULT_ID]
 	return LootService.rollItem(layer, shovel.luckBonus)
 end

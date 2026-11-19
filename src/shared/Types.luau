@@ -29,12 +29,27 @@ export type ItemDef = {
 	layer: number,
 }
 
+export type ShovelId = "Wood" | "Iron" | "Steel"
+export type StratumId = "Dirt" | "Clay" | "Rock"
+
 export type ShovelDef = {
-	id: string,
+	id: ShovelId,
 	name: string,
-	power: number, -- coups retirés à une case par frappe
-	luckBonus: number, -- en pourcentage (30 = +30 %)
 	price: number,
+	hitsPerCell: number, -- coups nécessaires pour vider une case
+	luckBonus: number, -- en pourcentage (30 = +30 %)
+	maxStratum: StratumId, -- couche la plus profonde accessible
+}
+
+export type StratumDef = {
+	id: StratumId,
+	layer: number, -- numéro de couche, utilisé par ItemDef.layer
+	name: string,
+	minDepth: number, -- mètres, inclus
+	maxDepth: number, -- mètres, exclu
+	requiredShovel: ShovelId,
+	valueMultiplier: number,
+	cellColor: Color3,
 }
 
 export type ItemInstance = {

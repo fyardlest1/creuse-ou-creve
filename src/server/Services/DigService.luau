@@ -151,7 +151,9 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 	end
 
 	local shovel = Shovels.byId[Shovels.DEFAULT_ID]
-	local newHitsLeft = math.max(hitsLeft - shovel.power, 0)
+	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.
+	local power = PlotConfig.HITS_PER_CELL / shovel.hitsPerCell
+	local newHitsLeft = math.max(hitsLeft - power, 0)
 	if newHitsLeft == 0 then
 		digOut(player, data, cell, index)
 		return
