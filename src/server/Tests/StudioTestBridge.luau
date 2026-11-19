@@ -3,7 +3,8 @@
 -- (barre de commande, MCP) via une BindableFunction dans ServerStorage, hors de portée des clients.
 -- Usage : ServerStorage.StudioTestBridge:Invoke("EconomyService", "addCoins", player, 100, "Sell")
 -- Aides : Invoke("Test", "getData", player), Invoke("Test", "setField", player, "coins", 0),
---         Invoke("Test", "setStat", player, "itemsSold", 0)
+--         Invoke("Test", "setStat", player, "itemsSold", 0), Invoke("Test", "setFavorite", player, uid, true),
+--         Invoke("Test", "teleport", player, position)
 
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -30,6 +31,23 @@ function StudioTestBridge.install(services: { [string]: any })
 		setStat = function(player: Player, field: string, value: any)
 			local data = PlayerDataService.getData(player) :: any
 			data.stats[field] = value
+		end,
+		setFavorite = function(player: Player, uid: string, favorite: boolean): boolean
+			local data = PlayerDataService.getData(player) :: any
+			for _, item in data.inventory do
+				if item.uid == uid then
+					item.favorite = favorite
+					PlayerDataService.pushInventory(player)
+					return true
+				end
+			end
+			return false
+		end,
+		teleport = function(player: Player, position: Vector3)
+			local character = player.Character
+			if character ~= nil then
+				character:PivotTo(CFrame.new(position))
+			end
 		end,
 	}
 

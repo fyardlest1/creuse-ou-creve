@@ -30,7 +30,25 @@ local UiConfig = {
 	CAMERA_ARRIVAL_RADIUS = 40, -- le personnage est considéré arrivé à cette distance de la parcelle
 	CAMERA_WAIT_TIMEOUT = 3, -- secondes max à attendre la téléportation
 
+	-- Coffre (grille de cartes)
+	CHEST_PANEL_MAX_SIZE = Vector2.new(760, 560), -- pixels
+	CHEST_CARD_SIZE = Vector2.new(150, 150), -- pixels, assez grand pour le toucher
+	CHEST_CARD_PADDING = 8,
+	CHEST_BUTTON_MIN_HEIGHT = 40, -- pixels, cible tactile
+
+	-- Vente au Marchand
+	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance
+	SELL_COIN_COUNT = 8, -- pièces animées après une vente
+	SELL_COIN_FLIGHT_TIME = 0.6,
+	SELL_COIN_STAGGER = 0.05, -- décalage entre deux pièces
+	SELL_COIN_SIZE = 36, -- pixels
+	SELL_COIN_SPREAD = Vector2.new(80, 40), -- dispersion au départ, pixels
+	SELL_COIN_TARGET = UDim2.new(1, -60, 0, 30), -- haut à droite, là où le HUD affiche les Pièces
+
 	-- Sons
+	SOUND_SELL = "rbxasset://sounds/electronicpingshort.wav", -- son de caisse temporaire
+	PITCH_SELL = 1.6,
+	VOLUME_SELL = 0.7,
 	SOUND_DIG_HIT = "rbxasset://sounds/snap.wav",
 	SOUND_REVEAL = "rbxasset://sounds/electronicpingshort.wav",
 	SOUND_REVEAL_SPECTACULAR = "rbxasset://sounds/victory.wav",

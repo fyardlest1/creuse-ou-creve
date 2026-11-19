@@ -12,6 +12,9 @@ local EconomyConfig = {
 	FAVORITE_COOLDOWN = 0.1,
 	BUY_COOLDOWN = 0.5,
 
+	-- Validation des requêtes de vente
+	UID_MAX_LENGTH = 64, -- les uids sont des GUID de 36 caractères
+
 	-- Raretés mises en favori automatiquement à la découverte
 	AUTO_FAVORITE_RARITIES = table.freeze({ Legendary = true, Secret = true }),
 

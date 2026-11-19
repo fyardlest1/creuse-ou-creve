@@ -82,6 +82,18 @@ export type PlayerData = {
 	stats: PlayerStats,
 }
 
+-- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).
+export type SellRequestPayload = {
+	uids: { string }?,
+	all: boolean?,
+}
+
+export type SellResultPayload = {
+	count: number,
+	coinsEarned: number,
+	newBalance: number,
+}
+
 export type RevealPayload = {
 	itemId: string,
 	name: string,

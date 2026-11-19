@@ -12,6 +12,7 @@ local Mutations = require(Shared.Config.Mutations)
 local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
+local Remotes = require(Shared.Remotes)
 local ProfileStore = require(script.Parent.Parent.Vendor.ProfileStore)
 
 type LoadedCallback = (player: Player, data: Types.PlayerData) -> ()
@@ -40,6 +41,7 @@ local PlayerDataService = {}
 local store: any = nil
 local profiles: { [Player]: any } = {}
 local loadedCallbacks: { LoadedCallback } = {}
+local inventoryUpdatedRemote: RemoteEvent
 
 local function log(message: string)
 	print("[PlayerData] " .. message)
@@ -137,6 +139,7 @@ local function onPlayerAdded(player: Player)
 	)
 
 	PlayerDataService.refreshAttributes(player)
+	PlayerDataService.pushInventory(player)
 
 	for _, callback in loadedCallbacks do
 		task.spawn(callback, player, data)
@@ -167,7 +170,17 @@ function PlayerDataService.addItem(player: Player, item: Types.ItemInstance): bo
 	end
 	table.insert(data.inventory, item)
 	PlayerDataService.refreshAttributes(player)
+	PlayerDataService.pushInventory(player)
 	return true
+end
+
+-- Envoie tout le coffre au client. À appeler après chaque changement du coffre.
+function PlayerDataService.pushInventory(player: Player)
+	local data = PlayerDataService.getData(player)
+	if data == nil then
+		return
+	end
+	inventoryUpdatedRemote:FireClient(player, data.inventory)
 end
 
 -- Recopie l'état affiché par le HUD dans des attributs du Player (lecture seule côté client).
@@ -195,6 +208,7 @@ end
 
 function PlayerDataService.init()
 	store = ProfileStore.New(PlayerConfig.PROFILE_STORE_NAME, TEMPLATE)
+	inventoryUpdatedRemote = Remotes.get(Remotes.Names.InventoryUpdated)
 end
 
 function PlayerDataService.start()

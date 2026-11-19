@@ -14,6 +14,9 @@ local Names = table.freeze({
 	ItemRevealed = "ItemRevealed", -- serveur -> client : RevealPayload
 	InventoryFull = "InventoryFull", -- serveur -> client : aucun
 	LayerCleared = "LayerCleared", -- serveur -> client : layer, depth
+	InventoryUpdated = "InventoryUpdated", -- serveur -> client : { ItemInstance } (tout le coffre)
+	SellRequest = "SellRequest", -- client -> serveur : SellRequestPayload
+	SellResult = "SellResult", -- serveur -> client : SellResultPayload
 })
 
 local function getFolderOnServer(): Folder
