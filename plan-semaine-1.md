@@ -142,12 +142,12 @@ Une requête invalide est ignorée sans erreur, et loggée en mode Studio seulem
 
 ## 8. Critères de réussite de la semaine
 
-- [ ] Aucune erreur rouge dans l'Output pendant 5 minutes de jeu.
-- [ ] Creuser fonctionne à la souris et en émulation téléphone.
-- [ ] La répartition des raretés sur 100 000 tirages correspond aux pourcentages.
-- [ ] L'inventaire survit à une déconnexion et une reconnexion.
-- [ ] Un client modifié qui envoie `DigRequest` en boucle ou avec un index invalide n'obtient rien de plus.
-- [ ] Deux joueurs (Test, Local Server, 2 joueurs) ont chacun leur parcelle et ne peuvent pas creuser celle de l'autre.
+- [x] Aucune erreur rouge dans l'Output pendant 5 minutes de jeu.
+- [x] Creuser fonctionne à la souris et en émulation téléphone.
+- [x] La répartition des raretés sur 100 000 tirages correspond aux pourcentages.
+- [x] L'inventaire survit à une déconnexion et une reconnexion.
+- [x] Un client modifié qui envoie `DigRequest` en boucle ou avec un index invalide n'obtient rien de plus.
+- [x] Deux joueurs (Test, Local Server, 2 joueurs) ont chacun leur parcelle et ne peuvent pas creuser celle de l'autre.
 
 ## 9. Message à donner à Claude Code
 
