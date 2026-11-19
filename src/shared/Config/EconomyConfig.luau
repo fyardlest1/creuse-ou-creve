@@ -19,6 +19,18 @@ local EconomyConfig = {
 	CURRENCY_NAME = "Pièces",
 	STARTING_COINS = 0,
 
+	-- Classement du serveur (leaderstats), textes affichés
+	LEADERSTAT_COINS = "Pièces",
+	LEADERSTAT_DEPTH = "Profondeur",
+
+	-- Analytique (AnalyticsService:LogEconomyEvent)
+	ANALYTICS_CURRENCY = "Coins",
+	-- Raison d'un gain ou d'une dépense -> type de transaction Roblox (Enum.AnalyticsEconomyTransactionType)
+	ANALYTICS_TRANSACTION_TYPES = table.freeze({
+		Sell = "Gameplay",
+		ShovelPurchase = "Shop",
+	}),
+
 	-- Simulation d'équilibrage (EconomySimulation)
 	SIM_SECONDS_PER_ITEM = 2,
 	SIM_SELL_TRIP_SECONDS = 20, -- aller-retour au Marchand quand le coffre est plein

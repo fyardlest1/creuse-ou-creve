@@ -32,6 +32,9 @@ export type ItemDef = {
 export type ShovelId = "Wood" | "Iron" | "Steel"
 export type StratumId = "Dirt" | "Clay" | "Rock"
 
+-- Raison d'un gain ou d'une dépense de Pièces (analytique).
+export type EconomyReason = "Sell" | "ShovelPurchase"
+
 export type ShovelDef = {
 	id: ShovelId,
 	name: string,
