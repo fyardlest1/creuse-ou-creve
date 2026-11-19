@@ -1,1 +1,1 @@
-print("[Client] Connexion au jeu reussie")
+print("[Client] Connexion au jeu yayad")
