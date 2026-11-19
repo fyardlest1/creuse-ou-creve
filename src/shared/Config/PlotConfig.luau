@@ -23,7 +23,6 @@ local PlotConfig = {
 	SPAWN_OFFSET = 4, -- studs entre le bord de la parcelle et le point d'apparition
 	SPAWN_HEIGHT = 3, -- hauteur du HumanoidRootPart au-dessus du sol
 
-	CELL_COLOR = Color3.fromRGB(124, 84, 52),
 	CELL_COLOR_VARIATION = 0.08, -- variation de luminosité aléatoire par case
 	CELL_MATERIAL = Enum.Material.Ground,
 	BASE_COLOR = Color3.fromRGB(60, 42, 30),

@@ -8,6 +8,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
+local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
 local Types = require(Shared.Types)
 local PlayerDataService = require(script.Parent.PlayerDataService)
@@ -67,19 +68,26 @@ local function getCellOffset(cellIndex: number): Vector3
 	)
 end
 
-local function randomCellColor(): Color3
-	local h, s, v = PlotConfig.CELL_COLOR:ToHSV()
+local function randomCellColor(baseColor: Color3): Color3
+	local h, s, v = baseColor:ToHSV()
 	local variation = rng:NextNumber(-PlotConfig.CELL_COLOR_VARIATION, PlotConfig.CELL_COLOR_VARIATION)
 	return Color3.fromHSV(h, s, math.clamp(v * (1 + variation), 0, 1))
 end
 
-local function restoreCell(cell: BasePart)
+-- Remet une case à neuf, colorée selon la couche (petite variation aléatoire pour lire la grille).
+local function restoreCell(cell: BasePart, baseColor: Color3)
 	cell:SetAttribute(HITS_ATTRIBUTE, PlotConfig.HITS_PER_CELL)
 	cell.Transparency = 0
 	cell.CanCollide = true
 	cell.CanQuery = true
 	cell.CanTouch = false
-	cell.Color = randomCellColor()
+	cell.Color = randomCellColor(baseColor)
+end
+
+-- Couleur des cases pour la profondeur actuelle du joueur (Terre par défaut).
+local function getCellColor(player: Player?): Color3
+	local data = if player ~= nil then PlayerDataService.getData(player) else nil
+	return Strata.fromDepth(if data ~= nil then data.depth else 0).cellColor
 end
 
 local function createPart(name: string, size: Vector3, position: Vector3, color: Color3, material: Enum.Material): Part
@@ -140,11 +148,11 @@ local function createPlot(index: number, parent: Instance): PlotState
 			tostring(cellIndex),
 			Vector3.new(cellSize, PlotConfig.CELL_HEIGHT, cellSize),
 			center + getCellOffset(cellIndex),
-			PlotConfig.CELL_COLOR,
+			getCellColor(nil),
 			PlotConfig.CELL_MATERIAL
 		)
 		cell:SetAttribute("CellIndex", cellIndex)
-		restoreCell(cell)
+		restoreCell(cell, getCellColor(nil))
 		cell.Parent = cellsFolder
 		cells[cellIndex] = cell
 	end
@@ -229,6 +237,10 @@ local function assignPlot(player: Player, _data: Types.PlayerData)
 	plotByPlayer[player] = plot
 	plot.model:SetAttribute("OwnerUserId", player.UserId)
 	plot.signLabel.Text = string.format(TEXT_OWNED, player.DisplayName)
+	local color = getCellColor(player)
+	for _, cell in plot.cells do
+		restoreCell(cell, color)
+	end
 
 	plot.characterConnection = player.CharacterAdded:Connect(function(character)
 		teleportToPlot(plot, character)
@@ -254,8 +266,9 @@ local function releasePlot(player: Player)
 	plot.owner = nil
 	plot.model:SetAttribute("OwnerUserId", 0)
 	plot.signLabel.Text = TEXT_FREE
+	local color = getCellColor(nil)
 	for _, cell in plot.cells do
-		restoreCell(cell)
+		restoreCell(cell, color)
 	end
 	log(string.format("Parcelle %d libérée", plot.index))
 end
@@ -287,14 +300,15 @@ function PlotService.getCell(player: Player, cellIndex: number): BasePart?
 	return plot.cells[cellIndex]
 end
 
--- Remet toutes les cases de la parcelle du joueur à neuf (nouvelle couche).
+-- Remet toutes les cases de la parcelle du joueur à neuf, à la couleur de sa couche actuelle.
 function PlotService.resetLayer(player: Player)
 	local plot = plotByPlayer[player]
 	if plot == nil then
 		return
 	end
+	local color = getCellColor(player)
 	for _, cell in plot.cells do
-		restoreCell(cell)
+		restoreCell(cell, color)
 	end
 end
 

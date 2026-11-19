@@ -30,6 +30,7 @@ local remotes: {
 	itemRevealed: RemoteEvent,
 	inventoryFull: RemoteEvent,
 	layerCleared: RemoteEvent,
+	stratumBlocked: RemoteEvent,
 }
 
 -- Les requêtes invalides sont ignorées, et loggées en Studio seulement.
@@ -59,12 +60,30 @@ local function getCharacterPosition(player: Player): Vector3?
 	return rootPart.Position
 end
 
+-- Parcelle entièrement creusée : on descend de DEPTH_PER_LAYER, sauf si la couche suivante demande
+-- une pelle que le joueur n'a pas. Dans ce cas la profondeur ne bouge pas, la parcelle se régénère
+-- dans la couche actuelle et le client est prévenu (StratumBlocked).
 local function clearLayer(player: Player, data: Types.PlayerData)
-	data.depth += PlotConfig.DEPTH_PER_LAYER
-	local layer = Strata.fromDepth(data.depth).layer
-	PlayerDataService.refreshAttributes(player)
-	remotes.layerCleared:FireClient(player, layer, data.depth)
-	print(string.format("[DigService] %s passe à la couche %d (%d m)", player.Name, layer, data.depth))
+	local nextDepth = data.depth + PlotConfig.DEPTH_PER_LAYER
+	local nextStratum = Strata.fromDepth(nextDepth)
+
+	if table.find(data.ownedShovels, nextStratum.requiredShovel) == nil then
+		remotes.stratumBlocked:FireClient(player, nextStratum.requiredShovel)
+		print(
+			string.format(
+				"[DigService] %s bloqué à %d m : %s requise pour %s",
+				player.Name,
+				data.depth,
+				nextStratum.requiredShovel,
+				nextStratum.name
+			)
+		)
+	else
+		data.depth = nextDepth
+		PlayerDataService.refreshAttributes(player)
+		remotes.layerCleared:FireClient(player, nextStratum.layer, data.depth)
+		print(string.format("[DigService] %s descend à %d m (%s)", player.Name, data.depth, nextStratum.name))
+	end
 
 	task.delay(PlotConfig.LAYER_RESET_DELAY, function()
 		if player.Parent == Players then
@@ -170,6 +189,7 @@ function DigService.init()
 		itemRevealed = Remotes.get(Remotes.Names.ItemRevealed),
 		inventoryFull = Remotes.get(Remotes.Names.InventoryFull),
 		layerCleared = Remotes.get(Remotes.Names.LayerCleared),
+		stratumBlocked = Remotes.get(Remotes.Names.StratumBlocked),
 	}
 end
 

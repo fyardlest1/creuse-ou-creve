@@ -13,7 +13,7 @@ local list: { Types.StratumDef } = {
 		maxDepth = 10,
 		requiredShovel = "Wood",
 		valueMultiplier = 1,
-		cellColor = Color3.fromRGB(150, 105, 65), -- brun clair
+		cellColor = Color3.fromRGB(200, 150, 95), -- brun clair (la texture Ground assombrit)
 	},
 	{
 		id = "Clay",
@@ -23,7 +23,7 @@ local list: { Types.StratumDef } = {
 		maxDepth = 50,
 		requiredShovel = "Iron",
 		valueMultiplier = 2,
-		cellColor = Color3.fromRGB(190, 95, 55), -- orange brique
+		cellColor = Color3.fromRGB(240, 120, 60), -- orange brique
 	},
 	{
 		id = "Rock",
@@ -33,7 +33,7 @@ local list: { Types.StratumDef } = {
 		maxDepth = 200,
 		requiredShovel = "Steel",
 		valueMultiplier = 4,
-		cellColor = Color3.fromRGB(120, 120, 125), -- gris
+		cellColor = Color3.fromRGB(175, 175, 185), -- gris
 	},
 }
 

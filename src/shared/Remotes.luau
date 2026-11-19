@@ -20,6 +20,7 @@ local Names = table.freeze({
 	ToggleFavorite = "ToggleFavorite", -- client -> serveur : uid
 	BuyShovel = "BuyShovel", -- client -> serveur : shovelId
 	ShovelChanged = "ShovelChanged", -- serveur -> client : shovelId
+	StratumBlocked = "StratumBlocked", -- serveur -> client : requiredShovel (shovelId)
 })
 
 local function getFolderOnServer(): Folder

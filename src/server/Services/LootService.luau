@@ -10,6 +10,7 @@ local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Items = require(Shared.Config.Items)
 local Strata = require(Shared.Config.Strata)
+local EconomyConfig = require(Shared.Config.EconomyConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ShopService = require(script.Parent.ShopService)
 
@@ -64,20 +65,26 @@ function LootService.pickItem(layer: number, rarity: Types.RarityId): Types.Item
 	return candidates[rng:NextInteger(1, #candidates)]
 end
 
--- Tirage complet, sans joueur : rareté, mutation, objet, valeur finale et uid.
+-- Valeur de vente : valeur de rareté x multiplicateur de mutation x multiplicateur de couche.
+function LootService.computeValue(rarityId: Types.RarityId, mutationId: Types.MutationId?, layer: number): number
+	local mutationMultiplier = if mutationId ~= nil then Mutations.byId[mutationId].multiplier else 1
+	return Rarities.byId[rarityId].value * mutationMultiplier * Strata.byLayer[layer].valueMultiplier
+end
+
+-- Tirage complet, sans joueur : rareté, mutation, objet de la couche, valeur finale et uid.
+-- Les Légendaires et Secrets sont mis en favori automatiquement.
 function LootService.rollItem(layer: number, luckBonus: number): Types.ItemInstance
 	local rarityId = LootService.rollRarity(luckBonus)
 	local mutationId = LootService.rollMutation()
 	local item = LootService.pickItem(layer, rarityId)
 
-	local multiplier = if mutationId ~= nil then Mutations.byId[mutationId].multiplier else 1
 	return {
 		uid = HttpService:GenerateGUID(false),
 		itemId = item.id,
 		rarity = rarityId,
 		mutation = mutationId,
-		value = Rarities.byId[rarityId].value * multiplier,
-		favorite = false,
+		value = LootService.computeValue(rarityId, mutationId, layer),
+		favorite = EconomyConfig.AUTO_FAVORITE_RARITIES[rarityId] == true,
 	}
 end
 
