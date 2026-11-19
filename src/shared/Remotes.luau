@@ -17,6 +17,7 @@ local Names = table.freeze({
 	InventoryUpdated = "InventoryUpdated", -- serveur -> client : { ItemInstance } (tout le coffre)
 	SellRequest = "SellRequest", -- client -> serveur : SellRequestPayload
 	SellResult = "SellResult", -- serveur -> client : SellResultPayload
+	ToggleFavorite = "ToggleFavorite", -- client -> serveur : uid
 })
 
 local function getFolderOnServer(): Folder

@@ -35,6 +35,8 @@ local UiConfig = {
 	CHEST_CARD_SIZE = Vector2.new(150, 150), -- pixels, assez grand pour le toucher
 	CHEST_CARD_PADDING = 8,
 	CHEST_BUTTON_MIN_HEIGHT = 40, -- pixels, cible tactile
+	CHEST_STAR_SIZE = 36, -- pixels, zone tactile de l'étoile de favori
+	HUD_CHEST_BUTTON_SIZE = 64, -- pixels
 
 	-- Vente au Marchand
 	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance

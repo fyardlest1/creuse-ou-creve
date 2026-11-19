@@ -1,9 +1,11 @@
 --!strict
--- Interface du coffre : grille de cartes triée par valeur décroissante, compteur "18/30".
--- Mode "view" pour consulter, mode "sell" (ouvert par le Marchand) avec "Tout vendre" et "Vendre" par carte.
+-- Interface du coffre : grille de cartes triée par valeur décroissante, compteur "18/30", étoile de favori.
+-- Mode "view" pour consulter (prompt du coffre, bouton du HUD), mode "sell" (ouvert par le Marchand)
+-- avec "Tout vendre" et "Vendre" par carte.
 -- Le coffre affiché est toujours celui envoyé par le serveur (InventoryUpdated).
 
 local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -13,6 +15,7 @@ local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
+local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 
 export type ChestMode = "view" | "sell"
@@ -29,6 +32,8 @@ local SELL_ALL_DISABLED_COLOR = Color3.fromRGB(80, 80, 90)
 local SELL_ONE_COLOR = Color3.fromRGB(230, 160, 40)
 local CLOSE_COLOR = Color3.fromRGB(200, 60, 60)
 local MUTED_TEXT = Color3.fromRGB(190, 190, 200)
+local STAR_ON_COLOR = Color3.fromRGB(255, 200, 40)
+local STAR_OFF_COLOR = Color3.fromRGB(120, 120, 135)
 
 local TEXT_TITLE = "Coffre"
 local TEXT_TITLE_SELL = "Marchand"
@@ -38,6 +43,8 @@ local TEXT_SELL_ONE = "Vendre"
 local TEXT_SELL_ALL = "Tout vendre (%s Pièces)"
 local TEXT_EMPTY = "Ton coffre est vide. Va creuser !"
 local TEXT_CLOSE = "X"
+local TEXT_STAR_ON = "★"
+local TEXT_STAR_OFF = "☆"
 
 local player = Players.LocalPlayer
 
@@ -47,6 +54,7 @@ local inventory: { Types.ItemInstance } = {}
 local mode: ChestMode = "view"
 local sellCallbacks: SellCallbacks? = nil
 local changedCallbacks: { () -> () } = {}
+local toggleFavoriteRemote: RemoteEvent
 
 local gui: ScreenGui
 local titleLabel: TextLabel
@@ -148,8 +156,25 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 	padding.Parent = card
 
 	local rarityLabel = createLabel("Rarity", if rarity ~= nil then rarity.displayName else item.rarity, card)
-	rarityLabel.Size = UDim2.fromScale(1, 0.14)
+	rarityLabel.Size = UDim2.fromScale(0.75, 0.14)
+	rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
 	rarityLabel.TextColor3 = rarityColor
+
+	-- Étoile de favori : un favori ne peut pas être vendu. Zone tactile plus grande que le symbole.
+	local star = Instance.new("TextButton")
+	star.Name = "Favorite"
+	star.AnchorPoint = Vector2.new(1, 0)
+	star.Position = UDim2.new(1, 4, 0, -4)
+	star.Size = UDim2.fromOffset(UiConfig.CHEST_STAR_SIZE, UiConfig.CHEST_STAR_SIZE)
+	star.BackgroundTransparency = 1
+	star.Font = Enum.Font.GothamBold
+	star.TextScaled = true
+	star.Text = if item.favorite then TEXT_STAR_ON else TEXT_STAR_OFF
+	star.TextColor3 = if item.favorite then STAR_ON_COLOR else STAR_OFF_COLOR
+	star.Parent = card
+	star.Activated:Connect(function()
+		toggleFavoriteRemote:FireServer(item.uid)
+	end)
 
 	local nameLabel = createLabel("ItemName", if itemDef ~= nil then itemDef.name else item.itemId, card)
 	nameLabel.Position = UDim2.fromScale(0, 0.15)
@@ -341,11 +366,35 @@ function ChestController.onChanged(callback: () -> ())
 	table.insert(changedCallbacks, callback)
 end
 
+-- Prompt "Ouvrir le coffre" : seulement le coffre de sa propre parcelle (le vol viendra en semaine 3).
+local function onPromptTriggered(prompt: ProximityPrompt)
+	if prompt:GetAttribute(WorldConfig.INTERACTION_ATTRIBUTE) ~= WorldConfig.INTERACTIONS.Chest then
+		return
+	end
+	local chest = prompt:FindFirstAncestorWhichIsA("Model")
+	local plot = if chest ~= nil then chest.Parent else nil
+	if plot == nil or plot:GetAttribute("OwnerUserId") ~= player.UserId then
+		return
+	end
+	ChestController.open("view")
+end
+
+-- Bouton du HUD : ouvre le coffre en consultation, ou le ferme s'il est déjà ouvert.
+function ChestController.toggle()
+	if ChestController.isOpen() then
+		ChestController.close()
+	else
+		ChestController.open("view")
+	end
+end
+
 function ChestController.init()
 	buildUi()
+	toggleFavoriteRemote = Remotes.get(Remotes.Names.ToggleFavorite)
 end
 
 function ChestController.start()
+	ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
 	Remotes.get(Remotes.Names.InventoryUpdated).OnClientEvent:Connect(function(items: unknown)
 		if typeof(items) ~= "table" then
 			return

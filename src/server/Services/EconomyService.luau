@@ -23,12 +23,13 @@ local IS_STUDIO = RunService:IsStudio()
 local EconomyService = {}
 
 local lastSellTime: { [Player]: number } = {}
+local lastFavoriteTime: { [Player]: number } = {}
 local sellResultRemote: RemoteEvent
 
 -- Les requêtes invalides sont ignorées, et loggées en Studio seulement.
-local function reject(player: Player, reason: string)
+local function reject(player: Player, reason: string, action: string?)
 	if IS_STUDIO then
-		print(string.format("[EconomyService] Vente refusée (%s) : %s", player.Name, reason))
+		print(string.format("[EconomyService] %s refusé(e) (%s) : %s", action or "Vente", player.Name, reason))
 	end
 end
 
@@ -250,17 +251,50 @@ local function onSellRequest(player: Player, payload: unknown)
 	sellResultRemote:FireClient(player, result)
 end
 
+-- Bascule le favori d'un objet du coffre. Un favori ne peut pas être vendu.
+local function onToggleFavorite(player: Player, uid: unknown)
+	local action = "Favori"
+	if typeof(uid) ~= "string" or #uid == 0 or #uid > EconomyConfig.UID_MAX_LENGTH then
+		reject(player, "uid invalide", action)
+		return
+	end
+	local data = PlayerDataService.getData(player)
+	if data == nil then
+		reject(player, "données non chargées", action)
+		return
+	end
+
+	local now = os.clock()
+	local last = lastFavoriteTime[player]
+	if last ~= nil and now - last < EconomyConfig.FAVORITE_COOLDOWN then
+		reject(player, "cadence trop rapide", action)
+		return
+	end
+	lastFavoriteTime[player] = now
+
+	for _, item in data.inventory do
+		if item.uid == uid then
+			item.favorite = not item.favorite
+			PlayerDataService.pushInventory(player)
+			return
+		end
+	end
+	reject(player, "uid absent du coffre " .. uid, action)
+end
+
 function EconomyService.init()
 	sellResultRemote = Remotes.get(Remotes.Names.SellResult)
 end
 
 function EconomyService.start()
 	Remotes.get(Remotes.Names.SellRequest).OnServerEvent:Connect(onSellRequest)
+	Remotes.get(Remotes.Names.ToggleFavorite).OnServerEvent:Connect(onToggleFavorite)
 	PlayerDataService.onLoaded(function(player: Player)
 		createLeaderstats(player)
 	end)
 	Players.PlayerRemoving:Connect(function(player)
 		lastSellTime[player] = nil
+		lastFavoriteTime[player] = nil
 	end)
 end
 

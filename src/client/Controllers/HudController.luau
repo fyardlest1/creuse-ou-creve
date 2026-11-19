@@ -10,6 +10,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local ChestController = require(script.Parent.ChestController)
 
 local PILL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local PILL_FULL_BACKGROUND = Color3.fromRGB(170, 40, 40)
@@ -24,6 +25,8 @@ local TEXT_INVENTORY = "Sac : %d/%d"
 -- Semaine 2 : remplacer par « Vends tes objets au marchand ».
 local TEXT_INVENTORY_FULL = "Inventaire plein !"
 local TEXT_LAYER_CLEARED = "Couche %d atteinte ! (%d m)"
+local TEXT_CHEST_BUTTON = "🧰\nCoffre"
+local CHEST_BUTTON_COLOR = Color3.fromRGB(130, 85, 45)
 
 local player = Players.LocalPlayer
 
@@ -131,6 +134,31 @@ local function buildUi()
 	bannerPadding.PaddingLeft = UDim.new(0.03, 0)
 	bannerPadding.PaddingRight = UDim.new(0.03, 0)
 	bannerPadding.Parent = banner
+
+	-- Bouton Coffre : bord gauche, à mi-hauteur (hors du joystick et du bouton de saut sur mobile).
+	local chestButton = Instance.new("TextButton")
+	chestButton.Name = "ChestButton"
+	chestButton.AnchorPoint = Vector2.new(0, 0.5)
+	chestButton.Position = UDim2.new(0, 12, 0.45, 0)
+	chestButton.Size = UDim2.fromOffset(UiConfig.HUD_CHEST_BUTTON_SIZE, UiConfig.HUD_CHEST_BUTTON_SIZE)
+	chestButton.BackgroundColor3 = CHEST_BUTTON_COLOR
+	chestButton.Font = Enum.Font.FredokaOne
+	chestButton.TextScaled = true
+	chestButton.TextColor3 = WHITE
+	chestButton.Text = TEXT_CHEST_BUTTON
+	chestButton.Parent = gui
+	chestButton.Activated:Connect(ChestController.toggle)
+
+	local chestCorner = Instance.new("UICorner")
+	chestCorner.CornerRadius = UDim.new(0.25, 0)
+	chestCorner.Parent = chestButton
+
+	local chestPadding = Instance.new("UIPadding")
+	chestPadding.PaddingTop = UDim.new(0.1, 0)
+	chestPadding.PaddingBottom = UDim.new(0.1, 0)
+	chestPadding.PaddingLeft = UDim.new(0.08, 0)
+	chestPadding.PaddingRight = UDim.new(0.08, 0)
+	chestPadding.Parent = chestButton
 
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
