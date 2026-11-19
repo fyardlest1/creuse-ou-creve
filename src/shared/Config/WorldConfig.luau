@@ -1,0 +1,52 @@
+--!strict
+-- Décor interactif : stands du Marchand et de la Forge, coffres des parcelles, et leurs ProximityPrompt.
+
+local WorldConfig = {
+	-- Valeur de l'attribut "Interaction" posé sur chaque ProximityPrompt, lue par les contrôleurs client.
+	INTERACTION_ATTRIBUTE = "Interaction",
+	INTERACTIONS = table.freeze({
+		Merchant = "Merchant",
+		Forge = "Forge",
+		Chest = "Chest",
+	}),
+
+	-- Stands, placés sur la place centrale (décalage depuis PlotConfig.PLOT_ORIGIN), tournés vers le centre
+	MERCHANT_OFFSET = Vector3.new(-14, 0, 0),
+	FORGE_OFFSET = Vector3.new(14, 0, 0),
+	STAND_FLOOR_SIZE = Vector3.new(12, 1, 8),
+	STAND_COUNTER_SIZE = Vector3.new(10, 3, 2),
+	STAND_POST_SIZE = Vector3.new(1, 9, 1),
+	STAND_ROOF_SIZE = Vector3.new(13, 1, 9),
+	STAND_SIGN_HEIGHT = 13, -- studs au-dessus du sol
+	STAND_SIGN_WIDTH = 14, -- studs
+	STAND_SIGN_TEXT_HEIGHT = 3.5, -- studs
+	STAND_SIGN_MAX_DISTANCE = 200,
+
+	MERCHANT_TITLE = "💰 Marchand",
+	MERCHANT_ACTION = "Vendre",
+	MERCHANT_COLOR = Color3.fromRGB(70, 160, 90),
+	MERCHANT_ROOF_COLOR = Color3.fromRGB(240, 200, 70),
+
+	FORGE_TITLE = "⚒️ Forge",
+	FORGE_ACTION = "Acheter une pelle",
+	FORGE_COLOR = Color3.fromRGB(85, 85, 95),
+	FORGE_ROOF_COLOR = Color3.fromRGB(230, 110, 40),
+
+	STAND_WOOD_COLOR = Color3.fromRGB(120, 80, 50),
+
+	-- Coffre, au bord extérieur de chaque parcelle, à côté du point d'apparition
+	CHEST_SIZE = Vector3.new(4, 3, 3),
+	CHEST_LID_HEIGHT = 0.8,
+	CHEST_SIDE_OFFSET = 10, -- studs sur le côté, depuis l'axe de la parcelle
+	CHEST_EDGE_OFFSET = 3, -- studs au-delà du bord de la parcelle
+	CHEST_COLOR = Color3.fromRGB(130, 85, 45),
+	CHEST_TRIM_COLOR = Color3.fromRGB(240, 190, 60),
+	CHEST_TITLE = "Coffre",
+	CHEST_ACTION = "Ouvrir le coffre",
+
+	-- ProximityPrompt (portée inférieure à la distance validée par le serveur)
+	PROMPT_MAX_DISTANCE = 10,
+	PROMPT_KEY = Enum.KeyCode.E,
+}
+
+return table.freeze(WorldConfig)

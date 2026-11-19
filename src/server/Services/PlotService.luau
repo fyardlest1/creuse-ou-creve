@@ -26,6 +26,7 @@ type PlotState = {
 local CELL_COUNT = PlotConfig.GRID_SIZE * PlotConfig.GRID_SIZE
 local PLOT_WIDTH = PlotConfig.GRID_SIZE * PlotConfig.CELL_SIZE
 local PLOT_PITCH = PLOT_WIDTH + PlotConfig.PLOT_SPACING
+local ROW_PITCH = PLOT_WIDTH + PlotConfig.ROW_SPACING
 local ROW_COUNT = math.ceil(PlotConfig.PLOT_COUNT / PlotConfig.PLOTS_PER_ROW)
 local HITS_ATTRIBUTE = "HitsLeft"
 local CHARACTER_WAIT_TIMEOUT = 5
@@ -49,7 +50,7 @@ local function getPlotCenter(index: number): Vector3
 	local column = zeroBased % PlotConfig.PLOTS_PER_ROW
 	local row = zeroBased // PlotConfig.PLOTS_PER_ROW
 	local x = (column - (PlotConfig.PLOTS_PER_ROW - 1) / 2) * PLOT_PITCH
-	local z = (row - (ROW_COUNT - 1) / 2) * PLOT_PITCH
+	local z = (row - (ROW_COUNT - 1) / 2) * ROW_PITCH
 	return PlotConfig.PLOT_ORIGIN + Vector3.new(x, 0, z)
 end
 
@@ -96,7 +97,7 @@ end
 
 local function createGround(): Part
 	local width = PlotConfig.PLOTS_PER_ROW * PLOT_PITCH + PlotConfig.GROUND_MARGIN * 2
-	local depth = ROW_COUNT * PLOT_PITCH + PlotConfig.GROUND_MARGIN * 2
+	local depth = ROW_COUNT * ROW_PITCH + PlotConfig.GROUND_MARGIN * 2
 	local ground = createPart(
 		"Ground",
 		Vector3.new(width, PlotConfig.GROUND_THICKNESS, depth),
@@ -257,6 +258,18 @@ local function releasePlot(player: Player)
 		restoreCell(cell)
 	end
 	log(string.format("Parcelle %d libérée", plot.index))
+end
+
+-- Disposition de chaque parcelle, pour placer les décors (coffres). outward vaut 1 ou -1 selon le côté
+-- vers lequel la parcelle s'ouvre (là où le joueur apparaît).
+function PlotService.getPlotLayouts(): { { model: Model, center: Vector3, outward: number } }
+	local layouts = {}
+	for _, plot in plots do
+		local center = getPlotCenter(plot.index)
+		local outward = if center.Z - PlotConfig.PLOT_ORIGIN.Z > 0 then 1 else -1
+		table.insert(layouts, { model = plot.model, center = center, outward = outward })
+	end
+	return layouts
 end
 
 -- Modèle de la parcelle du joueur, ou nil.
