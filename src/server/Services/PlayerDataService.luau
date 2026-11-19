@@ -7,6 +7,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
+local Rarities = require(Shared.Config.Rarities)
+local Mutations = require(Shared.Config.Mutations)
+local Shovels = require(Shared.Config.Shovels)
+local Strata = require(Shared.Config.Strata)
+local EconomyConfig = require(Shared.Config.EconomyConfig)
 local ProfileStore = require(script.Parent.Parent.Vendor.ProfileStore)
 
 type LoadedCallback = (player: Player, data: Types.PlayerData) -> ()
@@ -17,12 +22,16 @@ local KICK_SESSION_ENDED = "Ta partie a été ouverte sur un autre serveur. Reco
 
 local TEMPLATE: Types.PlayerData = {
 	version = PlayerConfig.DATA_VERSION,
+	coins = EconomyConfig.STARTING_COINS,
 	inventory = {},
-	layer = 1,
 	depth = 0,
+	ownedShovels = { Shovels.DEFAULT_ID },
+	equippedShovel = Shovels.DEFAULT_ID,
 	stats = {
 		totalDigs = 0,
 		foundByRarity = {},
+		totalCoinsEarned = 0,
+		itemsSold = 0,
 	},
 }
 
@@ -34,6 +43,46 @@ local loadedCallbacks: { LoadedCallback } = {}
 
 local function log(message: string)
 	print("[PlayerData] " .. message)
+end
+
+-- Version 1 -> 2 : `layer` disparaît (déduite de `depth`), Pièces et pelles apparaissent,
+-- chaque objet reçoit `favorite = false` et une valeur recalculée avec le multiplicateur de la couche 1.
+-- Aucun objet n'est jamais retiré : un objet inconnu garde sa valeur d'origine.
+local function migrateV1ToV2(data: any)
+	local multiplier = Strata.byLayer[1].valueMultiplier
+	for _, item in data.inventory do
+		item.favorite = false
+		local rarity = Rarities.byId[item.rarity]
+		if rarity ~= nil then
+			local mutation = if item.mutation ~= nil then Mutations.byId[item.mutation] else nil
+			local mutationMultiplier = if mutation ~= nil then mutation.multiplier else 1
+			item.value = rarity.value * mutationMultiplier * multiplier
+		else
+			warn(
+				"[PlayerData] Rareté inconnue pendant la migration, objet conservé tel quel : "
+					.. tostring(item.itemId)
+			)
+		end
+	end
+	data.layer = nil
+	data.coins = data.coins or EconomyConfig.STARTING_COINS
+	data.ownedShovels = data.ownedShovels or { Shovels.DEFAULT_ID }
+	data.equippedShovel = data.equippedShovel or Shovels.DEFAULT_ID
+	data.stats = data.stats or {}
+	data.stats.totalCoinsEarned = data.stats.totalCoinsEarned or 0
+	data.stats.itemsSold = data.stats.itemsSold or 0
+	data.version = 2
+end
+
+-- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
+-- Exposée pour pouvoir la tester sur des profils fabriqués.
+function PlayerDataService.migrate(data: any): number
+	local fromVersion = if typeof(data.version) == "number" then data.version else 1
+	data.inventory = data.inventory or {}
+	if fromVersion < 2 then
+		migrateV1ToV2(data)
+	end
+	return fromVersion
 end
 
 local function onPlayerAdded(player: Player)
@@ -52,7 +101,11 @@ local function onPlayerAdded(player: Player)
 	end
 
 	profile:AddUserId(player.UserId)
+	local fromVersion = PlayerDataService.migrate(profile.Data)
 	profile:Reconcile()
+	if fromVersion < PlayerConfig.DATA_VERSION then
+		log(string.format("Migration v%d -> v%d pour %s", fromVersion, PlayerConfig.DATA_VERSION, player.Name))
+	end
 
 	profile.OnSessionEnd:Connect(function()
 		profiles[player] = nil
@@ -72,10 +125,13 @@ local function onPlayerAdded(player: Player)
 	local data: Types.PlayerData = profile.Data
 	log(
 		string.format(
-			"Profil chargé pour %s (couche %d, %d objets, mode %s)",
+			"Profil chargé pour %s (v%d, %d m, %d objets, %d Pièces, pelle %s, mode %s)",
 			player.Name,
-			data.layer,
+			data.version,
+			data.depth,
 			#data.inventory,
+			data.coins,
+			data.equippedShovel,
 			ProfileStore.DataStoreState
 		)
 	)
@@ -120,8 +176,12 @@ function PlayerDataService.refreshAttributes(player: Player)
 	if data == nil then
 		return
 	end
-	player:SetAttribute("Layer", data.layer)
+	local stratum = Strata.fromDepth(data.depth)
+	player:SetAttribute("Coins", data.coins)
 	player:SetAttribute("Depth", data.depth)
+	player:SetAttribute("Layer", stratum.layer)
+	player:SetAttribute("Stratum", stratum.id)
+	player:SetAttribute("EquippedShovel", data.equippedShovel)
 	player:SetAttribute("InventoryCount", #data.inventory)
 end
 

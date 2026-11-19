@@ -77,6 +77,7 @@ function LootService.rollItem(layer: number, luckBonus: number): Types.ItemInsta
 		rarity = rarityId,
 		mutation = mutationId,
 		value = Rarities.byId[rarityId].value * multiplier,
+		favorite = false,
 	}
 end
 

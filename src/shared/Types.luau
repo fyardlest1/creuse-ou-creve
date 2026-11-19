@@ -58,18 +58,24 @@ export type ItemInstance = {
 	rarity: RarityId,
 	mutation: MutationId?,
 	value: number,
+	favorite: boolean, -- protégé de la vente
 }
 
 export type PlayerStats = {
 	totalDigs: number,
 	foundByRarity: { [string]: number },
+	totalCoinsEarned: number,
+	itemsSold: number,
 }
 
+-- Version 2. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
 export type PlayerData = {
 	version: number,
-	inventory: { ItemInstance },
-	layer: number,
+	coins: number,
+	inventory: { ItemInstance }, -- le coffre
 	depth: number,
+	ownedShovels: { ShovelId },
+	equippedShovel: ShovelId,
 	stats: PlayerStats,
 }
 

@@ -11,6 +11,7 @@ local PlotConfig = require(Shared.Config.PlotConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local Items = require(Shared.Config.Items)
 local Shovels = require(Shared.Config.Shovels)
+local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local PlotService = require(script.Parent.PlotService)
@@ -59,11 +60,11 @@ local function getCharacterPosition(player: Player): Vector3?
 end
 
 local function clearLayer(player: Player, data: Types.PlayerData)
-	data.layer += 1
 	data.depth += PlotConfig.DEPTH_PER_LAYER
+	local layer = Strata.fromDepth(data.depth).layer
 	PlayerDataService.refreshAttributes(player)
-	remotes.layerCleared:FireClient(player, data.layer, data.depth)
-	print(string.format("[DigService] %s passe à la couche %d (%d m)", player.Name, data.layer, data.depth))
+	remotes.layerCleared:FireClient(player, layer, data.depth)
+	print(string.format("[DigService] %s passe à la couche %d (%d m)", player.Name, layer, data.depth))
 
 	task.delay(PlotConfig.LAYER_RESET_DELAY, function()
 		if player.Parent == Players then
