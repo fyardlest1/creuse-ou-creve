@@ -31,6 +31,8 @@ local ARROW_COLOR = Color3.fromRGB(255, 205, 60)
 local WHITE = Color3.new(1, 1, 1)
 local PILL_MAX_TEXT_SIZE = 22
 local CHEST_BUTTON_COLOR = Color3.fromRGB(130, 85, 45)
+local PROTECTED_COLOR = Color3.fromRGB(60, 140, 90)
+local TEXT_PROTECTED = "Protégé : %d min"
 
 local TEXT_DEPTH = "Profondeur : %d m"
 local TEXT_CHEST = "Coffre : %d/%d"
@@ -67,6 +69,8 @@ local arrowDial: Frame
 local bannerGeneration = 0
 local fullSound: Sound
 local merchantPosition: Vector3? = nil
+local protectionPill: Frame
+local protectionLabel: TextLabel
 
 -- 12345 -> "12 345"
 local function formatNumber(value: number): string
@@ -285,6 +289,45 @@ local function buildMerchantArrow(gui: ScreenGui)
 	caption.Parent = arrowFrame
 end
 
+-- Rappel de la protection débutant, sous le minuteur jour/nuit (en haut à gauche).
+local function buildProtection(gui: ScreenGui)
+	local size = UiConfig.DAY_NIGHT_TIMER_SIZE
+	protectionPill = Instance.new("Frame")
+	protectionPill.Name = "Protection"
+	protectionPill.Position =
+		UDim2.fromOffset(UiConfig.HUD_MARGIN, UiConfig.HUD_TOP_MARGIN + size.Y + UiConfig.HUD_SPACING)
+	protectionPill.Size = UDim2.fromOffset(size.X, size.Y)
+	protectionPill.BackgroundColor3 = PROTECTED_COLOR
+	protectionPill.BackgroundTransparency = 0.15
+	protectionPill.Visible = false
+	protectionPill.Parent = gui
+	addCorner(protectionPill, 0.5)
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0.15, 0)
+	padding.PaddingBottom = UDim.new(0.15, 0)
+	padding.PaddingLeft = UDim.new(0.08, 0)
+	padding.PaddingRight = UDim.new(0.08, 0)
+	padding.Parent = protectionPill
+
+	protectionLabel = Instance.new("TextLabel")
+	protectionLabel.Size = UDim2.fromScale(1, 1)
+	protectionLabel.BackgroundTransparency = 1
+	protectionLabel.Font = Enum.Font.FredokaOne
+	protectionLabel.TextScaled = true
+	protectionLabel.TextColor3 = WHITE
+	protectionLabel.Parent = protectionPill
+end
+
+local function updateProtection()
+	local protectedUntil = player:GetAttribute("ProtectedUntil")
+	local remaining = if typeof(protectedUntil) == "number" then protectedUntil - Workspace:GetServerTimeNow() else 0
+	protectionPill.Visible = remaining > 0
+	if remaining > 0 then
+		protectionLabel.Text = string.format(TEXT_PROTECTED, math.ceil(remaining / 60))
+	end
+end
+
 local function buildChestButton(gui: ScreenGui)
 	-- Bord gauche, à mi-hauteur : hors du joystick et du bouton de saut sur mobile.
 	local chestButton = Instance.new("TextButton")
@@ -318,6 +361,7 @@ local function buildUi()
 	buildCoins(gui)
 	buildBanner(gui)
 	buildMerchantArrow(gui)
+	buildProtection(gui)
 	buildChestButton(gui)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
@@ -482,6 +526,7 @@ function HudController.start()
 	end)
 
 	RunService.RenderStepped:Connect(updateMerchantArrow)
+	RunService.RenderStepped:Connect(updateProtection)
 end
 
 return HudController
