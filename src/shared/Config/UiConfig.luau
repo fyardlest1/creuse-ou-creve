@@ -101,6 +101,8 @@ local UiConfig = {
 	STEAL_BLINK_FREQUENCY = 2, -- clignotements par seconde du coffre crocheté
 	STEAL_ARROW_REACH = 8, -- studs : la flèche vers son coffre disparaît une fois arrivé
 	STEAL_CARD_TIME = 3, -- secondes d'affichage de la carte "Tu as volé" / "On t'a volé"
+	STUN_VEIL_COLOR = Color3.fromRGB(120, 120, 255), -- voile pendant l'étourdissement
+	STUN_VEIL_TRANSPARENCY = 0.75,
 
 	-- Sons
 	SOUND_STEAL_ALARM = "rbxasset://sounds/electronicpingshort.wav", -- alarme temporaire

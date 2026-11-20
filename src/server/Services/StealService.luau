@@ -217,11 +217,14 @@ type ActivePick = { victim: Player, startedAt: number }
 local night = NightState.new()
 local activePicks: { [Player]: ActivePick } = {}
 local lastThiefByVictim: { [number]: number } = {} -- mémoire serveur seulement (Revanche, semaine 4)
+local lastEjectTime: { [Player]: number } = {}
+local stunToken: { [Player]: number } = {}
 local rng = Random.new()
 local remotes: {
 	stealStarted: RemoteEvent,
 	stealCancelled: RemoteEvent,
 	stealSucceeded: RemoteEvent,
+	ejected: RemoteEvent,
 }
 
 local function log(message: string)
@@ -230,7 +233,7 @@ end
 
 local function reject(thief: Player, reason: string)
 	if IS_STUDIO then
-		log(string.format("Crochetage refusé (%s) : %s", thief.Name, reason))
+		log(string.format("Refusé (%s) : %s", thief.Name, reason))
 	end
 end
 
@@ -391,6 +394,82 @@ function StealService.banFromChest(thief: Player, victim: Player)
 	StealService.cancelPick(thief, "éjecté")
 end
 
+-- Étourdit le voleur : ni marche ni saut pendant STUN_SECONDS (appliqué par le serveur).
+function StealService.stun(thief: Player)
+	local character = thief.Character
+	local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+	if humanoid == nil then
+		return
+	end
+	local token = (stunToken[thief] or 0) + 1
+	stunToken[thief] = token
+	local walkSpeed = humanoid:GetAttribute("StunWalkSpeed") or humanoid.WalkSpeed
+	local jumpHeight = humanoid:GetAttribute("StunJumpHeight") or humanoid.JumpHeight
+	local jumpPower = humanoid:GetAttribute("StunJumpPower") or humanoid.JumpPower
+	humanoid:SetAttribute("StunWalkSpeed", walkSpeed)
+	humanoid:SetAttribute("StunJumpHeight", jumpHeight)
+	humanoid:SetAttribute("StunJumpPower", jumpPower)
+	humanoid.WalkSpeed = 0
+	humanoid.JumpHeight = 0
+	humanoid.JumpPower = 0
+	task.delay(StealConfig.STUN_SECONDS, function()
+		if stunToken[thief] ~= token or humanoid.Parent == nil then
+			return
+		end
+		humanoid.WalkSpeed = walkSpeed
+		humanoid.JumpHeight = jumpHeight
+		humanoid.JumpPower = jumpPower
+		humanoid:SetAttribute("StunWalkSpeed", nil)
+		humanoid:SetAttribute("StunJumpHeight", nil)
+		humanoid:SetAttribute("StunJumpPower", nil)
+	end)
+end
+
+-- EjectRequest : seul le propriétaire du coffre en cours de crochetage peut éjecter, à
+-- EJECT_MAX_DISTANCE au plus du voleur, et seulement pendant un crochetage actif.
+local function onEjectRequest(owner: Player, thiefUserId: unknown)
+	if typeof(thiefUserId) ~= "number" or thiefUserId ~= thiefUserId or thiefUserId % 1 ~= 0 then
+		reject(owner, "éjection : identifiant invalide")
+		return
+	end
+	local now = os.clock()
+	local last = lastEjectTime[owner]
+	if last ~= nil and now - last < StealConfig.EJECT_COOLDOWN then
+		reject(owner, "éjection : cadence trop rapide")
+		return
+	end
+	lastEjectTime[owner] = now
+
+	local thief = Players:GetPlayerByUserId(thiefUserId)
+	if thief == nil or not StealService.isPicking(thief, owner) then
+		reject(owner, "éjection : aucun crochetage de ce joueur sur ton coffre")
+		return
+	end
+	local ownerPosition = getCharacterPosition(owner)
+	local thiefPosition = getCharacterPosition(thief)
+	if
+		ownerPosition == nil
+		or thiefPosition == nil
+		or (ownerPosition - thiefPosition).Magnitude > StealConfig.EJECT_MAX_DISTANCE
+	then
+		reject(owner, "éjection : trop loin du voleur")
+		return
+	end
+
+	StealService.banFromChest(thief, owner)
+	local character = thief.Character
+	if character ~= nil then
+		character:PivotTo(CFrame.new(StealConfig.EJECT_DESTINATION))
+	end
+	StealService.stun(thief)
+	local ownerData = PlayerDataService.getData(owner)
+	if ownerData ~= nil then
+		ownerData.stats.ejections += 1
+	end
+	remotes.ejected:FireClient(thief, owner.Name, StealConfig.STUN_SECONDS)
+	log(string.format("%s éjecte %s de son coffre", owner.Name, thief.Name))
+end
+
 -- Ce voleur est-il en train de crocheter le coffre de cette victime ?
 function StealService.isPicking(thief: Player, victim: Player): boolean
 	local pick = activePicks[thief]
@@ -410,6 +489,7 @@ function StealService.init()
 		stealStarted = Remotes.get(Remotes.Names.StealStarted),
 		stealCancelled = Remotes.get(Remotes.Names.StealCancelled),
 		stealSucceeded = Remotes.get(Remotes.Names.StealSucceeded),
+		ejected = Remotes.get(Remotes.Names.Ejected),
 	}
 end
 
@@ -471,6 +551,8 @@ function StealService.start()
 		publishNightAttributes(player)
 	end)
 
+	Remotes.get(Remotes.Names.EjectRequest).OnServerEvent:Connect(onEjectRequest)
+
 	-- Le voleur s'éloigne du coffre pendant le maintien : annulé.
 	local sinceCheck = 0
 	RunService.Heartbeat:Connect(function(deltaTime)
@@ -495,6 +577,8 @@ function StealService.start()
 
 	-- Un joueur part en plein crochetage (voleur ou victime) : on annule, rien n'est transféré.
 	Players.PlayerRemoving:Connect(function(player)
+		lastEjectTime[player] = nil
+		stunToken[player] = nil
 		StealService.cancelPick(player, "départ")
 		for thief, pick in activePicks do
 			if pick.victim == player then

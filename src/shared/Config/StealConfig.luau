@@ -20,6 +20,7 @@ local StealConfig = {
 	-- Éjection
 	EJECT_MAX_DISTANCE = 12, -- studs entre le propriétaire et le voleur
 	STUN_SECONDS = 3,
+	EJECT_COOLDOWN = 0.5, -- secondes minimum entre deux demandes d'éjection
 	EJECT_DESTINATION = Vector3.new(0, 4, 0), -- centre de la carte (place centrale)
 
 	-- Récompense

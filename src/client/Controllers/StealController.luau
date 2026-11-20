@@ -23,6 +23,9 @@ local HudController = require(script.Parent.HudController)
 local TEXT_ALERT = "Un voleur ouvre ton coffre !"
 local TEXT_ARROW_CHEST = "Ton coffre"
 local TEXT_VICTIM_SAFE = "Le voleur est reparti les mains vides"
+local TEXT_THIEF_EJECTED = "Voleur éjecté !"
+local TEXT_EJECT_ACTION = "Éjecter"
+local TEXT_EJECTED = "Éjecté par %s ! Étourdi %d s"
 local TEXT_THIEF_CANCELLED = "Crochetage annulé : %s"
 local TEXT_STOLEN_BY_ME = "Tu as volé :"
 local TEXT_STOLEN_FROM_ME = "On t'a volé :"
@@ -66,6 +69,9 @@ local chests: { ChestView } = {}
 local bannedOwners: { [number]: boolean } = {} -- coffres dont j'ai été éjecté cette nuit
 local alarm: Sound
 local alertThiefId: number? = nil
+local ejectPrompt: ProximityPrompt? = nil
+local ejectRequest: RemoteEvent
+local stunGui: ScreenGui
 local card: Frame
 local cardTitle: TextLabel
 local cardItem: TextLabel
@@ -223,10 +229,42 @@ local function findMyChestPosition(): Vector3?
 	return nil
 end
 
+local function removeEjectPrompt()
+	local prompt = ejectPrompt
+	ejectPrompt = nil
+	if prompt ~= nil then
+		prompt:Destroy()
+	end
+end
+
 local function stopAlert()
 	alertThiefId = nil
 	alarm:Stop()
 	HudController.setArrowTarget(nil)
+	removeEjectPrompt()
+end
+
+-- Prompt "Éjecter" au-dessus du voleur, créé par ce client : la victime est seule à le voir.
+local function showEjectPrompt(thief: Player)
+	removeEjectPrompt()
+	local character = thief.Character
+	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+	if root == nil then
+		return
+	end
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "EjectPrompt"
+	prompt.ActionText = TEXT_EJECT_ACTION
+	prompt.ObjectText = thief.DisplayName
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = StealConfig.EJECT_MAX_DISTANCE
+	prompt.RequiresLineOfSight = false
+	prompt.KeyboardKeyCode = WorldConfig.PROMPT_KEY
+	prompt.Triggered:Connect(function()
+		ejectRequest:FireServer(thief.UserId)
+	end)
+	prompt.Parent = root
+	ejectPrompt = prompt
 end
 
 local function buildCard()
@@ -300,6 +338,10 @@ local function onStealStarted(thiefName: unknown, thiefUserId: unknown)
 		return
 	end
 	alertThiefId = if typeof(thiefUserId) == "number" then thiefUserId else nil
+	local thief = if alertThiefId ~= nil then Players:GetPlayerByUserId(alertThiefId) else nil
+	if thief ~= nil then
+		showEjectPrompt(thief)
+	end
 	HudController.showBanner(TEXT_ALERT, "alert", true)
 	alarm:Play()
 	local chestPosition = findMyChestPosition()
@@ -315,7 +357,10 @@ local function onStealCancelled(reason: unknown, otherName: unknown)
 		if thief ~= nil and thief.Name == otherName then
 			-- Je suis la victime : mon coffre est sauf.
 			stopAlert()
-			HudController.showBanner(TEXT_VICTIM_SAFE, "success")
+			HudController.showBanner(
+				if reasonText == "éjecté" then TEXT_THIEF_EJECTED else TEXT_VICTIM_SAFE,
+				"success"
+			)
 			return
 		end
 	end
@@ -335,6 +380,38 @@ local function onStealSucceeded(itemName: unknown, rarity: unknown, thiefName: u
 	end
 end
 
+-- Éjecté : bannissement local de ce coffre (affichage), voile et message d'étourdissement.
+local function onEjected(ownerName: unknown, stunSeconds: unknown)
+	if typeof(ownerName) ~= "string" or typeof(stunSeconds) ~= "number" then
+		return
+	end
+	local owner = Players:FindFirstChild(ownerName)
+	if owner ~= nil and owner:IsA("Player") then
+		bannedOwners[owner.UserId] = true
+	end
+	HudController.showBanner(string.format(TEXT_EJECTED, ownerName, stunSeconds), "alert", true)
+	stunGui.Enabled = true
+	task.delay(stunSeconds, function()
+		stunGui.Enabled = false
+	end)
+end
+
+local function buildStunOverlay()
+	stunGui = Instance.new("ScreenGui")
+	stunGui.Name = "StunGui"
+	stunGui.ResetOnSpawn = false
+	stunGui.IgnoreGuiInset = true
+	stunGui.DisplayOrder = 3
+	stunGui.Enabled = false
+	local veil = Instance.new("Frame")
+	veil.Size = UDim2.fromScale(1, 1)
+	veil.BackgroundColor3 = UiConfig.STUN_VEIL_COLOR
+	veil.BackgroundTransparency = UiConfig.STUN_VEIL_TRANSPARENCY
+	veil.BorderSizePixel = 0
+	veil.Parent = stunGui
+	stunGui.Parent = player:WaitForChild("PlayerGui")
+end
+
 -- Coffres dont j'ai été éjecté cette nuit (les bannissements sont levés au lever du jour).
 function StealController.markBanned(ownerUserId: number)
 	bannedOwners[ownerUserId] = true
@@ -347,6 +424,8 @@ end
 
 function StealController.init()
 	buildCard()
+	buildStunOverlay()
+	ejectRequest = Remotes.get(Remotes.Names.EjectRequest)
 	alarm = Instance.new("Sound")
 	alarm.Name = "StealAlarm"
 	alarm.SoundId = UiConfig.SOUND_STEAL_ALARM
@@ -367,6 +446,7 @@ function StealController.start()
 	Remotes.get(Remotes.Names.StealStarted).OnClientEvent:Connect(onStealStarted)
 	Remotes.get(Remotes.Names.StealCancelled).OnClientEvent:Connect(onStealCancelled)
 	Remotes.get(Remotes.Names.StealSucceeded).OnClientEvent:Connect(onStealSucceeded)
+	Remotes.get(Remotes.Names.Ejected).OnClientEvent:Connect(onEjected)
 	Remotes.get(Remotes.Names.PhaseChanged).OnClientEvent:Connect(function(phase: unknown)
 		if phase == "Day" then
 			bannedOwners = {}
