@@ -22,6 +22,8 @@ local Remotes = require(Shared.Remotes)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local ChestController = require(script.Parent.ChestController)
 local ShopController = require(script.Parent.ShopController)
+local RetentionController = require(script.Parent.RetentionController)
+local UiKit = require(script.Parent.Parent.UiKit)
 
 local PILL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local PILL_FULL_BACKGROUND = Color3.fromRGB(170, 40, 40)
@@ -43,6 +45,20 @@ local TEXT_AUTO_DIG_OFF = "Auto\nOFF"
 local TEXT_AUTO_DIG_ON = "Auto\nON"
 local TEXT_AUTO_DIG_PAUSED = "Auto\nen pause"
 local TEXT_PROTECTED = "Protégé : %d min"
+local QUESTS_BUTTON_COLOR = Color3.fromRGB(60, 120, 200)
+local INDEX_BUTTON_COLOR = Color3.fromRGB(120, 80, 190)
+local RESERVE_BUTTON_COLOR = Color3.fromRGB(50, 150, 130)
+local NOTIFY_DOT_COLOR = Color3.fromRGB(230, 50, 50)
+local POTION_CHIP_COLOR = Color3.fromRGB(60, 150, 70)
+local EVENT_CHIP_COLOR = Color3.fromRGB(220, 140, 30)
+local SHIELD_CHIP_COLOR = Color3.fromRGB(60, 110, 200)
+local TEXT_QUESTS_BUTTON = "📜\nQuêtes"
+local TEXT_INDEX_BUTTON = "📖\nIndex"
+local TEXT_RESERVE_BUTTON = "🎒\nRéserve"
+local TEXT_POTION_CHIP = "🍀 %s"
+local TEXT_EVENT_CHIP = "⚡ %s"
+local TEXT_SHIELD_CHIP_ACTIVE = "🛡 Actif"
+local TEXT_SHIELD_CHIP_READY = "🛡 Prêt"
 
 local TEXT_DEPTH = "Profondeur : %d m"
 local TEXT_CHEST = "Coffre : %d/%d"
@@ -86,6 +102,12 @@ local protectionPill: Frame
 local autoDigButton: TextButton
 local autoDigToggle: RemoteEvent
 local protectionLabel: TextLabel
+local questsDot: Frame
+local reserveCount: TextLabel
+local boostChips: Frame
+local potionChip: TextLabel
+local eventChip: TextLabel
+local shieldChip: TextLabel
 
 -- 12345 -> "12 345"
 local function formatNumber(value: number): string
@@ -435,6 +457,164 @@ local function buildChestButton(gui: ScreenGui)
 	chestPadding.Parent = chestButton
 end
 
+-- Bouton carré du HUD (même style que Coffre et Boutique).
+local function sideButton(gui: ScreenGui, name: string, text: string, color: Color3, anchor: Vector2, position: UDim2)
+	local size = UiConfig.HUD_CHEST_BUTTON_SIZE
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.AnchorPoint = anchor
+	button.Position = position
+	button.Size = UDim2.fromOffset(size, size)
+	button.BackgroundColor3 = color
+	button.Font = Enum.Font.FredokaOne
+	button.TextScaled = true
+	button.TextColor3 = WHITE
+	button.Text = text
+	button.Parent = gui
+	addCorner(button, 0.25)
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0.12, 0)
+	padding.PaddingBottom = UDim.new(0.12, 0)
+	padding.PaddingLeft = UDim.new(0.06, 0)
+	padding.PaddingRight = UDim.new(0.06, 0)
+	padding.Parent = button
+	return button
+end
+
+-- Quêtes et Index à droite du Coffre (hors du joystick tactile), Réserve à gauche de la Boutique.
+local function buildRetentionButtons(gui: ScreenGui)
+	local size = UiConfig.HUD_CHEST_BUTTON_SIZE
+	local step = size + UiConfig.HUD_SPACING
+	local quests = sideButton(
+		gui,
+		"QuestsButton",
+		TEXT_QUESTS_BUTTON,
+		QUESTS_BUTTON_COLOR,
+		Vector2.new(0, 0.5),
+		UDim2.new(0, UiConfig.HUD_MARGIN + step, 0.45, 0)
+	)
+	quests.Activated:Connect(RetentionController.toggleQuests)
+	-- Pastille rouge : récompense du jour à récupérer
+	questsDot = Instance.new("Frame")
+	questsDot.Name = "Dot"
+	questsDot.AnchorPoint = Vector2.new(0.5, 0.5)
+	questsDot.Position = UDim2.new(1, 0, 0, 0)
+	questsDot.Size = UDim2.fromOffset(UiConfig.HUD_NOTIFY_DOT_SIZE, UiConfig.HUD_NOTIFY_DOT_SIZE)
+	questsDot.BackgroundColor3 = NOTIFY_DOT_COLOR
+	questsDot.Visible = false
+	questsDot.Parent = quests
+	addCorner(questsDot, 0.5)
+
+	local index = sideButton(
+		gui,
+		"IndexButton",
+		TEXT_INDEX_BUTTON,
+		INDEX_BUTTON_COLOR,
+		Vector2.new(0, 0.5),
+		UDim2.new(0, UiConfig.HUD_MARGIN + 2 * step, 0.45, 0)
+	)
+	index.Activated:Connect(RetentionController.toggleIndex)
+
+	local reserve = sideButton(
+		gui,
+		"ReserveButton",
+		TEXT_RESERVE_BUTTON,
+		RESERVE_BUTTON_COLOR,
+		Vector2.new(1, 0.5),
+		UDim2.new(1, -(UiConfig.HUD_MARGIN + UiConfig.HUD_SHOP_BUTTON_SIZE + UiConfig.HUD_SPACING), 0.45, 0)
+	)
+	reserve.Activated:Connect(RetentionController.toggleReserve)
+	-- Nombre de bonus en réserve
+	reserveCount = Instance.new("TextLabel")
+	reserveCount.Name = "Count"
+	reserveCount.AnchorPoint = Vector2.new(0.5, 0.5)
+	reserveCount.Position = UDim2.new(1, 0, 0, 0)
+	reserveCount.Size = UDim2.fromOffset(UiConfig.HUD_COUNT_BADGE_SIZE, UiConfig.HUD_COUNT_BADGE_SIZE)
+	reserveCount.BackgroundColor3 = NOTIFY_DOT_COLOR
+	reserveCount.Font = Enum.Font.FredokaOne
+	reserveCount.TextScaled = true
+	reserveCount.TextColor3 = WHITE
+	reserveCount.Visible = false
+	reserveCount.Parent = reserve
+	addCorner(reserveCount, 0.5)
+end
+
+-- Indicateurs des bonus actifs (potion, événement, bouclier), sous le minuteur jour/nuit.
+local function chip(name: string, color: Color3, order: number): TextLabel
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.LayoutOrder = order
+	label.Size = UDim2.fromOffset(UiConfig.BOOST_CHIP_SIZE.X, UiConfig.BOOST_CHIP_SIZE.Y)
+	label.BackgroundColor3 = color
+	label.Font = Enum.Font.FredokaOne
+	label.TextScaled = true
+	label.TextColor3 = WHITE
+	label.Visible = false
+	label.Parent = boostChips
+	addCorner(label, 0.5)
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0.15, 0)
+	padding.PaddingBottom = UDim.new(0.15, 0)
+	padding.PaddingLeft = UDim.new(0.08, 0)
+	padding.PaddingRight = UDim.new(0.08, 0)
+	padding.Parent = label
+	return label
+end
+
+local function buildBoostChips(gui: ScreenGui)
+	boostChips = Instance.new("Frame")
+	boostChips.Name = "BoostChips"
+	boostChips.BackgroundTransparency = 1
+	boostChips.Size = UDim2.fromOffset(3 * (UiConfig.BOOST_CHIP_SIZE.X + 4), UiConfig.BOOST_CHIP_SIZE.Y)
+	boostChips.Parent = gui
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 4)
+	layout.Parent = boostChips
+	potionChip = chip("Potion", POTION_CHIP_COLOR, 1)
+	eventChip = chip("Event", EVENT_CHIP_COLOR, 2)
+	shieldChip = chip("Shield", SHIELD_CHIP_COLOR, 3)
+end
+
+local function updateBoostChips()
+	local now = Workspace:GetServerTimeNow()
+	local luckUntil = player:GetAttribute("LuckUntil")
+	local potionLeft = if typeof(luckUntil) == "number" then luckUntil - now else 0
+	potionChip.Visible = potionLeft > 0
+	if potionLeft > 0 then
+		potionChip.Text = string.format(TEXT_POTION_CHIP, UiKit.formatDuration(potionLeft))
+	end
+	local eventEndsAt = ReplicatedStorage:GetAttribute("LuckEventEndsAt")
+	local eventLeft = if typeof(eventEndsAt) == "number" then eventEndsAt - now else 0
+	eventChip.Visible = eventLeft > 0
+	if eventLeft > 0 then
+		eventChip.Text = string.format(TEXT_EVENT_CHIP, UiKit.formatDuration(eventLeft))
+	end
+	local shieldActive = player:GetAttribute("ShieldTonight") == true
+	shieldChip.Visible = shieldActive or player:GetAttribute("ShieldPlanned") == true
+	shieldChip.Text = if shieldActive then TEXT_SHIELD_CHIP_ACTIVE else TEXT_SHIELD_CHIP_READY
+	-- Sous le minuteur, et sous la protection débutant quand elle est affichée.
+	local timer = UiConfig.DAY_NIGHT_TIMER_SIZE
+	local top = UiConfig.HUD_TOP_MARGIN + timer.Y + UiConfig.HUD_SPACING
+	if protectionPill.Visible then
+		top += timer.Y + UiConfig.HUD_SPACING
+	end
+	boostChips.Position = UDim2.fromOffset(UiConfig.HUD_MARGIN, top)
+end
+
+local function readNumberAttributeEarly(name: string): number
+	local value = player:GetAttribute(name)
+	return if typeof(value) == "number" then value else 0
+end
+
+local function refreshRetention()
+	questsDot.Visible = player:GetAttribute("DailyAvailable") == true
+	local total = readNumberAttributeEarly("ReserveLuckPotion") + readNumberAttributeEarly("ReserveShield")
+	reserveCount.Visible = total > 0
+	reserveCount.Text = tostring(total)
+end
+
 local function buildUi()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "HudGui"
@@ -448,6 +628,8 @@ local function buildUi()
 	buildChestButton(gui)
 	buildAutoDigButton(gui)
 	buildShopButton(gui)
+	buildRetentionButtons(gui)
+	buildBoostChips(gui)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 
@@ -641,6 +823,19 @@ function HudController.start()
 
 	RunService.RenderStepped:Connect(updateMerchantArrow)
 	RunService.RenderStepped:Connect(updateProtection)
+	RetentionController.setBannerHandler(function(text: string)
+		showBanner(text, BANNER_SUCCESS, UiConfig.BANNER_LONG_TIME)
+	end)
+	for _, name in { "DailyAvailable", "ReserveLuckPotion", "ReserveShield" } do
+		player:GetAttributeChangedSignal(name):Connect(refreshRetention)
+	end
+	refreshRetention()
+	task.spawn(function()
+		while true do
+			updateBoostChips()
+			task.wait(UiConfig.BOOST_REFRESH_INTERVAL)
+		end
+	end)
 	for _, name in { "OwnedPasses", "AutoDig", "AutoDigPaused" } do
 		player:GetAttributeChangedSignal(name):Connect(refreshAutoDig)
 	end

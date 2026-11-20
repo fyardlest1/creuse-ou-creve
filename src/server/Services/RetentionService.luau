@@ -332,7 +332,7 @@ pushState = function(player: Player)
 			done = quest.claimed,
 		})
 	end
-	remotes.state:FireClient(player, {
+	local payload: Types.RetentionStatePayload = {
 		daily = {
 			available = RetentionService.isDailyAvailable(data),
 			nextDay = RetentionService.nextCalendarDay(data),
@@ -343,7 +343,8 @@ pushState = function(player: Player)
 		index = data.index,
 		indexRewards = data.indexRewards,
 		title = data.title,
-	})
+	}
+	remotes.state:FireClient(player, payload)
 	player:SetAttribute("DailyAvailable", RetentionService.isDailyAvailable(data))
 end
 

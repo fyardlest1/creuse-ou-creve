@@ -21,6 +21,7 @@ local orderedControllers: { [number]: { name: string, module: Controller } } = {
 	{ name = "StealController", module = require(Controllers:WaitForChild("StealController")) :: any },
 	{ name = "VipController", module = require(Controllers:WaitForChild("VipController")) :: any },
 	{ name = "ShopController", module = require(Controllers:WaitForChild("ShopController")) :: any },
+	{ name = "RetentionController", module = require(Controllers:WaitForChild("RetentionController")) :: any },
 }
 
 for _, entry in orderedControllers do

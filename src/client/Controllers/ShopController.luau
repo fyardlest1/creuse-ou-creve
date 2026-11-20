@@ -10,9 +10,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
-local Rarities = require(Shared.Config.Rarities)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local UiKit = require(script.Parent.Parent.UiKit)
 
 type Tab = "Passes" | "Bonus"
 
@@ -36,9 +36,6 @@ local TEXT_PRICE = "%d R$"
 local TEXT_BUY = "Acheter"
 local TEXT_OWNED = "Possédé"
 local TEXT_LOADING = "..."
-local TEXT_ODDS_TITLE = "Chances de trouver chaque rareté"
-local TEXT_ODDS_HEADER = "Sans bonus  •  Avec tes bonus (x%s)"
-local TEXT_ODDS_ROW = "%s : %s %%  •  %s %%"
 
 local player = Players.LocalPlayer
 
@@ -97,33 +94,6 @@ local function isRestricted(): boolean
 	return player:GetAttribute("PaidRandomItemsRestricted") == true
 end
 
--- Probabilités affichées : poids des raretés boostées multipliés, puis renormalisés (même règle que le serveur).
-local function oddsFor(multiplier: number): { [string]: number }
-	local total = 0
-	local weights: { [string]: number } = {}
-	for _, rarity in Rarities.list do
-		local weight = if rarity.isLuckBoosted then rarity.chance * multiplier else rarity.chance
-		weights[rarity.id] = weight
-		total += weight
-	end
-	local odds: { [string]: number } = {}
-	for id, weight in weights do
-		odds[id] = weight / total * 100
-	end
-	return odds
-end
-
-local function formatPercent(value: number): string
-	local text = if value >= 1 then string.format("%.1f", value) else string.format("%.2f", value)
-	return (text:gsub("%.", ","))
-end
-
--- Multiplicateur affiché : jusqu'à 2 décimales, sans zéros inutiles (x1,05 ; x2,1 ; x10).
-local function formatMultiplier(value: number): string
-	local text = string.format("%.2f", value):gsub("0+$", ""):gsub("%.$", "")
-	return (text:gsub("%.", ","))
-end
-
 local function createCard(def: any, order: number)
 	local card = Instance.new("Frame")
 	card.Name = def.key
@@ -180,51 +150,6 @@ local function createCard(def: any, order: number)
 	end
 end
 
-local function createOdds(order: number)
-	local multiplier = player:GetAttribute("LuckMultiplier")
-	local luck = if typeof(multiplier) == "number" then multiplier else 1
-	local base, boosted = oddsFor(1), oddsFor(luck)
-
-	local block = Instance.new("Frame")
-	block.Name = "Odds"
-	block.LayoutOrder = order
-	block.Size = UDim2.new(1, -12, 0, UiConfig.SHOP_ODDS_HEIGHT)
-	block.BackgroundColor3 = CARD_BACKGROUND
-	block.Parent = list
-	addCorner(block, 0.06)
-	addPadding(block, 8, 12)
-
-	local layout = Instance.new("UIListLayout")
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = block
-
-	local lineHeight = UiConfig.SHOP_ODDS_LINE_HEIGHT
-	local title = createLabel("Title", TEXT_ODDS_TITLE, block)
-	title.Size = UDim2.new(1, 0, 0, lineHeight)
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	local header = createLabel("Header", string.format(TEXT_ODDS_HEADER, formatMultiplier(luck)), block)
-	header.LayoutOrder = 1
-	header.Size = UDim2.new(1, 0, 0, lineHeight)
-	header.TextXAlignment = Enum.TextXAlignment.Left
-	header.TextColor3 = MUTED_TEXT
-	for index, rarity in Rarities.list do
-		local row = createLabel(
-			rarity.id,
-			string.format(
-				TEXT_ODDS_ROW,
-				rarity.displayName,
-				formatPercent(base[rarity.id]),
-				formatPercent(boosted[rarity.id])
-			),
-			block
-		)
-		row.LayoutOrder = index + 1
-		row.Size = UDim2.new(1, 0, 0, lineHeight)
-		row.TextXAlignment = Enum.TextXAlignment.Left
-		row.TextColor3 = rarity.color
-	end
-end
-
 local function render()
 	if gui == nil or not gui.Enabled then
 		return
@@ -247,7 +172,7 @@ local function render()
 		end
 	end
 	if currentTab == "Bonus" then
-		createOdds(order + 1)
+		UiKit.oddsBlock(list, order + 1)
 	end
 end
 

@@ -78,6 +78,8 @@ local function publish(player: Player)
 	player:SetAttribute("LuckUntil", data.effects.luckUntil)
 	player:SetAttribute("ShieldNightId", data.effects.shieldNightId)
 	player:SetAttribute("ShieldTonight", BoostService.isShieldActive(player))
+	-- Bouclier déjà prévu pour la nuit en cours ou la prochaine : la Réserve ne propose pas d'en activer un autre.
+	player:SetAttribute("ShieldPlanned", not BoostService.canActivateShield(player))
 	player:SetAttribute("LuckMultiplier", BoostService.getLuckMultiplier(player))
 end
 

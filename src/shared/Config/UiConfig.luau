@@ -86,6 +86,23 @@ local UiConfig = {
 	SHOP_REFRESH_INTERVAL = 2, -- secondes entre deux mises à jour de l'état pendant que la boutique est ouverte
 	HUD_SHOP_BUTTON_SIZE = 64, -- pixels
 
+	-- Rétention : fenêtres Aujourd'hui (calendrier, quêtes), Index et Réserve
+	RETENTION_PANEL_MAX_SIZE = Vector2.new(760, 560), -- pixels
+	RETENTION_SECTION_HEIGHT = 26, -- pixels : titres de section, ligne de progression
+	RETENTION_SMALL_TEXT = 16, -- taille de texte maximale des cases (calendrier, paliers, Index)
+	DAILY_CELL_HEIGHT = 74, -- pixels : cases du calendrier de 7 jours
+	QUEST_ROW_HEIGHT = 62, -- pixels
+	INDEX_TIERS_HEIGHT = 48, -- pixels : ligne des paliers 25/50/75/100 %
+	INDEX_CELL_SIZE = Vector2.new(112, 72), -- pixels : case d'un objet de l'Index
+	INDEX_MUTATION_DOT = 10, -- pixels : pastille d'une mutation trouvée
+	RESERVE_PANEL_MAX_SIZE = Vector2.new(520, 300), -- pixels
+	RESERVE_PANEL_SCALE = Vector2.new(0.8, 0.9), -- fraction de l'écran
+	RESERVE_ROW_HEIGHT = 76, -- pixels
+	HUD_NOTIFY_DOT_SIZE = 16, -- pixels : pastille rouge sur le bouton Quêtes
+	HUD_COUNT_BADGE_SIZE = 22, -- pixels : nombre de bonus sur le bouton Réserve
+	BOOST_CHIP_SIZE = Vector2.new(86, 28), -- pixels : indicateur de bonus actif, sous le minuteur
+	BOOST_REFRESH_INTERVAL = 0.25, -- secondes entre deux mises à jour des minuteurs de bonus
+
 	-- Vente au Marchand
 	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance
 	SELL_COIN_COUNT = 8, -- pièces animées après une vente

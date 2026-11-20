@@ -94,6 +94,15 @@ export type Boosts = { luckPotion: number, shield: number }
 -- Effets actifs : fin de la potion (os.time()), numéro de la nuit protégée par un Bouclier.
 export type Effects = { luckUntil: number, shieldNightId: number }
 
+export type RetentionStatePayload = {
+	daily: { available: boolean, nextDay: number, lastDay: number },
+	quests: { { text: string, progress: number, target: number, reward: number, done: boolean } },
+	questsBonusClaimed: boolean,
+	index: { [string]: { [string]: boolean } },
+	indexRewards: { [string]: boolean },
+	title: string?,
+}
+
 export type DailyState = { lastClaimDay: number, calendarDay: number, firstSeenDay: number }
 
 export type QuestState = { id: string, target: number, progress: number, claimed: boolean, reward: number }
