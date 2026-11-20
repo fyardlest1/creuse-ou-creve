@@ -34,6 +34,7 @@ local TEMPLATE: Types.PlayerData = {
 		totalCoinsEarned = 0,
 		itemsSold = 0,
 	},
+	digHintDone = false,
 }
 
 local PlayerDataService = {}
@@ -105,6 +106,10 @@ local function onPlayerAdded(player: Player)
 	profile:AddUserId(player.UserId)
 	local fromVersion = PlayerDataService.migrate(profile.Data)
 	profile:Reconcile()
+	-- Profils existants : qui a déjà trouvé assez d'objets n'a plus besoin de l'indice.
+	if profile.Data.stats.totalDigs >= PlayerConfig.DIG_HINT_ITEM_COUNT then
+		profile.Data.digHintDone = true
+	end
 	if fromVersion < PlayerConfig.DATA_VERSION then
 		log(string.format("Migration v%d -> v%d pour %s", fromVersion, PlayerConfig.DATA_VERSION, player.Name))
 	end
@@ -197,6 +202,7 @@ function PlayerDataService.refreshAttributes(player: Player)
 	player:SetAttribute("EquippedShovel", data.equippedShovel)
 	player:SetAttribute("OwnedShovels", table.concat(data.ownedShovels, ","))
 	player:SetAttribute("InventoryCount", #data.inventory)
+	player:SetAttribute("ShowDigHint", not data.digHintDone)
 end
 
 -- Appelle le callback pour chaque joueur dont le profil est chargé (y compris ceux déjà chargés).

@@ -25,6 +25,19 @@ local UiConfig = {
 	SWING_STRIKE_TIME = 0.06, -- l'impact (particules, son) arrive à la fin de la frappe
 	SWING_RECOVER_TIME = 0.1,
 
+	-- Prise en main du creusage
+	DIG_HOLD_MARGIN = 0.03, -- secondes ajoutées à DIG_COOLDOWN entre deux coups enchaînés (appui maintenu)
+	DIG_HIGHLIGHT_COLOR = Color3.fromRGB(255, 230, 120), -- surbrillance de la case visée
+	DIG_HIGHLIGHT_THICKNESS = 0.08, -- studs
+	DIG_HIGHLIGHT_SURFACE_TRANSPARENCY = 0.75,
+
+	-- Indice de premier lancement
+	DIG_HINT_LABEL_Y = 0.8, -- bas du texte, fraction de l'écran (au-dessus des commandes mobiles)
+	DIG_HINT_HAND_SIZE = 64, -- pixels
+	DIG_HINT_BOB_TIME = 0.5, -- secondes pour une descente de la main
+	DIG_HINT_BOB_DISTANCE = 0.3, -- fraction de la taille de la main
+	DIG_HINT_RETARGET_INTERVAL = 0.5, -- secondes entre deux choix de case
+
 	-- Retour local du coup de pelle
 	CELL_SHAKE_DEPTH = 0.25, -- studs
 	CELL_SHAKE_TIME = 0.08,

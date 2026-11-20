@@ -1,10 +1,14 @@
 --!strict
 -- Clic ou toucher sur une case de sa parcelle : envoie l'intention au serveur
 -- et joue tout de suite un petit retour local (secousse, terre, son).
+-- Maintenir l'appui enchaîne les coups à la cadence du serveur, en suivant le curseur.
+-- La case visée (intacte, sur sa parcelle, à portée) est mise en surbrillance.
 
 local Debris = game:GetService("Debris")
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -31,6 +35,10 @@ local plotOrigin: CFrame? = nil
 local lastRequestTime = -math.huge
 local restCFrames: { [BasePart]: CFrame } = {}
 local hitSound: Sound
+local highlight: SelectionBox
+-- Appui en cours (souris ou doigt) et position du curseur, en coordonnées d'écran (hors barre Roblox).
+local holdInput: InputObject? = nil
+local holdPosition = Vector2.zero
 
 local function findOwnedPlot(): Model?
 	local folder = Workspace:FindFirstChild("Plots")
@@ -131,43 +139,87 @@ local function shakeCell(cell: BasePart)
 	):Play()
 end
 
-local function tryDig(screenPosition: Vector2)
-	local now = os.clock()
-	if now - lastRequestTime < PlotConfig.DIG_COOLDOWN then
-		return
-	end
-
+-- Case creusable sous ce point de l'écran : sur ma parcelle, intacte et à portée. Retourne aussi son index.
+local function getDiggableCell(screenPosition: Vector2): (BasePart?, number)
 	local cell = getTargetCell(screenPosition)
 	if cell == nil then
-		return
+		return nil, 0
 	end
 	local hitsLeft = cell:GetAttribute("HitsLeft")
 	local cellIndex = cell:GetAttribute("CellIndex")
 	if typeof(hitsLeft) ~= "number" or hitsLeft <= 0 or typeof(cellIndex) ~= "number" then
-		return
+		return nil, 0
 	end
 	local position = getCharacterPosition()
 	if position == nil or (position - cell.Position).Magnitude > PlotConfig.MAX_DIG_DISTANCE then
+		return nil, 0
+	end
+	return cell, cellIndex
+end
+
+local function isChestFull(): boolean
+	local inventoryCount = player:GetAttribute("InventoryCount")
+	return typeof(inventoryCount) == "number" and inventoryCount >= PlayerConfig.INVENTORY_LIMIT
+end
+
+-- Un coup sur la case visée. Les coups enchaînés par l'appui gardent une petite marge sur la cadence
+-- du serveur, pour qu'un décalage réseau ne fasse pas refuser un coup sur deux.
+local function tryDig(screenPosition: Vector2, isRepeat: boolean)
+	local now = os.clock()
+	local interval = if isRepeat then PlotConfig.DIG_COOLDOWN + UiConfig.DIG_HOLD_MARGIN else PlotConfig.DIG_COOLDOWN
+	if now - lastRequestTime < interval then
+		return
+	end
+
+	local cell, cellIndex = getDiggableCell(screenPosition)
+	if cell == nil then
 		return
 	end
 
 	lastRequestTime = now
 	digRequest:FireServer(cellIndex)
 
-	-- Inventaire plein : le serveur refusera le coup et affichera le bandeau, pas d'effet de creusage.
-	local inventoryCount = player:GetAttribute("InventoryCount")
-	if typeof(inventoryCount) == "number" and inventoryCount >= PlayerConfig.INVENTORY_LIMIT then
+	-- Coffre plein : le serveur refusera le coup et affichera le bandeau. Un seul essai par appui.
+	if isChestFull() then
+		holdInput = nil
 		return
 	end
+	local target: BasePart = cell
 
 	-- Le geste part tout de suite ; terre, secousse et son arrivent quand la lame touche la case.
 	ShovelController.swingLocal(function()
-		if cell.Parent ~= nil then
-			shakeCell(cell)
-			emitDirt(cell, UiConfig.DIRT_PARTICLES_PER_HIT)
+		if target.Parent ~= nil then
+			shakeCell(target)
+			emitDirt(target, UiConfig.DIRT_PARTICLES_PER_HIT)
 		end
 		hitSound:Play()
 	end)
+end
+
+-- Position de la souris en coordonnées d'écran (GetMouseLocation inclut la barre Roblox).
+local function getMouseScreenPosition(): Vector2
+	local inset = GuiService:GetGuiInset()
+	return UserInputService:GetMouseLocation() - inset
+end
+
+local function isPointerInput(input: InputObject): boolean
+	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+end
+
+-- Chaque image : surbrillance de la case visée, et coups enchaînés tant que l'appui dure.
+local function onRenderStep()
+	local aimPosition: Vector2? = nil
+	if holdInput ~= nil then
+		aimPosition = holdPosition
+	elseif UserInputService.MouseEnabled then
+		aimPosition = getMouseScreenPosition()
+	end
+	local cell = if aimPosition ~= nil then getDiggableCell(aimPosition) else nil
+	highlight.Adornee = cell
+
+	if holdInput ~= nil then
+		tryDig(holdPosition, true)
+	end
 end
 
 -- Place la caméra derrière le personnage, tournée vers sa parcelle, une fois la téléportation arrivée.
@@ -217,6 +269,15 @@ function DigController.init()
 	hitSound.SoundId = UiConfig.SOUND_DIG_HIT
 	hitSound.Volume = UiConfig.VOLUME_DIG_HIT
 	hitSound.Parent = SoundService
+
+	-- Sous la caméra : visible uniquement par ce joueur.
+	highlight = Instance.new("SelectionBox")
+	highlight.Name = "DigHighlight"
+	highlight.Color3 = UiConfig.DIG_HIGHLIGHT_COLOR
+	highlight.LineThickness = UiConfig.DIG_HIGHLIGHT_THICKNESS
+	highlight.SurfaceColor3 = UiConfig.DIG_HIGHLIGHT_COLOR
+	highlight.SurfaceTransparency = UiConfig.DIG_HIGHLIGHT_SURFACE_TRANSPARENCY
+	highlight.Parent = Workspace.CurrentCamera
 end
 
 function DigController.start()
@@ -240,20 +301,41 @@ function DigController.start()
 	end)
 	cellHit.OnClientEvent:Connect(onCellHit)
 
+	-- Appui (souris ou doigt) hors de l'interface : premier coup tout de suite, puis enchaînement.
 	UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
-		if gameProcessed or input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+		if gameProcessed or not isPointerInput(input) or holdInput ~= nil then
 			return
 		end
-		tryDig(Vector2.new(input.Position.X, input.Position.Y))
+		holdInput = input
+		holdPosition = Vector2.new(input.Position.X, input.Position.Y)
+		tryDig(holdPosition, false)
 	end)
 
-	-- Sur mobile : un tapotement dans le monde (pas un glissement de caméra).
-	UserInputService.TouchTapInWorld:Connect(function(position: Vector2, processedByUI: boolean)
-		if processedByUI then
+	-- Le curseur bouge pendant l'appui : on continue sur la nouvelle case.
+	UserInputService.InputChanged:Connect(function(input: InputObject)
+		local held = holdInput
+		if held == nil then
 			return
 		end
-		tryDig(position)
+		local mouseMove = input.UserInputType == Enum.UserInputType.MouseMovement
+			and held.UserInputType == Enum.UserInputType.MouseButton1
+		if input == held or mouseMove then
+			holdPosition = Vector2.new(input.Position.X, input.Position.Y)
+		end
 	end)
+
+	UserInputService.InputEnded:Connect(function(input: InputObject)
+		if input == holdInput then
+			holdInput = nil
+		end
+	end)
+
+	-- La fenêtre perd le focus : le relâchement ne nous parviendra pas, on arrête l'appui.
+	UserInputService.WindowFocusReleased:Connect(function()
+		holdInput = nil
+	end)
+
+	RunService.RenderStepped:Connect(onRenderStep)
 end
 
 return DigController

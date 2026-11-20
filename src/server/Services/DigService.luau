@@ -108,6 +108,11 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 	remotes.cellHit:FireClient(player, index, 0)
 	data.stats.totalDigs += 1
 	data.stats.foundByRarity[item.rarity] = (data.stats.foundByRarity[item.rarity] or 0) + 1
+	-- Indice de premier lancement : il disparaît pour toujours après les premiers objets trouvés.
+	if not data.digHintDone and data.stats.totalDigs >= PlayerConfig.DIG_HINT_ITEM_COUNT then
+		data.digHintDone = true
+		PlayerDataService.refreshAttributes(player)
+	end
 	local payload: Types.RevealPayload = {
 		itemId = item.itemId,
 		name = Items.byId[item.itemId].name,

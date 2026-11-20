@@ -91,6 +91,7 @@ export type PlayerData = {
 	ownedShovels: { ShovelId },
 	equippedShovel: ShovelId,
 	stats: PlayerStats,
+	digHintDone: boolean, -- l'indice "Clique sur une case pour creuser" ne s'affiche plus
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).

@@ -206,3 +206,13 @@ Oubli du plan initial : aucune pelle n'était visible dans la main du personnage
 | Semaine 5 (polish) | On remplacera la pelle en Parts par un vrai modèle 3D, et le geste par une animation faite dans l'éditeur d'animation. |
 
 Note technique : les avatars utilisent les nouvelles articulations (`AnimationConstraint`, pas `Motor6D`). Le geste s'applique donc en ajoutant une rotation au `Transform` de l'épaule à chaque image, après l'Animator (`RunService.PreSimulation`). Cela fonctionne avec les deux types d'articulation et se combine aux animations de marche.
+
+## 12. Ajout en cours de semaine : la prise en main du creusage
+
+| Sujet | Décision |
+|---|---|
+| Surbrillance | La case visée est mise en surbrillance (`SelectionBox` locale, visible seulement par le joueur), uniquement sur sa propre parcelle et pour les cases encore intactes. Elle ne s'affiche que pour une case à portée de creusage, pour qu'un clic sur une case en surbrillance creuse toujours. Sur PC, elle suit la souris ; sur mobile, elle suit le doigt pendant l'appui. |
+| Appui maintenu | Maintenir le bouton de la souris ou le doigt sur une case enchaîne les coups au rythme de la cadence serveur (0,2 s), plus une petite marge (`DIG_HOLD_MARGIN`, 0,03 s) pour que la gigue réseau ne fasse pas refuser un coup sur deux. Si le curseur passe sur une autre case pendant l'appui, on continue sur la nouvelle case. Coffre plein : un seul essai par appui, pour ne pas répéter le bandeau. |
+| Indice de premier lancement | « Clique sur une case pour creuser » sur PC, « Touche une case pour creuser » sur mobile, avec une main animée qui pointe une case intacte près du centre de la parcelle (le bord avant est caché par le panneau de la parcelle). Il disparaît après les 3 premiers objets trouvés (`PlayerConfig.DIG_HINT_ITEM_COUNT`) et ne revient plus : champ `digHintDone` du profil. Les profils existants qui ont déjà trouvé 3 objets ou plus sont marqués au chargement. |
+
+Note technique : la main de l'indice est dessinée dans l'interface 2D et replacée à chaque image au-dessus de la case (projection à l'écran), car les `BillboardGui` avec `AlwaysOnTop` ne s'affichaient pas dans la place.
