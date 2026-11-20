@@ -31,6 +31,7 @@ local serverEventEndsAt = 0
 local groupMembers: { [Player]: boolean } = {}
 local lastUse: { [Player]: number } = {}
 local eventStartedRemote: RemoteEvent
+local addVipTag: (character: Model?) -> ()
 
 local function log(message: string)
 	print("[BoostService] " .. message)
@@ -177,6 +178,30 @@ local function onUseBoost(player: Player, kind: unknown)
 	end
 end
 
+-- Étiquette VIP dorée au-dessus du personnage (créée par le serveur : visible par tous).
+addVipTag = function(character: Model?)
+	local head = if character ~= nil then character:WaitForChild("Head", 5) else nil
+	if head == nil or head:FindFirstChild("VipTag") ~= nil then
+		return
+	end
+	local tag = Instance.new("BillboardGui")
+	tag.Name = "VipTag"
+	tag.Size = UDim2.fromOffset(MonetizationConfig.VIP_TAG_SIZE.X, MonetizationConfig.VIP_TAG_SIZE.Y)
+	tag.StudsOffset = Vector3.new(0, MonetizationConfig.VIP_TAG_HEIGHT, 0)
+	tag.MaxDistance = MonetizationConfig.VIP_TAG_MAX_DISTANCE
+	tag.Adornee = head
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.FredokaOne
+	label.TextScaled = true
+	label.Text = MonetizationConfig.VIP_TAG_TEXT
+	label.TextColor3 = MonetizationConfig.VIP_TAG_COLOR
+	label.TextStrokeTransparency = 0.2
+	label.Parent = tag
+	tag.Parent = head
+end
+
 local function checkGroup(player: Player)
 	if MonetizationConfig.GROUP_ID == 0 then
 		return
@@ -203,6 +228,10 @@ function BoostService.start()
 	PurchaseService.onPassOwned(function(player: Player, key)
 		if key == "BiggerChest" then
 			PlayerDataService.setInventoryLimit(player, MonetizationConfig.BIGGER_CHEST_LIMIT)
+		elseif key == "VIP" then
+			player:SetAttribute("VIP", true) -- lu par les clients pour l'étiquette du chat
+			addVipTag(player.Character)
+			player.CharacterAdded:Connect(addVipTag)
 		end
 		publish(player)
 	end)

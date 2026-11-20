@@ -15,6 +15,7 @@ local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local WorldService = require(script.Parent.WorldService)
+local PurchaseService = require(script.Parent.PurchaseService)
 
 local LEADERSTATS_NAME = "leaderstats" -- nom imposé par Roblox
 local SKU_SELL_ALL = "SellAll"
@@ -231,6 +232,10 @@ local function onSellRequest(player: Player, payload: unknown)
 	if not sellAll and next(wanted) ~= nil then
 		reject(player, "uid absent du coffre " .. tostring(next(wanted)))
 		return
+	end
+	-- Pass VIP : +10 % de Pièces sur toutes les ventes.
+	if PurchaseService.ownsPass(player, "VIP") then
+		total = math.round(total * (1 + MonetizationConfig.VIP_SELL_BONUS))
 	end
 
 	if soldCount > 0 then

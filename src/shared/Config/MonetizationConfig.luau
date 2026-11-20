@@ -180,6 +180,10 @@ local MonetizationConfig = {
 	VIP_SELL_BONUS = 0.10, -- +10 % de Pièces à la vente
 	VIP_TAG_TEXT = "VIP",
 	VIP_TAG_COLOR = Color3.fromRGB(255, 200, 40),
+	VIP_TAG_COLOR_HEX = "#FFC828", -- même couleur, pour la balise du chat
+	VIP_TAG_SIZE = Vector2.new(90, 34), -- pixels
+	VIP_TAG_HEIGHT = 2.6, -- studs au-dessus de la tête
+	VIP_TAG_MAX_DISTANCE = 80, -- studs
 	BODYGUARD_PICK_DURATION = 8, -- secondes de crochetage au lieu de 5
 
 	-- Effets des developer products
