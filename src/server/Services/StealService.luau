@@ -5,6 +5,7 @@
 -- Le cœur des règles (NightState, transferItem) est pur : il travaille sur des identifiants et des
 -- listes d'objets, sans vrais joueurs, pour être testé par Tests/StealRules.luau.
 
+local AnalyticsService = game:GetService("AnalyticsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -231,6 +232,17 @@ local function log(message: string)
 	print("[StealService] " .. message)
 end
 
+-- L'analytique ne doit jamais bloquer le vol.
+local function logEvent(player: Player, eventName: string, value: number?, reason: string?)
+	local ok, err = pcall(function()
+		local fields = if reason ~= nil then { [Enum.AnalyticsCustomFieldKeys.CustomField01.Name] = reason } else nil
+		AnalyticsService:LogCustomEvent(player, eventName, value or 1, fields)
+	end)
+	if not ok then
+		warn("[StealService] Analytique en échec : " .. tostring(err))
+	end
+end
+
 local function reject(thief: Player, reason: string)
 	if IS_STUDIO then
 		log(string.format("Refusé (%s) : %s", thief.Name, reason))
@@ -317,6 +329,7 @@ function StealService.beginPick(thief: Player, victim: Player): boolean
 		thiefData.stats.stealsAttempted += 1
 	end
 	remotes.stealStarted:FireClient(victim, thief.Name, thief.UserId)
+	logEvent(thief, StealConfig.ANALYTICS_EVENTS.Attempt)
 	log(string.format("%s commence à crocheter le coffre de %s", thief.Name, victim.Name))
 	return true
 end
@@ -329,6 +342,9 @@ function StealService.cancelPick(thief: Player, reason: string)
 	end
 	activePicks[thief] = nil
 	setBeingPicked(pick.victim)
+	if thief.Parent == Players then
+		logEvent(thief, StealConfig.ANALYTICS_EVENTS.Cancel, 1, reason)
+	end
 	if pick.victim.Parent == Players then
 		remotes.stealCancelled:FireClient(pick.victim, reason, thief.Name)
 	end
@@ -384,6 +400,7 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 	for _, player in { thief, victim } do
 		remotes.stealSucceeded:FireClient(player, name, item.rarity, thief.Name, victim.Name)
 	end
+	logEvent(thief, StealConfig.ANALYTICS_EVENTS.Success, item.value, item.rarity)
 	log(string.format("%s a volé %s (%s) à %s", thief.Name, name, item.rarity, victim.Name))
 	return item
 end
@@ -467,6 +484,7 @@ local function onEjectRequest(owner: Player, thiefUserId: unknown)
 		ownerData.stats.ejections += 1
 	end
 	remotes.ejected:FireClient(thief, owner.Name, StealConfig.STUN_SECONDS)
+	logEvent(owner, StealConfig.ANALYTICS_EVENTS.Ejection)
 	log(string.format("%s éjecte %s de son coffre", owner.Name, thief.Name))
 end
 

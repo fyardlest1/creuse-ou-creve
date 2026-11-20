@@ -26,6 +26,14 @@ local StealConfig = {
 	-- Récompense
 	THIEF_POINTS_PER_STEAL = 1,
 
+	-- Analytique (AnalyticsService:LogCustomEvent)
+	ANALYTICS_EVENTS = table.freeze({
+		Attempt = "StealAttempt", -- le voleur commence à crocheter
+		Success = "StealSuccess", -- valeur : valeur de l'objet volé
+		Cancel = "StealCancel", -- champ : raison
+		Ejection = "StealEjection", -- journalisé pour le propriétaire qui éjecte
+	}),
+
 	-- Temps de jeu compté pour la protection
 	PLAYTIME_TICK = 1, -- secondes entre deux incréments de playTime
 }

@@ -138,6 +138,8 @@ src/client/Controllers/StealController.luau
 
 Avant le test, réduis la protection débutant à 0 et la durée du jour à 1 minute **dans la config Studio seulement**, puis remets les vraies valeurs.
 
+> **Mode de test préparé :** `src/shared/Config/StudioTestMode.luau`. Passe `ENABLED` à `true` (jour de 1 minute, protection à 0), lance le test, puis remets `false` avant de commiter. Les valeurs de test ne s'appliquent que si `RunService:IsStudio()` est vrai : sur un serveur en ligne, ce mode est ignoré même si `ENABLED` reste à `true`. Pour forcer la nuit tout de suite pendant un test, dans la barre de commande du serveur : `game.ServerStorage.StudioTestBridge:Invoke("DayNightService", "forcePhase", "Night")`. Pour le test 6, un Secret se met dans le coffre de Player2 avec le même pont (`LootService.rollItem` puis `PlayerDataService.addItem`).
+
 1. Player1 crochète le coffre de Player2 la nuit, jusqu'au bout : un objet passe de Player2 à Player1, avec "Volé à Player2".
 2. Player1 relâche avant 5 secondes : rien n'est volé.
 3. Player2 éjecte Player1 pendant le crochetage : Player1 est repoussé, étourdi, et ne peut plus viser ce coffre cette nuit.
