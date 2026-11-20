@@ -73,7 +73,8 @@ export type ItemInstance = {
 	rarity: RarityId,
 	mutation: MutationId?,
 	value: number,
-	favorite: boolean, -- protégé de la vente
+	favorite: boolean, -- protégé de la vente (pas du vol)
+	stolenFrom: string?, -- nom de la victime si l'objet a été volé : un trophée affiché sur la carte
 }
 
 export type PlayerStats = {
@@ -81,9 +82,13 @@ export type PlayerStats = {
 	foundByRarity: { [string]: number },
 	totalCoinsEarned: number,
 	itemsSold: number,
+	stealsSucceeded: number,
+	stealsAttempted: number,
+	timesRobbed: number,
+	ejections: number,
 }
 
--- Version 2. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
+-- Version 3. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
 export type PlayerData = {
 	version: number,
 	coins: number,
@@ -93,6 +98,8 @@ export type PlayerData = {
 	equippedShovel: ShovelId,
 	stats: PlayerStats,
 	digHintDone: boolean, -- l'indice "Clique sur une case pour creuser" ne s'affiche plus
+	playTime: number, -- secondes de jeu cumulées, pour la protection débutant
+	thiefPoints: number, -- Points de Voleur (comptés, pas encore dépensables)
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).

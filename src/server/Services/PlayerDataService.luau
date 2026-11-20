@@ -33,8 +33,14 @@ local TEMPLATE: Types.PlayerData = {
 		foundByRarity = {},
 		totalCoinsEarned = 0,
 		itemsSold = 0,
+		stealsSucceeded = 0,
+		stealsAttempted = 0,
+		timesRobbed = 0,
+		ejections = 0,
 	},
 	digHintDone = false,
+	playTime = 0,
+	thiefPoints = 0,
 }
 
 local PlayerDataService = {}
@@ -77,6 +83,20 @@ local function migrateV1ToV2(data: any)
 	data.version = 2
 end
 
+-- Version 2 -> 3 : temps de jeu (protection débutant), Points de Voleur et statistiques de vol.
+-- Les joueurs existants partent avec playTime = 0, donc protégés 20 minutes : c'est voulu.
+-- Aucun objet n'est touché (stolenFrom est optionnel).
+local function migrateV2ToV3(data: any)
+	data.playTime = data.playTime or 0
+	data.thiefPoints = data.thiefPoints or 0
+	data.stats = data.stats or {}
+	data.stats.stealsSucceeded = data.stats.stealsSucceeded or 0
+	data.stats.stealsAttempted = data.stats.stealsAttempted or 0
+	data.stats.timesRobbed = data.stats.timesRobbed or 0
+	data.stats.ejections = data.stats.ejections or 0
+	data.version = 3
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -84,6 +104,9 @@ function PlayerDataService.migrate(data: any): number
 	data.inventory = data.inventory or {}
 	if fromVersion < 2 then
 		migrateV1ToV2(data)
+	end
+	if fromVersion < 3 then
+		migrateV2ToV3(data)
 	end
 	return fromVersion
 end
