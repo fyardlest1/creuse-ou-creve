@@ -30,6 +30,7 @@ local Names = table.freeze({
 	Ejected = "Ejected", -- serveur -> voleur : ownerName, stunSeconds
 	PurchaseRequest = "PurchaseRequest", -- client -> serveur : clé du pass ou du produit
 	UseBoost = "UseBoost", -- client -> serveur : "luckPotion" | "shield" (depuis la réserve)
+	AutoDigToggle = "AutoDigToggle", -- client -> serveur : enabled (pass Creusage auto)
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 })
 

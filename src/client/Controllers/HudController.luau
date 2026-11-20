@@ -32,6 +32,12 @@ local WHITE = Color3.new(1, 1, 1)
 local PILL_MAX_TEXT_SIZE = 22
 local CHEST_BUTTON_COLOR = Color3.fromRGB(130, 85, 45)
 local PROTECTED_COLOR = Color3.fromRGB(60, 140, 90)
+local AUTO_DIG_OFF_COLOR = Color3.fromRGB(80, 80, 90)
+local AUTO_DIG_ON_COLOR = Color3.fromRGB(60, 160, 80)
+local AUTO_DIG_PAUSED_COLOR = Color3.fromRGB(200, 120, 40)
+local TEXT_AUTO_DIG_OFF = "Auto\nOFF"
+local TEXT_AUTO_DIG_ON = "Auto\nON"
+local TEXT_AUTO_DIG_PAUSED = "Auto\nen pause"
 local TEXT_PROTECTED = "Protégé : %d min"
 
 local TEXT_DEPTH = "Profondeur : %d m"
@@ -73,6 +79,8 @@ local merchantPosition: Vector3? = nil
 local arrowOverride: { position: Vector3, caption: string, reachDistance: number }? = nil
 local arrowCaption: TextLabel
 local protectionPill: Frame
+local autoDigButton: TextButton
+local autoDigToggle: RemoteEvent
 local protectionLabel: TextLabel
 
 -- 12345 -> "12 345"
@@ -332,6 +340,49 @@ local function updateProtection()
 	end
 end
 
+-- Bouton du pass Creusage auto, sous le bouton Coffre (visible seulement avec le pass).
+local function buildAutoDigButton(gui: ScreenGui)
+	local size = UiConfig.HUD_CHEST_BUTTON_SIZE
+	autoDigButton = Instance.new("TextButton")
+	autoDigButton.Name = "AutoDigButton"
+	autoDigButton.AnchorPoint = Vector2.new(0, 0)
+	autoDigButton.Position = UDim2.new(0, UiConfig.HUD_MARGIN, 0.45, size / 2 + UiConfig.HUD_SPACING)
+	autoDigButton.Size = UDim2.fromOffset(size, size)
+	autoDigButton.BackgroundColor3 = AUTO_DIG_OFF_COLOR
+	autoDigButton.Font = Enum.Font.FredokaOne
+	autoDigButton.TextScaled = true
+	autoDigButton.TextColor3 = WHITE
+	autoDigButton.Text = TEXT_AUTO_DIG_OFF
+	autoDigButton.Visible = false
+	autoDigButton.Parent = gui
+	addCorner(autoDigButton, 0.25)
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0.12, 0)
+	padding.PaddingBottom = UDim.new(0.12, 0)
+	padding.PaddingLeft = UDim.new(0.08, 0)
+	padding.PaddingRight = UDim.new(0.08, 0)
+	padding.Parent = autoDigButton
+	autoDigButton.Activated:Connect(function()
+		autoDigToggle:FireServer(player:GetAttribute("AutoDig") ~= true)
+	end)
+end
+
+local function ownsPass(key: string): boolean
+	local owned = player:GetAttribute("OwnedPasses")
+	return typeof(owned) == "string" and table.find(string.split(owned, ","), key) ~= nil
+end
+
+local function refreshAutoDig()
+	autoDigButton.Visible = ownsPass("AutoDig")
+	local on = player:GetAttribute("AutoDig") == true
+	local paused = on and player:GetAttribute("AutoDigPaused") == true
+	autoDigButton.Text = if paused then TEXT_AUTO_DIG_PAUSED elseif on then TEXT_AUTO_DIG_ON else TEXT_AUTO_DIG_OFF
+	autoDigButton.BackgroundColor3 = if paused
+		then AUTO_DIG_PAUSED_COLOR
+		elseif on then AUTO_DIG_ON_COLOR
+		else AUTO_DIG_OFF_COLOR
+end
+
 local function buildChestButton(gui: ScreenGui)
 	-- Bord gauche, à mi-hauteur : hors du joystick et du bouton de saut sur mobile.
 	local chestButton = Instance.new("TextButton")
@@ -367,6 +418,7 @@ local function buildUi()
 	buildMerchantArrow(gui)
 	buildProtection(gui)
 	buildChestButton(gui)
+	buildAutoDigButton(gui)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 
@@ -492,6 +544,7 @@ function HudController.showBanner(text: string, kind: BannerKind, long: boolean?
 end
 
 function HudController.init()
+	autoDigToggle = Remotes.get(Remotes.Names.AutoDigToggle)
 	buildUi()
 	fullSound = Instance.new("Sound")
 	fullSound.Name = "InventoryFull"
@@ -546,6 +599,10 @@ function HudController.start()
 
 	RunService.RenderStepped:Connect(updateMerchantArrow)
 	RunService.RenderStepped:Connect(updateProtection)
+	for _, name in { "OwnedPasses", "AutoDig", "AutoDigPaused" } do
+		player:GetAttributeChangedSignal(name):Connect(refreshAutoDig)
+	end
+	refreshAutoDig()
 end
 
 return HudController

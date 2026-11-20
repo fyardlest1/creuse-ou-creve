@@ -130,6 +130,23 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 	return true
 end
 
+-- Un coup validé sur une case : geste chez tous les clients, puis la case perd des unités de travail.
+local function applyHit(player: Player, data: Types.PlayerData, cell: BasePart, index: number, hitsLeft: number)
+	-- Tous les clients animent le geste (le client du joueur l'a déjà joué s'il a cliqué).
+	remotes.digSwing:FireAllClients(player)
+
+	local shovel = ShopService.getEquippedShovel(player)
+	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.
+	local power = PlotConfig.HITS_PER_CELL / shovel.hitsPerCell
+	local newHitsLeft = math.max(hitsLeft - power, 0)
+	if newHitsLeft == 0 then
+		digOut(player, data, cell, index)
+		return
+	end
+	cell:SetAttribute(HITS_ATTRIBUTE, newHitsLeft)
+	remotes.cellHit:FireClient(player, index, newHitsLeft)
+end
+
 local function onDigRequest(player: Player, cellIndex: unknown)
 	if not isValidCellIndex(cellIndex) then
 		reject(player, "index invalide " .. tostring(cellIndex))
@@ -177,19 +194,26 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 		return
 	end
 
-	-- Coup validé : tous les clients animent le geste (le client du joueur l'a déjà joué).
-	remotes.digSwing:FireAllClients(player)
+	applyHit(player, data, cell, index, hitsLeft)
+end
 
-	local shovel = ShopService.getEquippedShovel(player)
-	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.
-	local power = PlotConfig.HITS_PER_CELL / shovel.hitsPerCell
-	local newHitsLeft = math.max(hitsLeft - power, 0)
-	if newHitsLeft == 0 then
-		digOut(player, data, cell, index)
-		return
+-- Coup automatique (pass Creusage auto, AutoDigService) : sur la première case intacte de la parcelle du
+-- joueur, où qu'il soit. Pas de vérification de distance ni de la cadence manuelle : c'est le serveur qui
+-- donne le coup, à son propre rythme. Retourne false si rien n'a été creusé (pas de case, coffre plein).
+function DigService.autoHit(player: Player): boolean
+	local data = PlayerDataService.getData(player)
+	if data == nil or #data.inventory >= PlayerDataService.getInventoryLimit(player) then
+		return false
 	end
-	cell:SetAttribute(HITS_ATTRIBUTE, newHitsLeft)
-	remotes.cellHit:FireClient(player, index, newHitsLeft)
+	for index = 1, CELL_COUNT do
+		local cell = PlotService.getCell(player, index)
+		local hitsLeft = if cell ~= nil then cell:GetAttribute(HITS_ATTRIBUTE) else nil
+		if cell ~= nil and typeof(hitsLeft) == "number" and hitsLeft > 0 then
+			applyHit(player, data, cell, index, hitsLeft)
+			return true
+		end
+	end
+	return false
 end
 
 function DigService.init()
