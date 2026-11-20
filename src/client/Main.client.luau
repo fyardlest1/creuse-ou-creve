@@ -20,6 +20,7 @@ local orderedControllers: { [number]: { name: string, module: Controller } } = {
 	{ name = "ForgeController", module = require(Controllers:WaitForChild("ForgeController")) :: any },
 	{ name = "StealController", module = require(Controllers:WaitForChild("StealController")) :: any },
 	{ name = "VipController", module = require(Controllers:WaitForChild("VipController")) :: any },
+	{ name = "ShopController", module = require(Controllers:WaitForChild("ShopController")) :: any },
 }
 
 for _, entry in orderedControllers do

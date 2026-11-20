@@ -21,6 +21,7 @@ local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local ChestController = require(script.Parent.ChestController)
+local ShopController = require(script.Parent.ShopController)
 
 local PILL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local PILL_FULL_BACKGROUND = Color3.fromRGB(170, 40, 40)
@@ -34,6 +35,8 @@ local PILL_MAX_TEXT_SIZE = 22
 local CHEST_BUTTON_COLOR = Color3.fromRGB(130, 85, 45)
 local PROTECTED_COLOR = Color3.fromRGB(60, 140, 90)
 local AUTO_DIG_OFF_COLOR = Color3.fromRGB(80, 80, 90)
+local SHOP_BUTTON_COLOR = Color3.fromRGB(200, 70, 150)
+local TEXT_SHOP_BUTTON = "🛒\nBoutique"
 local AUTO_DIG_ON_COLOR = Color3.fromRGB(60, 160, 80)
 local AUTO_DIG_PAUSED_COLOR = Color3.fromRGB(200, 120, 40)
 local TEXT_AUTO_DIG_OFF = "Auto\nOFF"
@@ -341,6 +344,30 @@ local function updateProtection()
 	end
 end
 
+-- Bouton Boutique : bord droit, à mi-hauteur (au-dessus du bouton de saut sur mobile).
+local function buildShopButton(gui: ScreenGui)
+	local size = UiConfig.HUD_SHOP_BUTTON_SIZE
+	local button = Instance.new("TextButton")
+	button.Name = "ShopButton"
+	button.AnchorPoint = Vector2.new(1, 0.5)
+	button.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, 0.45, 0)
+	button.Size = UDim2.fromOffset(size, size)
+	button.BackgroundColor3 = SHOP_BUTTON_COLOR
+	button.Font = Enum.Font.FredokaOne
+	button.TextScaled = true
+	button.TextColor3 = WHITE
+	button.Text = TEXT_SHOP_BUTTON
+	button.Parent = gui
+	addCorner(button, 0.25)
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0.12, 0)
+	padding.PaddingBottom = UDim.new(0.12, 0)
+	padding.PaddingLeft = UDim.new(0.06, 0)
+	padding.PaddingRight = UDim.new(0.06, 0)
+	padding.Parent = button
+	button.Activated:Connect(ShopController.toggle)
+end
+
 -- Bouton du pass Creusage auto, sous le bouton Coffre (visible seulement avec le pass).
 local function buildAutoDigButton(gui: ScreenGui)
 	local size = UiConfig.HUD_CHEST_BUTTON_SIZE
@@ -420,6 +447,7 @@ local function buildUi()
 	buildProtection(gui)
 	buildChestButton(gui)
 	buildAutoDigButton(gui)
+	buildShopButton(gui)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 

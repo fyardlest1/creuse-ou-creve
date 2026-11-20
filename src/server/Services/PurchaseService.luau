@@ -45,6 +45,7 @@ local PROFILE_WAIT_TIMEOUT = 30 -- secondes d'attente du profil dans ProcessRece
 local PROFILE_WAIT_STEP = 0.25
 local TEXT_UNAVAILABLE = "Bientôt disponible"
 local TEXT_RESTRICTED = "Indisponible dans ton pays"
+local SHOP_STATE_COOLDOWN = 0.5 -- secondes entre deux demandes d'état de la boutique
 
 local PurchaseService = {}
 
@@ -114,6 +115,7 @@ local ownedPasses: { [Player]: { [PassKey]: boolean } } = {}
 local luckRestricted: { [Player]: boolean } = {}
 local lastRequest: { [Player]: number } = {}
 local passCallbacks: { (player: Player, key: PassKey) -> () } = {}
+local shopStateRemote: RemoteEvent
 
 local function log(message: string)
 	print("[PurchaseService] " .. message)
@@ -210,6 +212,15 @@ local function loadPolicy(player: Player)
 	end)
 	-- En cas d'erreur, on restreint par prudence.
 	local restricted = not ok or (info :: any).ArePaidRandomItemsRestricted == true
+	luckRestricted[player] = restricted
+	player:SetAttribute("PaidRandomItemsRestricted", restricted)
+end
+
+-- Studio seulement : simule un pays où les objets aléatoires payants sont restreints.
+function PurchaseService.setLuckRestrictedForTest(player: Player, restricted: boolean)
+	if not IS_STUDIO then
+		return
+	end
 	luckRestricted[player] = restricted
 	player:SetAttribute("PaidRandomItemsRestricted", restricted)
 end
@@ -320,6 +331,28 @@ function PurchaseService.simulatePassPurchase(player: Player, key: PassKey)
 end
 
 -- Le client demande un achat ; le serveur vérifie les conditions avant de l'afficher (principe 3).
+-- État de la boutique pour ce joueur : pour chaque pass et produit, "" s'il peut l'acheter, sinon la
+-- raison affichée. Les passes possédés valent "owned". Le client ne fait qu'afficher.
+local lastShopState: { [Player]: number } = {}
+local function onShopStateRequest(player: Player)
+	local now = os.clock()
+	local last = lastShopState[player]
+	if last ~= nil and now - last < SHOP_STATE_COOLDOWN then
+		return
+	end
+	lastShopState[player] = now
+	local state: { [string]: string } = {}
+	for _, pass in MonetizationConfig.passes do
+		state[pass.key] = if PurchaseService.ownsPass(player, pass.key)
+			then "owned"
+			else PurchaseService.getBlockReason(player, pass.key) or ""
+	end
+	for _, product in MonetizationConfig.products do
+		state[product.key] = PurchaseService.getBlockReason(player, product.key) or ""
+	end
+	shopStateRemote:FireClient(player, state)
+end
+
 local function onPurchaseRequest(player: Player, key: unknown)
 	if typeof(key) ~= "string" or #key > 64 then
 		reject(player, "clé invalide")
@@ -357,7 +390,9 @@ local function onPurchaseRequest(player: Player, key: unknown)
 	end
 end
 
-function PurchaseService.init() end
+function PurchaseService.init()
+	shopStateRemote = Remotes.get(Remotes.Names.ShopState)
+end
 
 function PurchaseService.start()
 	MarketplaceService.ProcessReceipt = processReceipt
@@ -370,6 +405,7 @@ function PurchaseService.start()
 		end
 	)
 	Remotes.get(Remotes.Names.PurchaseRequest).OnServerEvent:Connect(onPurchaseRequest)
+	Remotes.get(Remotes.Names.ShopStateRequest).OnServerEvent:Connect(onShopStateRequest)
 	PlayerDataService.onLoaded(function(player: Player)
 		task.spawn(loadPolicy, player)
 		loadPasses(player)
@@ -378,6 +414,7 @@ function PurchaseService.start()
 		ownedPasses[player] = nil
 		luckRestricted[player] = nil
 		lastRequest[player] = nil
+		lastShopState[player] = nil
 	end)
 end
 

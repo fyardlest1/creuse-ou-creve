@@ -76,6 +76,16 @@ local UiConfig = {
 	FORGE_ROW_PADDING = 6, -- pixels, marge verticale dans une ligne
 	FORGE_LIST_SPACING = 8, -- pixels entre deux lignes
 
+	-- Boutique
+	SHOP_PANEL_MAX_SIZE = Vector2.new(760, 560), -- pixels
+	SHOP_CARD_HEIGHT = 96, -- pixels
+	SHOP_TITLE_HEIGHT = 26, -- pixels
+	SHOP_DESCRIPTION_MAX_TEXT = 18,
+	SHOP_ODDS_HEIGHT = 190, -- pixels
+	SHOP_ODDS_LINE_HEIGHT = 21, -- pixels
+	SHOP_REFRESH_INTERVAL = 2, -- secondes entre deux mises à jour de l'état pendant que la boutique est ouverte
+	HUD_SHOP_BUTTON_SIZE = 64, -- pixels
+
 	-- Vente au Marchand
 	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance
 	SELL_COIN_COUNT = 8, -- pièces animées après une vente

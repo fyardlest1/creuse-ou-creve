@@ -32,6 +32,8 @@ local Names = table.freeze({
 	UseBoost = "UseBoost", -- client -> serveur : "luckPotion" | "shield" (depuis la réserve)
 	AutoDigToggle = "AutoDigToggle", -- client -> serveur : enabled (pass Creusage auto)
 	RevengeCompensated = "RevengeCompensated", -- serveur -> joueur : Revanche impossible, potion en réserve
+	ShopStateRequest = "ShopStateRequest", -- client -> serveur : aucun (état de la boutique)
+	ShopState = "ShopState", -- serveur -> client : { [clé] = raison ou "" si achetable }
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 })
 
