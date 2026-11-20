@@ -88,7 +88,17 @@ export type PlayerStats = {
 	ejections: number,
 }
 
--- Version 3. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
+-- Réserve de bonus (gagnés en jouant, activés quand le joueur veut).
+export type Boosts = { luckPotion: number, shield: number }
+
+-- Effets actifs : fin de la potion (os.time()), numéro de la nuit protégée par un Bouclier.
+export type Effects = { luckUntil: number, shieldNightId: number }
+
+export type DailyState = { lastClaimDay: number, calendarDay: number }
+
+export type QuestState = { id: string, target: number, progress: number, claimed: boolean, reward: number }
+
+-- Version 4. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
 export type PlayerData = {
 	version: number,
 	coins: number,
@@ -100,6 +110,15 @@ export type PlayerData = {
 	digHintDone: boolean, -- l'indice "Clique sur une case pour creuser" ne s'affiche plus
 	playTime: number, -- secondes de jeu cumulées, pour la protection débutant
 	thiefPoints: number, -- Points de Voleur (comptés, pas encore dépensables)
+	boosts: Boosts,
+	effects: Effects,
+	daily: DailyState,
+	quests: { day: number, list: { QuestState }, bonusClaimed: boolean },
+	index: { [string]: { [string]: boolean } }, -- [itemId] = { [mutationId ou "Normal"] = true }
+	indexRewards: { [string]: boolean }, -- paliers réclamés, clé "couche:pourcentage"
+	title: string?, -- titre affiché sous le nom ("Archéologue de l'Argile")
+	funnelSteps: { [string]: boolean }, -- étapes de l'entonnoir déjà journalisées
+	processedPurchases: { string }, -- 100 derniers PurchaseId traités (idempotence)
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).

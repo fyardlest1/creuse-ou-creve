@@ -42,6 +42,15 @@ local TEMPLATE: Types.PlayerData = {
 	digHintDone = false,
 	playTime = 0,
 	thiefPoints = 0,
+	boosts = { luckPotion = 0, shield = 0 },
+	effects = { luckUntil = 0, shieldNightId = 0 },
+	daily = { lastClaimDay = 0, calendarDay = 0 },
+	quests = { day = 0, list = {}, bonusClaimed = false },
+	index = {},
+	indexRewards = {},
+	title = nil,
+	funnelSteps = {},
+	processedPurchases = {},
 }
 
 local PlayerDataService = {}
@@ -98,6 +107,36 @@ local function migrateV2ToV3(data: any)
 	data.version = 3
 end
 
+-- Ajoute un objet à l'Index de collection (objet et mutation).
+function PlayerDataService.recordInIndex(data: any, itemId: string, mutation: string?)
+	data.index = data.index or {}
+	local entry = data.index[itemId]
+	if entry == nil then
+		entry = {}
+		data.index[itemId] = entry
+	end
+	entry[mutation or PlayerConfig.INDEX_NO_MUTATION] = true
+end
+
+-- Version 3 -> 4 : réserve de bonus, effets actifs, quotidien, quêtes, Index, entonnoir, achats traités.
+-- L'Index est rempli à partir des objets déjà dans le coffre, pour ne pas repartir de zéro.
+local function migrateV3ToV4(data: any)
+	data.boosts = data.boosts or { luckPotion = 0, shield = 0 }
+	data.effects = data.effects or { luckUntil = 0, shieldNightId = 0 }
+	data.daily = data.daily or { lastClaimDay = 0, calendarDay = 0 }
+	data.quests = data.quests or { day = 0, list = {}, bonusClaimed = false }
+	data.index = data.index or {}
+	for _, item in data.inventory do
+		if typeof(item.itemId) == "string" then
+			PlayerDataService.recordInIndex(data, item.itemId, item.mutation)
+		end
+	end
+	data.indexRewards = data.indexRewards or {}
+	data.funnelSteps = data.funnelSteps or {}
+	data.processedPurchases = data.processedPurchases or {}
+	data.version = 4
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -108,6 +147,9 @@ function PlayerDataService.migrate(data: any): number
 	end
 	if fromVersion < 3 then
 		migrateV2ToV3(data)
+	end
+	if fromVersion < 4 then
+		migrateV3ToV4(data)
 	end
 	return fromVersion
 end
