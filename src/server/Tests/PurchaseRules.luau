@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local PurchaseService = require(script.Parent.Parent.Services.PurchaseService)
+local LootService = require(script.Parent.Parent.Services.LootService)
 
 local GRANTED = Enum.ProductPurchaseDecision.PurchaseGranted
 local NOT_YET = Enum.ProductPurchaseDecision.NotProcessedYet
@@ -172,6 +173,66 @@ local function testCatalogPrinciples()
 	check("les produits de chance sont marqués (masqués si restreints)", luckFlagged)
 end
 
+local function testLuckFormula()
+	table.insert(results, "Formule unique de la chance et plafond x10 (section 4)")
+	local function luck(shovel: number, pass: boolean, potion: boolean, event: boolean, group: boolean): number
+		return LootService.computeLuckMultiplier({
+			shovelBonus = shovel,
+			luckPass = pass,
+			potion = potion,
+			serverEvent = event,
+			groupMember = group,
+		})
+	end
+	local function near(a: number, b: number): boolean
+		return math.abs(a - b) < 1e-9
+	end
+	check("sans bonus : x1", near(luck(0, false, false, false, false), 1))
+	check("pelle en acier : x1,15", near(luck(15, false, false, false, false), 1.15))
+	check("pelle en fer + Chance x2 : x2,1", near(luck(5, true, false, false, false), 2.1))
+	check("Chance x2 + potion : x6", near(luck(0, true, true, false, false), 6))
+	local all = luck(15, true, true, true, true)
+	check("pass + potion + événement + acier : plafonné à x10 (x13,8 sans plafond)", near(all, 10), tostring(all))
+	local worst = 0
+	for _, shovel in { 0, 5, 15, 30, 60, 500 } do
+		for mask = 0, 15 do
+			local value = luck(shovel, mask % 2 == 1, mask // 2 % 2 == 1, mask // 4 % 2 == 1, mask // 8 % 2 == 1)
+			worst = math.max(worst, value)
+		end
+	end
+	check("aucune combinaison ne dépasse x10", worst <= MonetizationConfig.LUCK_CAP, tostring(worst))
+	local groupOn = luck(0, false, false, false, true)
+	check(
+		"groupe : x1,05 si configuré, sinon x1",
+		if MonetizationConfig.GROUP_ID == 0 then near(groupOn, 1) else near(groupOn, 1.05),
+		tostring(groupOn)
+	)
+
+	-- Le tirage applique bien le multiplicateur, et ne dépasse jamais le plafond même si on lui en donne plus.
+	local function shareBoosted(multiplier: number, count: number): number
+		local boosted = 0
+		for _ = 1, count do
+			local rarity = LootService.rollRarity(multiplier)
+			if rarity == "Rare" or rarity == "Epic" or rarity == "Legendary" or rarity == "Secret" then
+				boosted += 1
+			end
+		end
+		return boosted / count
+	end
+	local count = 40000
+	-- Poids boostés : 15 % à x1. À x10 : 150 / (85 + 150) = 63,8 %.
+	local atCap = shareBoosted(10, count)
+	local overCap = shareBoosted(1000, count)
+	check(
+		string.format("tirage à x10 : %.1f %% de Rare ou mieux (attendu 63,8 %%)", atCap * 100),
+		math.abs(atCap - 0.638) < 0.02
+	)
+	check(
+		string.format("tirage avec x1000 demandé : ramené à x10 (%.1f %%)", overCap * 100),
+		math.abs(overCap - 0.638) < 0.02
+	)
+end
+
 function PurchaseRules.run(): (string, number, number)
 	results = {}
 	passed = 0
@@ -183,6 +244,7 @@ function PurchaseRules.run(): (string, number, number)
 	testHistoryLimit()
 	testRevengeCompensation()
 	testCatalogPrinciples()
+	testLuckFormula()
 	local report =
 		string.format("[PurchaseRules] %d réussis, %d échoués\n%s", passed, failed, table.concat(results, "\n"))
 	print(report)

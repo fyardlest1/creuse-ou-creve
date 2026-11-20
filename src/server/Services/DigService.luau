@@ -16,6 +16,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local PlotService = require(script.Parent.PlotService)
 local LootService = require(script.Parent.LootService)
 local ShopService = require(script.Parent.ShopService)
+local BoostService = require(script.Parent.BoostService)
 
 local CELL_COUNT = PlotConfig.GRID_SIZE * PlotConfig.GRID_SIZE
 local HITS_ATTRIBUTE = "HitsLeft"
@@ -96,7 +97,7 @@ end
 -- Retourne true si la case a été vidée. Un objet n'est jamais perdu : si l'ajout échoue,
 -- la case garde un coup restant et le joueur est prévenu.
 local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, index: number): boolean
-	local item = LootService.roll(player)
+	local item = LootService.roll(player, BoostService.getLuckMultiplier(player))
 	if not PlayerDataService.addItem(player, item) then
 		cell:SetAttribute(HITS_ATTRIBUTE, 1)
 		remotes.cellHit:FireClient(player, index, 1)

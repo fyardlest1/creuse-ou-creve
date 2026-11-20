@@ -11,6 +11,7 @@ local Mutations = require(Shared.Config.Mutations)
 local Items = require(Shared.Config.Items)
 local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
+local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ShopService = require(script.Parent.ShopService)
 local DayNightService = require(script.Parent.DayNightService)
@@ -21,9 +22,38 @@ local LootService = {}
 
 local rng = Random.new()
 
--- Tire une rareté. Le bonus de chance (en %) multiplie le poids des raretés boostées, puis on renormalise.
-function LootService.rollRarity(luckBonus: number): Types.RarityId
-	local luckMultiplier = 1 + math.max(luckBonus, 0) / PERCENT
+export type LuckParts = {
+	shovelBonus: number, -- bonus de la pelle en % (15 = +15 %)
+	luckPass: boolean, -- game pass Chance x2
+	potion: boolean, -- Potion de chance active
+	serverEvent: boolean, -- Événement chance du serveur actif
+	groupMember: boolean, -- membre du groupe Konbit Games (si le groupe est configuré)
+}
+
+-- LA formule de la chance (plan semaine 4, section 4). Seul endroit où elle existe.
+--   (1 + bonus de la pelle) x (2 si Chance x2) x (3 si potion) x (2 si événement) x (1,05 si groupe)
+-- plafonné à x10 pour protéger la valeur des Secrets.
+function LootService.computeLuckMultiplier(parts: LuckParts): number
+	local multiplier = 1 + math.max(parts.shovelBonus, 0) / PERCENT
+	if parts.luckPass then
+		multiplier *= MonetizationConfig.LUCK_PASS_MULTIPLIER
+	end
+	if parts.potion then
+		multiplier *= MonetizationConfig.POTION_MULTIPLIER
+	end
+	if parts.serverEvent then
+		multiplier *= MonetizationConfig.SERVER_EVENT_MULTIPLIER
+	end
+	if parts.groupMember and MonetizationConfig.GROUP_ID ~= 0 then
+		multiplier *= MonetizationConfig.GROUP_MULTIPLIER
+	end
+	return math.min(multiplier, MonetizationConfig.LUCK_CAP)
+end
+
+-- Tire une rareté. Le multiplicateur de chance (déjà plafonné, au moins 1) multiplie le poids des raretés
+-- boostées (Rare, Épique, Légendaire, Secret), puis on renormalise.
+function LootService.rollRarity(luckMultiplier: number): Types.RarityId
+	luckMultiplier = math.clamp(luckMultiplier, 1, MonetizationConfig.LUCK_CAP)
 	local weights: { number } = {}
 	local total = 0
 	for index, rarity in Rarities.list do
@@ -78,8 +108,8 @@ end
 -- Tirage complet, sans joueur : rareté, mutation, objet de la couche, valeur finale et uid.
 -- Les Légendaires et Secrets sont mis en favori automatiquement, sauf s'ils sont Maudits :
 -- le joueur doit choisir lui-même entre vendre vite un objet Maudit et le défendre.
-function LootService.rollItem(layer: number, luckBonus: number, isNight: boolean?): Types.ItemInstance
-	local rarityId = LootService.rollRarity(luckBonus)
+function LootService.rollItem(layer: number, luckMultiplier: number, isNight: boolean?): Types.ItemInstance
+	local rarityId = LootService.rollRarity(luckMultiplier)
 	local mutationId = LootService.rollMutation(isNight)
 	local item = LootService.pickItem(layer, rarityId)
 
@@ -94,22 +124,22 @@ function LootService.rollItem(layer: number, luckBonus: number, isNight: boolean
 	}
 end
 
--- Tirage pour un joueur : utilise sa couche et le bonus de chance de sa pelle.
-function LootService.roll(player: Player): Types.ItemInstance
+-- Tirage pour un joueur : sa couche et son multiplicateur de chance (calculé par BoostService
+-- avec computeLuckMultiplier), la nuit pour la mutation Maudite.
+function LootService.roll(player: Player, luckMultiplier: number): Types.ItemInstance
 	local data = PlayerDataService.getData(player)
 	local layer = Strata.fromDepth(if data ~= nil then data.depth else 0).layer
-	local shovel = ShopService.getEquippedShovel(player)
-	return LootService.rollItem(layer, shovel.luckBonus, DayNightService.isNight())
+	return LootService.rollItem(layer, luckMultiplier, DayNightService.isNight())
 end
 
 -- Vérification : fait `count` tirages de rareté et retourne la répartition en %.
-function LootService.simulateRarities(count: number, luckBonus: number): { [string]: number }
+function LootService.simulateRarities(count: number, luckMultiplier: number): { [string]: number }
 	local counts: { [string]: number } = {}
 	for _, rarity in Rarities.list do
 		counts[rarity.id] = 0
 	end
 	for _ = 1, count do
-		local id = LootService.rollRarity(luckBonus)
+		local id = LootService.rollRarity(luckMultiplier)
 		counts[id] += 1
 	end
 	local percentages: { [string]: number } = {}

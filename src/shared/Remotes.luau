@@ -29,6 +29,8 @@ local Names = table.freeze({
 	EjectRequest = "EjectRequest", -- client -> serveur : thiefUserId
 	Ejected = "Ejected", -- serveur -> voleur : ownerName, stunSeconds
 	PurchaseRequest = "PurchaseRequest", -- client -> serveur : clé du pass ou du produit
+	UseBoost = "UseBoost", -- client -> serveur : "luckPotion" | "shield" (depuis la réserve)
+	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 })
 
 local function getFolderOnServer(): Folder

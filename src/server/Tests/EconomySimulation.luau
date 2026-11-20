@@ -64,7 +64,14 @@ function EconomySimulation.runOnce(sellFavorites: boolean, maxSeconds: number): 
 		local shovel = Shovels.list[tier]
 
 		-- Creuse un objet
-		local item = LootService.rollItem(stratum.layer, shovel.luckBonus)
+		local luck = LootService.computeLuckMultiplier({
+			shovelBonus = shovel.luckBonus,
+			luckPass = false,
+			potion = false,
+			serverEvent = false,
+			groupMember = false,
+		})
+		local item = LootService.rollItem(stratum.layer, luck)
 		time += EconomyConfig.SIM_SECONDS_PER_ITEM
 		result.timeInStratum[stratum.id] += EconomyConfig.SIM_SECONDS_PER_ITEM
 		table.insert(chest, { value = item.value, favorite = item.favorite, stratumId = stratum.id })
