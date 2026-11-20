@@ -2,7 +2,7 @@
 -- Types partagés entre serveur et client.
 
 export type RarityId = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Secret"
-export type MutationId = "Golden" | "Diamond" | "Rainbow"
+export type MutationId = "Golden" | "Diamond" | "Rainbow" | "Cursed"
 
 export type RarityDef = {
 	id: RarityId,
@@ -20,6 +20,7 @@ export type MutationDef = {
 	chance: number, -- en pourcentage
 	multiplier: number,
 	color: Color3,
+	nightOnly: boolean, -- ne peut être tirée que la nuit (Maudit)
 }
 
 export type ItemDef = {

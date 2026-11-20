@@ -42,12 +42,15 @@ function LootService.rollRarity(luckBonus: number): Types.RarityId
 end
 
 -- Tire au plus une mutation. Chaque mutation a sa propre chance en %, cumulées sur un seul tirage.
-function LootService.rollMutation(): Types.MutationId?
+-- Les mutations de nuit (Maudit) ne sont possibles que si isNight est vrai.
+function LootService.rollMutation(isNight: boolean?): Types.MutationId?
 	local roll = rng:NextNumber(0, PERCENT)
 	for _, mutation in Mutations.list do
-		roll -= mutation.chance
-		if roll < 0 then
-			return mutation.id
+		if not mutation.nightOnly or isNight == true then
+			roll -= mutation.chance
+			if roll < 0 then
+				return mutation.id
+			end
 		end
 	end
 	return nil
