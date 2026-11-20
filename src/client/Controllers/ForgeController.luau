@@ -111,20 +111,25 @@ local function getButtonState(shovel: Types.ShovelDef, owned: { [string]: boolea
 	return string.format(TEXT_BUY, string.format(TEXT_PRICE, formatNumber(shovel.price))), BUY_COLOR, true
 end
 
-local function createRow(shovel: Types.ShovelDef, order: number, owned: { [string]: boolean })
+-- Hauteur des lignes : les pelles se partagent la place visible pour tenir sans défiler,
+-- sans descendre sous FORGE_ROW_MIN_HEIGHT (bouton de 44 pixels + marges).
+local function getRowHeight(): number
+	local count = #Shovels.list
+	local available = list.AbsoluteSize.Y - UiConfig.FORGE_LIST_SPACING * (count - 1)
+	return math.clamp(math.floor(available / count), UiConfig.FORGE_ROW_MIN_HEIGHT, UiConfig.FORGE_ROW_HEIGHT)
+end
+
+local function createRow(shovel: Types.ShovelDef, order: number, owned: { [string]: boolean }, rowHeight: number)
 	local row = Instance.new("Frame")
 	row.Name = shovel.id
 	row.LayoutOrder = order
-	local camera = workspace.CurrentCamera
-	local compact = camera ~= nil and camera.ViewportSize.Y < UiConfig.COMPACT_SCREEN_HEIGHT
-	local rowHeight = if compact then UiConfig.FORGE_ROW_HEIGHT_COMPACT else UiConfig.FORGE_ROW_HEIGHT
 	row.Size = UDim2.new(1, -12, 0, rowHeight)
 	row.BackgroundColor3 = ROW_BACKGROUND
 	addCorner(row, 0.12)
 
 	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 8)
-	padding.PaddingBottom = UDim.new(0, 8)
+	padding.PaddingTop = UDim.new(0, UiConfig.FORGE_ROW_PADDING)
+	padding.PaddingBottom = UDim.new(0, UiConfig.FORGE_ROW_PADDING)
 	padding.PaddingLeft = UDim.new(0, 12)
 	padding.PaddingRight = UDim.new(0, 12)
 	padding.Parent = row
@@ -201,8 +206,9 @@ local function render()
 	end
 	coinsLabel.Text = string.format(TEXT_COINS, formatNumber(getCoins()))
 	local owned = getOwned()
+	local rowHeight = getRowHeight()
 	for order, shovel in Shovels.list do
-		createRow(shovel, order, owned)
+		createRow(shovel, order, owned, rowHeight)
 	end
 end
 
@@ -269,6 +275,10 @@ local function buildUi()
 	list.BackgroundTransparency = 1
 	list.BorderSizePixel = 0
 	list.ScrollBarThickness = 8
+	-- La hauteur des lignes dépend de la place visible : on refait la liste quand elle change.
+	list:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		render()
+	end)
 	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	list.CanvasSize = UDim2.new()
 	list.ScrollingDirection = Enum.ScrollingDirection.Y
@@ -276,7 +286,7 @@ local function buildUi()
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 8)
+	layout.Padding = UDim.new(0, UiConfig.FORGE_LIST_SPACING)
 	layout.Parent = list
 
 	gui.Parent = player:WaitForChild("PlayerGui")

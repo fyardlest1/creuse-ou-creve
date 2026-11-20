@@ -41,20 +41,27 @@ local UiConfig = {
 
 	-- Coffre (grille de cartes)
 	CHEST_PANEL_MAX_SIZE = Vector2.new(760, 560), -- pixels
-	CHEST_CARD_SIZE = Vector2.new(150, 150), -- pixels, assez grand pour le toucher
-	CHEST_CARD_SIZE_COMPACT = Vector2.new(135, 135), -- pixels, écrans bas (téléphone en paysage)
-	CHEST_CARD_BUTTON_MIN_HEIGHT = 32, -- pixels, bouton "Vendre" d'une carte
+	TOUCH_TARGET_MIN = 44, -- pixels : taille minimale d'une zone tactile (recommandation mobile)
+	CHEST_CARD_SIZE = Vector2.new(150, 175), -- pixels
+	CHEST_CARD_SIZE_COMPACT = Vector2.new(140, 165), -- pixels, écrans bas (téléphone en paysage)
+	CHEST_CARD_LINE_HEIGHT = 20, -- pixels : rareté, valeur
+	CHEST_CARD_NAME_MAX_TEXT = 20, -- taille de texte maximale du nom, pour des cartes homogènes
+	CHEST_CARD_BADGE_HEIGHT = 16, -- pixels : badge de mutation
+	CHEST_CARD_GAP = 4, -- pixels entre la valeur et le bouton "Vendre"
+	CHEST_CARD_STAR_INSET = 6, -- pixels : l'étoile déborde un peu dans le coin de la carte
+	CHEST_CARD_STAR_PADDING = 7, -- pixels : marge du symbole dans sa zone tactile
 	COMPACT_SCREEN_HEIGHT = 500, -- pixels : en dessous, interface compacte
-	PANEL_SIZE_SCALE = Vector2.new(0.92, 0.88), -- fenêtres coffre et Forge, fraction de l'écran
+	PANEL_SIZE_SCALE = Vector2.new(0.92, 0.94), -- fenêtres coffre et Forge, fraction de l'écran
 	CHEST_CARD_PADDING = 8,
-	CHEST_BUTTON_MIN_HEIGHT = 40, -- pixels, cible tactile
-	CHEST_STAR_SIZE = 36, -- pixels, zone tactile de l'étoile de favori
+	CHEST_BUTTON_MIN_HEIGHT = 44, -- pixels, cible tactile (fermer, en-têtes, boutons de la Forge)
 	HUD_CHEST_BUTTON_SIZE = 64, -- pixels
 
 	-- Forge
 	FORGE_PANEL_MAX_SIZE = Vector2.new(760, 440), -- pixels
 	FORGE_ROW_HEIGHT = 96, -- pixels
-	FORGE_ROW_HEIGHT_COMPACT = 72, -- pixels, écrans bas : les 3 pelles tiennent sans défiler
+	FORGE_ROW_MIN_HEIGHT = 56, -- pixels : bouton de 44 + marges ; les lignes rétrécissent jusque-là
+	FORGE_ROW_PADDING = 6, -- pixels, marge verticale dans une ligne
+	FORGE_LIST_SPACING = 8, -- pixels entre deux lignes
 
 	-- Vente au Marchand
 	MERCHANT_CLOSE_CHECK_INTERVAL = 0.5, -- secondes entre deux vérifications de distance
@@ -68,8 +75,9 @@ local UiConfig = {
 	-- HUD
 	HUD_COINS_SIZE = Vector2.new(150, 40), -- pixels, compteur de Pièces en haut à droite
 	HUD_MARGIN = 12, -- pixels depuis le bord de l'écran
-	MERCHANT_ARROW_SIZE = 72, -- pixels
-	MERCHANT_ARROW_OFFSET = 0.2, -- position verticale de la flèche (fraction de l'écran)
+	HUD_TOP_MARGIN = 6, -- pixels depuis le haut de la zone d'interface
+	HUD_SPACING = 8, -- pixels entre deux éléments empilés du HUD
+	MERCHANT_ARROW_SIZE = 60, -- pixels, sous le compteur de Pièces
 
 	-- Sons
 	SOUND_SELL = "rbxasset://sounds/electronicpingshort.wav", -- son de caisse temporaire

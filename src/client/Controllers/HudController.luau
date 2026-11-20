@@ -118,8 +118,10 @@ local function buildTopBar(gui: ScreenGui)
 	local bar = Instance.new("Frame")
 	bar.Name = "TopBar"
 	bar.AnchorPoint = Vector2.new(0.5, 0)
-	bar.Position = UDim2.new(0.5, 0, 0, 6)
-	bar.Size = UDim2.fromScale(0.55, 0.065)
+	bar.Position = UDim2.new(0.5, 0, 0, UiConfig.HUD_TOP_MARGIN)
+	-- Centrée, et assez étroite pour laisser la place du compteur de Pièces de chaque côté.
+	local reserved = 2 * (UiConfig.HUD_COINS_SIZE.X + 2 * UiConfig.HUD_MARGIN)
+	bar.Size = UDim2.new(1, -reserved, 0.065, 0)
 	bar.BackgroundTransparency = 1
 	bar.Parent = gui
 
@@ -146,7 +148,7 @@ local function buildCoins(gui: ScreenGui)
 	local pill = Instance.new("Frame")
 	pill.Name = "Coins"
 	pill.AnchorPoint = Vector2.new(1, 0)
-	pill.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, 0, 6)
+	pill.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, 0, UiConfig.HUD_TOP_MARGIN)
 	pill.Size = UDim2.fromOffset(size.X, size.Y)
 	pill.BackgroundColor3 = PILL_BACKGROUND
 	pill.BackgroundTransparency = 0.15
@@ -223,9 +225,15 @@ local function buildMerchantArrow(gui: ScreenGui)
 	local size = UiConfig.MERCHANT_ARROW_SIZE
 	arrowFrame = Instance.new("Frame")
 	arrowFrame.Name = "MerchantArrow"
-	arrowFrame.AnchorPoint = Vector2.new(0.5, 0)
-	arrowFrame.Position = UDim2.fromScale(0.5, UiConfig.MERCHANT_ARROW_OFFSET)
-	arrowFrame.Size = UDim2.fromOffset(size * 2, size + 20)
+	-- En haut à droite, sous le compteur de Pièces : au centre, elle cacherait l'avatar sur téléphone.
+	arrowFrame.AnchorPoint = Vector2.new(1, 0)
+	arrowFrame.Position = UDim2.new(
+		1,
+		-UiConfig.HUD_MARGIN,
+		0,
+		UiConfig.HUD_TOP_MARGIN + UiConfig.HUD_COINS_SIZE.Y + UiConfig.HUD_SPACING
+	)
+	arrowFrame.Size = UDim2.fromOffset(UiConfig.HUD_COINS_SIZE.X, size + 20)
 	arrowFrame.BackgroundTransparency = 1
 	arrowFrame.Visible = false
 	arrowFrame.Parent = gui

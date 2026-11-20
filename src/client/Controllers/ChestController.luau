@@ -156,56 +156,71 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 	padding.PaddingRight = UDim.new(0, 6)
 	padding.Parent = card
 
+	-- Mise en page en pixels, de haut en bas : rareté (+ étoile à droite), mutation, nom, valeur,
+	-- bouton "Vendre". Les zones tactiles font au moins TOUCH_TARGET_MIN pixels.
+	local touch = UiConfig.TOUCH_TARGET_MIN
+	local line = UiConfig.CHEST_CARD_LINE_HEIGHT
+	local hasSellButton = mode == "sell" and not item.favorite
+	local bottomReserved = if hasSellButton then touch + UiConfig.CHEST_CARD_GAP else 0
+
 	local rarityLabel = createLabel("Rarity", if rarity ~= nil then rarity.displayName else item.rarity, card)
-	rarityLabel.Size = UDim2.fromScale(0.75, 0.14)
+	rarityLabel.Size = UDim2.new(1, -touch, 0, line)
 	rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
 	rarityLabel.TextColor3 = rarityColor
 
-	-- Étoile de favori : un favori ne peut pas être vendu. Zone tactile plus grande que le symbole.
+	-- Étoile de favori : un favori ne peut pas être vendu. Zone tactile carrée dans le coin.
 	local star = Instance.new("TextButton")
 	star.Name = "Favorite"
 	star.AnchorPoint = Vector2.new(1, 0)
-	star.Position = UDim2.new(1, 4, 0, -4)
-	star.Size = UDim2.fromOffset(UiConfig.CHEST_STAR_SIZE, UiConfig.CHEST_STAR_SIZE)
+	star.Position = UDim2.new(1, UiConfig.CHEST_CARD_STAR_INSET, 0, -UiConfig.CHEST_CARD_STAR_INSET)
+	star.Size = UDim2.fromOffset(touch, touch)
 	star.BackgroundTransparency = 1
 	star.Font = Enum.Font.GothamBold
 	star.TextScaled = true
 	star.Text = if item.favorite then TEXT_STAR_ON else TEXT_STAR_OFF
 	star.TextColor3 = if item.favorite then STAR_ON_COLOR else STAR_OFF_COLOR
 	star.Parent = card
+	local starPadding = Instance.new("UIPadding")
+	local inner = UDim.new(0, UiConfig.CHEST_CARD_STAR_PADDING)
+	starPadding.PaddingTop, starPadding.PaddingBottom, starPadding.PaddingLeft, starPadding.PaddingRight =
+		inner, inner, inner, inner
+	starPadding.Parent = star
 	star.Activated:Connect(function()
 		toggleFavoriteRemote:FireServer(item.uid)
 	end)
 
-	local nameLabel = createLabel("ItemName", if itemDef ~= nil then itemDef.name else item.itemId, card)
-	nameLabel.Position = UDim2.fromScale(0, 0.15)
-	nameLabel.Size = UDim2.fromScale(1, 0.3)
-	nameLabel.TextWrapped = true
-
 	local mutation = if item.mutation ~= nil then Mutations.byId[item.mutation] else nil
 	if mutation ~= nil then
 		local badge = createLabel("Mutation", mutation.displayName, card)
-		badge.Position = UDim2.fromScale(0.15, 0.46)
-		badge.Size = UDim2.fromScale(0.7, 0.12)
+		badge.Position = UDim2.fromOffset(0, line + 2)
+		badge.Size = UDim2.new(1, -touch, 0, UiConfig.CHEST_CARD_BADGE_HEIGHT)
 		badge.BackgroundTransparency = 0
 		badge.BackgroundColor3 = mutation.color
 		badge.TextColor3 = PANEL_BACKGROUND
 		addCorner(badge, 0.5)
 	end
 
+	-- Le nom commence sous l'étoile, pour ne jamais la chevaucher.
+	local nameTop = touch - UiConfig.CHEST_CARD_STAR_INSET
+	local nameLabel = createLabel("ItemName", if itemDef ~= nil then itemDef.name else item.itemId, card)
+	nameLabel.Position = UDim2.fromOffset(0, nameTop)
+	nameLabel.Size = UDim2.new(1, 0, 1, -(nameTop + line + bottomReserved + 2))
+	nameLabel.TextWrapped = true
+	local nameLimit = Instance.new("UITextSizeConstraint")
+	nameLimit.MaxTextSize = UiConfig.CHEST_CARD_NAME_MAX_TEXT
+	nameLimit.Parent = nameLabel
+
 	local valueLabel = createLabel("Value", string.format(TEXT_VALUE, formatNumber(item.value)), card)
-	valueLabel.Position = UDim2.fromScale(0, 0.6)
-	valueLabel.Size = UDim2.fromScale(1, 0.14)
+	valueLabel.AnchorPoint = Vector2.new(0, 1)
+	valueLabel.Position = UDim2.new(0, 0, 1, -bottomReserved)
+	valueLabel.Size = UDim2.new(1, 0, 0, line)
 	valueLabel.TextColor3 = MUTED_TEXT
 
-	if mode == "sell" and not item.favorite then
+	if hasSellButton then
 		local sellButton = createButton("Sell", TEXT_SELL_ONE, SELL_ONE_COLOR, card)
 		sellButton.AnchorPoint = Vector2.new(0.5, 1)
 		sellButton.Position = UDim2.fromScale(0.5, 1)
-		sellButton.Size = UDim2.new(0.9, 0, 0.22, 0)
-		local minHeight = Instance.new("UISizeConstraint")
-		minHeight.MinSize = Vector2.new(0, UiConfig.CHEST_CARD_BUTTON_MIN_HEIGHT)
-		minHeight.Parent = sellButton
+		sellButton.Size = UDim2.new(1, 0, 0, touch)
 		sellButton.Activated:Connect(function()
 			if sellCallbacks ~= nil then
 				sellCallbacks.sellOne(item.uid)
@@ -272,13 +287,13 @@ local function buildUi()
 	-- En-tête : titre, compteur, bouton fermer
 	local headerHeight = UiConfig.CHEST_BUTTON_MIN_HEIGHT
 	titleLabel = createLabel("Title", TEXT_TITLE, panel)
-	titleLabel.Size = UDim2.new(0.4, 0, 0, headerHeight)
+	titleLabel.Size = UDim2.new(0.22, 0, 0, headerHeight)
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 	counterLabel = createLabel("Counter", "", panel)
 	counterLabel.AnchorPoint = Vector2.new(1, 0)
 	counterLabel.Position = UDim2.new(1, -(headerHeight + 10), 0, 0)
-	counterLabel.Size = UDim2.new(0.25, 0, 0, headerHeight)
+	counterLabel.Size = UDim2.new(0.14, 0, 0, headerHeight)
 	counterLabel.TextXAlignment = Enum.TextXAlignment.Right
 
 	local closeButton = createButton("Close", TEXT_CLOSE, CLOSE_COLOR, panel)
@@ -289,10 +304,11 @@ local function buildUi()
 		ChestController.close()
 	end)
 
-	-- Bouton "Tout vendre", bien visible sous l'en-tête (mode vente seulement)
+	-- Bouton "Tout vendre" dans la ligne d'en-tête (mode vente seulement) : sur un téléphone bas,
+	-- une ligne de plus empêcherait de voir une rangée de cartes en entier.
 	sellAllButton = createButton("SellAll", "", SELL_ALL_COLOR, panel)
-	sellAllButton.Position = UDim2.new(0, 0, 0, headerHeight + 8)
-	sellAllButton.Size = UDim2.new(1, 0, 0, headerHeight + 8)
+	sellAllButton.Position = UDim2.new(0.24, 0, 0, 0)
+	sellAllButton.Size = UDim2.new(0.62, -(headerHeight + 16), 0, headerHeight)
 	sellAllButton.Activated:Connect(function()
 		if sellCallbacks ~= nil and getSellableTotal() > 0 then
 			sellCallbacks.sellAll()
@@ -334,7 +350,7 @@ end
 -- La grille prend la place restante sous l'en-tête (et sous "Tout vendre" en mode vente).
 local function layoutGrid()
 	local headerHeight = UiConfig.CHEST_BUTTON_MIN_HEIGHT
-	local top = if mode == "sell" then headerHeight * 2 + 24 else headerHeight + 8
+	local top = headerHeight + 8
 	grid.Position = UDim2.new(0, 0, 0, top)
 	grid.Size = UDim2.new(1, 0, 1, -top)
 end
