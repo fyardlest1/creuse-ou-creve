@@ -50,6 +50,7 @@ export type AttemptContext = {
 	victimOnline: boolean,
 	distance: number,
 	thiefInventoryCount: number,
+	thiefInventoryLimit: number,
 	victimInventory: { Types.ItemInstance },
 }
 
@@ -155,7 +156,7 @@ function NightState.checkStart(self: NightState, context: AttemptContext): (bool
 	if self:isBanned(context.thiefId, context.victimId) then
 		return false, "banned"
 	end
-	if context.thiefInventoryCount >= PlayerConfig.INVENTORY_LIMIT then
+	if context.thiefInventoryCount >= context.thiefInventoryLimit then
 		return false, "thief_chest_full"
 	end
 	if context.distance > StealConfig.PICK_MAX_DISTANCE then
@@ -188,9 +189,10 @@ function StealService.transferItem(
 	victimInventory: { Types.ItemInstance },
 	thiefInventory: { Types.ItemInstance },
 	victimName: string,
-	rng: Random
+	rng: Random,
+	thiefLimit: number?
 ): Types.ItemInstance?
-	if #thiefInventory >= PlayerConfig.INVENTORY_LIMIT then
+	if #thiefInventory >= (thiefLimit or PlayerConfig.INVENTORY_LIMIT) then
 		return nil
 	end
 	local candidates: { number } = {}
@@ -292,6 +294,7 @@ local function buildContext(thief: Player, victim: Player): AttemptContext?
 		victimOnline = victim.Parent == Players,
 		distance = if body ~= nil then (body.Position - position).Magnitude else math.huge,
 		thiefInventoryCount = #thiefData.inventory,
+		thiefInventoryLimit = PlayerDataService.getInventoryLimit(thief),
 		victimInventory = victimData.inventory,
 	}
 end
@@ -378,7 +381,13 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 	if thiefData == nil or victimData == nil then
 		return nil
 	end
-	local item = StealService.transferItem(victimData.inventory, thiefData.inventory, victim.Name, rng)
+	local item = StealService.transferItem(
+		victimData.inventory,
+		thiefData.inventory,
+		victim.Name,
+		rng,
+		PlayerDataService.getInventoryLimit(thief)
+	)
 	if item == nil then
 		reject(thief, "rien à transférer")
 		return nil

@@ -59,6 +59,7 @@ local store: any = nil
 local profiles: { [Player]: any } = {}
 local loadedCallbacks: { LoadedCallback } = {}
 local inventoryUpdatedRemote: RemoteEvent
+local inventoryLimits: { [Player]: number } = {} -- 60 avec le pass Coffre agrandi
 
 local function log(message: string)
 	print("[PlayerData] " .. message)
@@ -218,6 +219,7 @@ local function onPlayerAdded(player: Player)
 end
 
 local function onPlayerRemoving(player: Player)
+	inventoryLimits[player] = nil
 	local profile = profiles[player]
 	if profile ~= nil then
 		profile:EndSession()
@@ -236,13 +238,24 @@ end
 -- Ajoute un objet à l'inventaire. Refuse si l'inventaire est plein.
 function PlayerDataService.addItem(player: Player, item: Types.ItemInstance): boolean
 	local data = PlayerDataService.getData(player)
-	if data == nil or #data.inventory >= PlayerConfig.INVENTORY_LIMIT then
+	if data == nil or #data.inventory >= PlayerDataService.getInventoryLimit(player) then
 		return false
 	end
 	table.insert(data.inventory, item)
 	PlayerDataService.refreshAttributes(player)
 	PlayerDataService.pushInventory(player)
 	return true
+end
+
+-- Places du coffre de ce joueur (30, ou 60 avec Coffre agrandi).
+function PlayerDataService.getInventoryLimit(player: Player): number
+	return inventoryLimits[player] or PlayerConfig.INVENTORY_LIMIT
+end
+
+-- Fixée par le pass Coffre agrandi (BoostService), publiée pour le HUD.
+function PlayerDataService.setInventoryLimit(player: Player, limit: number)
+	inventoryLimits[player] = limit
+	PlayerDataService.refreshAttributes(player)
 end
 
 -- Envoie tout le coffre au client. À appeler après chaque changement du coffre.
@@ -268,6 +281,7 @@ function PlayerDataService.refreshAttributes(player: Player)
 	player:SetAttribute("EquippedShovel", data.equippedShovel)
 	player:SetAttribute("OwnedShovels", table.concat(data.ownedShovels, ","))
 	player:SetAttribute("InventoryCount", #data.inventory)
+	player:SetAttribute("InventoryLimit", PlayerDataService.getInventoryLimit(player))
 	-- Pour l'affichage "Rien à voler" chez les autres joueurs (le serveur revalide au crochetage).
 	local hasStealable = false
 	for _, item in data.inventory do

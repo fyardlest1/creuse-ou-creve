@@ -11,12 +11,15 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
+local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local WorldService = require(script.Parent.WorldService)
 
 local LEADERSTATS_NAME = "leaderstats" -- nom imposé par Roblox
 local SKU_SELL_ALL = "SellAll"
+-- Au plus un coffre entier par vente (le plus grand : Coffre agrandi).
+local MAX_UIDS_PER_SALE = math.max(PlayerConfig.INVENTORY_LIMIT, MonetizationConfig.BIGGER_CHEST_LIMIT)
 local SKU_SELL_SELECTED = "SellSelected"
 local IS_STUDIO = RunService:IsStudio()
 
@@ -61,7 +64,7 @@ local function parseSellRequest(payload: unknown): (({ string } | "all")?, strin
 	local list: { string } = {}
 	local seen: { [string]: boolean } = {}
 	for key, uid in uids do
-		if typeof(key) ~= "number" or #list >= PlayerConfig.INVENTORY_LIMIT then
+		if typeof(key) ~= "number" or #list >= MAX_UIDS_PER_SALE then
 			return nil, "liste d'uids invalide"
 		end
 		if typeof(uid) ~= "string" or #uid == 0 or #uid > EconomyConfig.UID_MAX_LENGTH then

@@ -171,7 +171,7 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 	lastHitTime[player] = now
 
 	-- Inventaire plein : on refuse le coup sans rien consommer, la case reste intacte.
-	if #data.inventory >= PlayerConfig.INVENTORY_LIMIT then
+	if #data.inventory >= PlayerDataService.getInventoryLimit(player) then
 		reject(player, "inventaire plein")
 		remotes.inventoryFull:FireClient(player)
 		return

@@ -200,7 +200,10 @@ function BoostService.start()
 		publish(player)
 		task.spawn(checkGroup, player)
 	end)
-	PurchaseService.onPassOwned(function(player: Player)
+	PurchaseService.onPassOwned(function(player: Player, key)
+		if key == "BiggerChest" then
+			PlayerDataService.setInventoryLimit(player, MonetizationConfig.BIGGER_CHEST_LIMIT)
+		end
 		publish(player)
 	end)
 	DayNightService.onPhaseChanged(function()

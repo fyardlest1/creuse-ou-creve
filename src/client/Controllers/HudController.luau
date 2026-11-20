@@ -376,7 +376,8 @@ local function readNumberAttribute(name: string, default: number): number
 end
 
 local function isChestFull(): boolean
-	return readNumberAttribute("InventoryCount", 0) >= PlayerConfig.INVENTORY_LIMIT
+	return readNumberAttribute("InventoryCount", 0)
+		>= readNumberAttribute("InventoryLimit", PlayerConfig.INVENTORY_LIMIT)
 end
 
 local function refresh()
@@ -384,8 +385,9 @@ local function refresh()
 	local count = readNumberAttribute("InventoryCount", 0)
 	depthLabel.Text = string.format(TEXT_DEPTH, depth)
 	stratumLabel.Text = Strata.fromDepth(depth).name
-	chestLabel.Text = string.format(TEXT_CHEST, count, PlayerConfig.INVENTORY_LIMIT)
-	chestPill.BackgroundColor3 = if count >= PlayerConfig.INVENTORY_LIMIT then PILL_FULL_BACKGROUND else PILL_BACKGROUND
+	local limit = readNumberAttribute("InventoryLimit", PlayerConfig.INVENTORY_LIMIT)
+	chestLabel.Text = string.format(TEXT_CHEST, count, limit)
+	chestPill.BackgroundColor3 = if count >= limit then PILL_FULL_BACKGROUND else PILL_BACKGROUND
 	coinsLabel.Text = string.format(TEXT_COINS, formatNumber(readNumberAttribute("Coins", 0)))
 end
 
@@ -500,7 +502,7 @@ function HudController.init()
 end
 
 function HudController.start()
-	for _, name in { "Depth", "InventoryCount", "Coins" } do
+	for _, name in { "Depth", "InventoryCount", "InventoryLimit", "Coins" } do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
 	Remotes.get(Remotes.Names.InventoryFull).OnClientEvent:Connect(function()

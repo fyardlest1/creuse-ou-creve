@@ -54,6 +54,12 @@ local LABEL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 
 local player = Players.LocalPlayer
 
+-- Places du coffre (30, ou 60 avec Coffre agrandi), publiées par le serveur.
+local function getInventoryLimit(): number
+	local limit = player:GetAttribute("InventoryLimit")
+	return if typeof(limit) == "number" then limit else PlayerConfig.INVENTORY_LIMIT
+end
+
 local StealController = {}
 
 type ChestView = {
@@ -121,7 +127,7 @@ local function getBlockText(victim: Player): string?
 		return string.format(TEXT_THIEF_LIMIT, steals)
 	end
 	local count = player:GetAttribute("InventoryCount")
-	if typeof(count) == "number" and count >= PlayerConfig.INVENTORY_LIMIT then
+	if typeof(count) == "number" and count >= getInventoryLimit() then
 		return TEXT_CHEST_FULL
 	end
 	return nil

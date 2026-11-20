@@ -70,6 +70,7 @@ local function context(overrides: { [string]: any }?): StealService.AttemptConte
 		victimOnline = true,
 		distance = 5,
 		thiefInventoryCount = 0,
+		thiefInventoryLimit = PlayerConfig.INVENTORY_LIMIT,
 		victimInventory = inventory(3, "Common"),
 	}
 	for key, value in overrides or {} do
@@ -235,6 +236,15 @@ local function testGuardrail6()
 		context({ thiefInventoryCount = PlayerConfig.INVENTORY_LIMIT }),
 		"thief_chest_full"
 	)
+	expectReason(
+		"Coffre agrandi : 30 objets sur 60 places, le voleur peut encore voler",
+		state,
+		context({ thiefInventoryCount = PlayerConfig.INVENTORY_LIMIT, thiefInventoryLimit = 60 }),
+		nil
+	)
+	local bigThief = inventory(PlayerConfig.INVENTORY_LIMIT, "Common")
+	local loot60 = StealService.transferItem(inventory(3, "Rare"), bigThief, "Victime", rng, 60)
+	check("transfert vers un coffre de 60 places à 30/60 : accepté", loot60 ~= nil and #bigThief == 31)
 end
 
 local function testOtherValidations()

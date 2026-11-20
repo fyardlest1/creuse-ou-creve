@@ -50,6 +50,12 @@ local TEXT_STAR_OFF = "☆"
 
 local player = Players.LocalPlayer
 
+-- Places du coffre (30, ou 60 avec Coffre agrandi), publiées par le serveur.
+local function getInventoryLimit(): number
+	local limit = player:GetAttribute("InventoryLimit")
+	return if typeof(limit) == "number" then limit else PlayerConfig.INVENTORY_LIMIT
+end
+
 local ChestController = {}
 
 local inventory: { Types.ItemInstance } = {}
@@ -256,7 +262,7 @@ local function render()
 	end
 
 	titleLabel.Text = if mode == "sell" then TEXT_TITLE_SELL else TEXT_TITLE
-	counterLabel.Text = string.format(TEXT_COUNTER, #inventory, PlayerConfig.INVENTORY_LIMIT)
+	counterLabel.Text = string.format(TEXT_COUNTER, #inventory, getInventoryLimit())
 
 	local sellable = getSellableTotal()
 	sellAllButton.Visible = mode == "sell"

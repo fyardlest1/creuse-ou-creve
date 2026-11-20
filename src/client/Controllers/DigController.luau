@@ -25,6 +25,12 @@ local RAY_LENGTH = 1000
 
 local player = Players.LocalPlayer
 
+-- Places du coffre (30, ou 60 avec Coffre agrandi), publiées par le serveur.
+local function getInventoryLimit(): number
+	local limit = player:GetAttribute("InventoryLimit")
+	return if typeof(limit) == "number" then limit else PlayerConfig.INVENTORY_LIMIT
+end
+
 local DigController = {}
 
 local digRequest: RemoteEvent
@@ -159,7 +165,7 @@ end
 
 local function isChestFull(): boolean
 	local inventoryCount = player:GetAttribute("InventoryCount")
-	return typeof(inventoryCount) == "number" and inventoryCount >= PlayerConfig.INVENTORY_LIMIT
+	return typeof(inventoryCount) == "number" and inventoryCount >= getInventoryLimit()
 end
 
 -- Un coup sur la case visée. Les coups enchaînés par l'appui gardent une petite marge sur la cadence
