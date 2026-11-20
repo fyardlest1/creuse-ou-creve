@@ -17,6 +17,8 @@ local EconomyConfig = {
 
 	-- Raretés mises en favori automatiquement à la découverte
 	AUTO_FAVORITE_RARITIES = table.freeze({ Legendary = true, Secret = true }),
+	-- Mutations qui empêchent le favori automatique (Maudit : vendre vite ou défendre, au joueur de choisir)
+	NO_AUTO_FAVORITE_MUTATIONS = table.freeze({ Cursed = true }),
 
 	-- Monnaie
 	CURRENCY_NAME = "Pièces",

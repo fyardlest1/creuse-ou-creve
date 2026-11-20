@@ -52,6 +52,18 @@ local WorldConfig = {
 	PROMPT_MAX_DISTANCE = 10,
 	PROMPT_KEY = Enum.KeyCode.E,
 	PICK_PROMPT_OFFSET = Vector2.new(0, 70), -- pixels : décale "Crocheter" sous "Ouvrir le coffre"
+
+	-- Fumée noire des coffres qui contiennent un objet Maudit (la nuit)
+	-- Noir violacé : un noir pur disparaît dans la nuit, celui-ci se détache du ciel sans s'éclairer.
+	CURSED_SMOKE_COLOR = Color3.fromRGB(45, 30, 60),
+	CURSED_SMOKE_TEXTURE = "rbxasset://textures/particles/smoke_main.dds",
+	CURSED_SMOKE_SIZE_START = 3, -- studs
+	CURSED_SMOKE_SIZE_END = 7,
+	CURSED_SMOKE_TRANSPARENCY = 0.15, -- au départ ; la fumée s'estompe en montant
+	CURSED_SMOKE_LIFETIME = 3, -- secondes
+	CURSED_SMOKE_RATE = 20, -- particules par seconde
+	CURSED_SMOKE_SPEED = 3, -- studs par seconde
+	CURSED_SMOKE_REFRESH_INTERVAL = 1, -- secondes entre deux vérifications des coffres
 }
 
 return table.freeze(WorldConfig)

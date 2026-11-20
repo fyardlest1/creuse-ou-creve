@@ -13,6 +13,7 @@ local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ShopService = require(script.Parent.ShopService)
+local DayNightService = require(script.Parent.DayNightService)
 
 local PERCENT = 100
 
@@ -75,10 +76,11 @@ function LootService.computeValue(rarityId: Types.RarityId, mutationId: Types.Mu
 end
 
 -- Tirage complet, sans joueur : rareté, mutation, objet de la couche, valeur finale et uid.
--- Les Légendaires et Secrets sont mis en favori automatiquement.
-function LootService.rollItem(layer: number, luckBonus: number): Types.ItemInstance
+-- Les Légendaires et Secrets sont mis en favori automatiquement, sauf s'ils sont Maudits :
+-- le joueur doit choisir lui-même entre vendre vite un objet Maudit et le défendre.
+function LootService.rollItem(layer: number, luckBonus: number, isNight: boolean?): Types.ItemInstance
 	local rarityId = LootService.rollRarity(luckBonus)
-	local mutationId = LootService.rollMutation()
+	local mutationId = LootService.rollMutation(isNight)
 	local item = LootService.pickItem(layer, rarityId)
 
 	return {
@@ -87,7 +89,8 @@ function LootService.rollItem(layer: number, luckBonus: number): Types.ItemInsta
 		rarity = rarityId,
 		mutation = mutationId,
 		value = LootService.computeValue(rarityId, mutationId, layer),
-		favorite = EconomyConfig.AUTO_FAVORITE_RARITIES[rarityId] == true,
+		favorite = EconomyConfig.AUTO_FAVORITE_RARITIES[rarityId] == true
+			and not (mutationId ~= nil and EconomyConfig.NO_AUTO_FAVORITE_MUTATIONS[mutationId] == true),
 	}
 end
 
@@ -96,7 +99,7 @@ function LootService.roll(player: Player): Types.ItemInstance
 	local data = PlayerDataService.getData(player)
 	local layer = Strata.fromDepth(if data ~= nil then data.depth else 0).layer
 	local shovel = ShopService.getEquippedShovel(player)
-	return LootService.rollItem(layer, shovel.luckBonus)
+	return LootService.rollItem(layer, shovel.luckBonus, DayNightService.isNight())
 end
 
 -- Vérification : fait `count` tirages de rareté et retourne la répartition en %.

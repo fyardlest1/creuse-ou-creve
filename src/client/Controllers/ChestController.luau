@@ -44,6 +44,8 @@ local TEXT_SELL_ALL = "Tout vendre (%s Pièces)"
 local TEXT_EMPTY = "Ton coffre est vide. Va creuser !"
 local TEXT_CLOSE = "X"
 local TEXT_STAR_ON = "★"
+local TEXT_STOLEN_FROM = "Volé à %s"
+local STOLEN_COLOR = Color3.fromRGB(255, 110, 110)
 local TEXT_STAR_OFF = "☆"
 
 local player = Players.LocalPlayer
@@ -196,7 +198,9 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 		badge.Size = UDim2.new(1, -touch, 0, UiConfig.CHEST_CARD_BADGE_HEIGHT)
 		badge.BackgroundTransparency = 0
 		badge.BackgroundColor3 = mutation.color
-		badge.TextColor3 = PANEL_BACKGROUND
+		-- Texte sombre sur couleur claire, blanc sur couleur sombre (Maudit).
+		local _, _, brightness = mutation.color:ToHSV()
+		badge.TextColor3 = if brightness > 0.7 then PANEL_BACKGROUND else WHITE
 		addCorner(badge, 0.5)
 	end
 
@@ -204,11 +208,21 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 	local nameTop = touch - UiConfig.CHEST_CARD_STAR_INSET
 	local nameLabel = createLabel("ItemName", if itemDef ~= nil then itemDef.name else item.itemId, card)
 	nameLabel.Position = UDim2.fromOffset(0, nameTop)
-	nameLabel.Size = UDim2.new(1, 0, 1, -(nameTop + line + bottomReserved + 2))
+	local stolenReserved = if item.stolenFrom ~= nil then line else 0
+	nameLabel.Size = UDim2.new(1, 0, 1, -(nameTop + line + stolenReserved + bottomReserved + 2))
 	nameLabel.TextWrapped = true
 	local nameLimit = Instance.new("UITextSizeConstraint")
 	nameLimit.MaxTextSize = UiConfig.CHEST_CARD_NAME_MAX_TEXT
 	nameLimit.Parent = nameLabel
+
+	-- Trophée : un objet volé affiche sa provenance.
+	if item.stolenFrom ~= nil then
+		local stolen = createLabel("StolenFrom", string.format(TEXT_STOLEN_FROM, item.stolenFrom), card)
+		stolen.AnchorPoint = Vector2.new(0, 1)
+		stolen.Position = UDim2.new(0, 0, 1, -(bottomReserved + line))
+		stolen.Size = UDim2.new(1, 0, 0, line)
+		stolen.TextColor3 = STOLEN_COLOR
+	end
 
 	local valueLabel = createLabel("Value", string.format(TEXT_VALUE, formatNumber(item.value)), card)
 	valueLabel.AnchorPoint = Vector2.new(0, 1)

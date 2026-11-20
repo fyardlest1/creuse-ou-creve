@@ -2,6 +2,7 @@
 -- Génère le décor interactif : stand du Marchand, stand de la Forge et un coffre par parcelle.
 -- Chaque interaction passe par un ProximityPrompt (la bonne interaction sur mobile).
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
@@ -12,6 +13,7 @@ local DayNightConfig = require(Shared.Config.DayNightConfig)
 local StealConfig = require(Shared.Config.StealConfig)
 local PlotService = require(script.Parent.PlotService)
 local DayNightService = require(script.Parent.DayNightService)
+local PlayerDataService = require(script.Parent.PlayerDataService)
 
 type StandStyle = {
 	name: string,
@@ -25,6 +27,9 @@ type StandStyle = {
 local FOLDER_NAME = "Stands"
 
 local WorldService = {}
+
+-- Fumée noire de chaque coffre (par parcelle), visible par tous la nuit si le coffre contient un Maudit.
+local cursedSmoke: { [Model]: ParticleEmitter } = {}
 
 -- Prompts "Crocheter" de chaque coffre, avec la parcelle qui les porte (écoutés par StealService).
 local pickPrompts: { { plot: Model, prompt: ProximityPrompt } } = {}
@@ -196,6 +201,28 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 	pick.UIOffset = WorldConfig.PICK_PROMPT_OFFSET
 	table.insert(pickPrompts, { plot = plotModel, prompt = pick })
 
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Name = "CursedSmoke"
+	smoke.Color = ColorSequence.new(WorldConfig.CURSED_SMOKE_COLOR)
+	smoke.Size = NumberSequence.new(WorldConfig.CURSED_SMOKE_SIZE_START, WorldConfig.CURSED_SMOKE_SIZE_END)
+	smoke.Texture = WorldConfig.CURSED_SMOKE_TEXTURE
+	smoke.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, WorldConfig.CURSED_SMOKE_TRANSPARENCY),
+		NumberSequenceKeypoint.new(0.7, 0.45),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	smoke.LightInfluence = 0 -- pas assombrie par la nuit
+	smoke.Rotation = NumberRange.new(0, 360)
+	smoke.RotSpeed = NumberRange.new(-30, 30)
+	smoke.Lifetime = NumberRange.new(WorldConfig.CURSED_SMOKE_LIFETIME)
+	smoke.Rate = WorldConfig.CURSED_SMOKE_RATE
+	smoke.Speed = NumberRange.new(WorldConfig.CURSED_SMOKE_SPEED)
+	smoke.SpreadAngle = Vector2.new(15, 15)
+	smoke.EmissionDirection = Enum.NormalId.Top
+	smoke.Enabled = false
+	smoke.Parent = body
+	cursedSmoke[plotModel] = smoke
+
 	-- Lanterne à côté du coffre, allumée la nuit (le serveur l'allume : tout le monde la voit).
 	local postSize = DayNightConfig.LANTERN_POST_SIZE
 	local base = position - Vector3.new(0, size.Y / 2, 0) + DayNightConfig.LANTERN_OFFSET
@@ -242,6 +269,29 @@ end
 -- Position du comptoir de la Forge, pour la validation de distance côté serveur.
 function WorldService.getForgePosition(): Vector3
 	return forgePosition
+end
+
+local function hasCursedItem(player: Player): boolean
+	local data = PlayerDataService.getData(player)
+	if data == nil then
+		return false
+	end
+	for _, item in data.inventory do
+		if item.mutation == "Cursed" then
+			return true
+		end
+	end
+	return false
+end
+
+-- Fumée : la nuit, sur les coffres dont le propriétaire garde un objet Maudit.
+local function refreshCursedSmoke()
+	local night = DayNightService.isNight()
+	for plot, smoke in cursedSmoke do
+		local ownerId = plot:GetAttribute("OwnerUserId")
+		local owner = if typeof(ownerId) == "number" and ownerId ~= 0 then Players:GetPlayerByUserId(ownerId) else nil
+		smoke.Enabled = night and owner ~= nil and hasCursedItem(owner)
+	end
 end
 
 -- Prompts "Crocheter" de tous les coffres, avec leur parcelle.
@@ -302,6 +352,13 @@ function WorldService.start()
 	setLanterns(DayNightService.isNight())
 	DayNightService.onPhaseChanged(function(phase)
 		setLanterns(phase == "Night")
+		refreshCursedSmoke()
+	end)
+	task.spawn(function()
+		while true do
+			refreshCursedSmoke()
+			task.wait(WorldConfig.CURSED_SMOKE_REFRESH_INTERVAL)
+		end
 	end)
 end
 
