@@ -21,6 +21,7 @@ local Names = table.freeze({
 	BuyShovel = "BuyShovel", -- client -> serveur : shovelId
 	ShovelChanged = "ShovelChanged", -- serveur -> client : shovelId
 	StratumBlocked = "StratumBlocked", -- serveur -> client : requiredShovel (shovelId)
+	DigSwing = "DigSwing", -- serveur -> tous les clients : player (coup de pelle validé, à animer)
 })
 
 local function getFolderOnServer(): Folder

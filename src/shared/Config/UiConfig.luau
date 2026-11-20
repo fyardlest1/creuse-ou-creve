@@ -17,6 +17,14 @@ local UiConfig = {
 	BANNER_LONG_TIME = 4, -- messages à lire : pelle requise, coffre plein
 	BANNER_FADE_TIME = 0.3,
 
+	-- Geste de creusage (épaule droite). Durée totale = DIG_COOLDOWN, pour enchaîner les coups.
+	SWING_AXIS = Vector3.new(1, 0, 0), -- axe de rotation de l'épaule
+	SWING_RAISE_ANGLE = 70, -- degrés : la pelle se lève vers l'avant
+	SWING_STRIKE_ANGLE = 5, -- degrés : la lame frappe le sol devant le personnage
+	SWING_RAISE_TIME = 0.06,
+	SWING_STRIKE_TIME = 0.06, -- l'impact (particules, son) arrive à la fin de la frappe
+	SWING_RECOVER_TIME = 0.1,
+
 	-- Retour local du coup de pelle
 	CELL_SHAKE_DEPTH = 0.25, -- studs
 	CELL_SHAKE_TIME = 0.08,

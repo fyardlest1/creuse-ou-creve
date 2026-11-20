@@ -15,6 +15,7 @@ local PlotConfig = require(Shared.Config.PlotConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local ShovelController = require(script.Parent.ShovelController)
 
 local RAY_LENGTH = 1000
 
@@ -159,9 +160,14 @@ local function tryDig(screenPosition: Vector2)
 		return
 	end
 
-	shakeCell(cell)
-	emitDirt(cell, UiConfig.DIRT_PARTICLES_PER_HIT)
-	hitSound:Play()
+	-- Le geste part tout de suite ; terre, secousse et son arrivent quand la lame touche la case.
+	ShovelController.swingLocal(function()
+		if cell.Parent ~= nil then
+			shakeCell(cell)
+			emitDirt(cell, UiConfig.DIRT_PARTICLES_PER_HIT)
+		end
+		hitSound:Play()
+	end)
 end
 
 -- Place la caméra derrière le personnage, tournée vers sa parcelle, une fois la téléportation arrivée.

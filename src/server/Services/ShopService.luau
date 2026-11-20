@@ -14,6 +14,7 @@ local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local WorldService = require(script.Parent.WorldService)
+local ShovelVisualService = require(script.Parent.ShovelVisualService)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -100,6 +101,7 @@ local function onBuyShovel(player: Player, shovelId: unknown)
 	table.insert(data.ownedShovels, shovel.id)
 	data.equippedShovel = shovel.id
 	PlayerDataService.refreshAttributes(player)
+	ShovelVisualService.refresh(player)
 	shovelChangedRemote:FireClient(player, shovel.id)
 	print(string.format("[ShopService] %s achète la %s (%d Pièces)", player.Name, shovel.name, shovel.price))
 end

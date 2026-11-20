@@ -35,6 +35,15 @@ export type StratumId = "Dirt" | "Clay" | "Rock"
 -- Raison d'un gain ou d'une dépense de Pièces (analytique).
 export type EconomyReason = "Sell" | "ShovelPurchase"
 
+-- Apparence de la pelle tenue en main (version simple en Parts, remplacée en semaine 5).
+export type ShovelAppearance = {
+	handleColor: Color3,
+	handleMaterial: Enum.Material,
+	bladeColor: Color3,
+	bladeMaterial: Enum.Material,
+	bladeReflectance: number, -- 0 = mat, l'acier brille légèrement
+}
+
 export type ShovelDef = {
 	id: ShovelId,
 	name: string,
@@ -42,6 +51,7 @@ export type ShovelDef = {
 	hitsPerCell: number, -- coups nécessaires pour vider une case
 	luckBonus: number, -- en pourcentage (30 = +30 %)
 	maxStratum: StratumId, -- couche la plus profonde accessible
+	appearance: ShovelAppearance,
 }
 
 export type StratumDef = {

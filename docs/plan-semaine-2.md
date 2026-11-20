@@ -192,3 +192,17 @@ Critères d'acceptation :
 ## 10. Message à donner à Claude Code
 
 > Lis `CLAUDE.md` puis `docs/plan-semaine-2.md`. Implémente la semaine 2 en suivant l'ordre des tâches de la section 8, une tâche à la fois. Après chaque tâche, lance un playtest dans Studio par MCP, lis l'Output, corrige les erreurs, puis fais un commit Git. Pour la tâche 9, donne-moi les résultats bruts de la simulation avant d'ajuster quoi que ce soit. Arrête-toi et demande-moi avant toute décision qui contredit le plan.
+
+## 11. Ajout en cours de semaine : la pelle visible
+
+Oubli du plan initial : aucune pelle n'était visible dans la main du personnage. Or le pilier 4 du GDD, « filmable », repose sur cette image : un joueur qui creuse sans pelle visible ne donne pas envie d'être filmé.
+
+| Sujet | Décision |
+|---|---|
+| Modèle | Une pelle construite en Parts simples (manche et lame), soudée à la main droite (`RightHand`, ou `Right Arm` en R6). Créée par le serveur (`ShovelVisualService`), donc visible par tous les joueurs. |
+| Pas de Tool | On n'utilise pas de Tool Roblox : sur mobile, il ajoute une barre d'inventaire inutile, et le joueur pourrait ranger sa pelle par erreur. Le Backpack est désactivé côté client (`StarterGui:SetCoreGuiEnabled`). |
+| Apparence par pelle | Dans `Shovels.luau` (`appearance`) : bois (manche et lame brun clair), fer (lame gris foncé), acier (lame argentée qui brille légèrement). La pelle change tout de suite dans la main à l'achat, et revient après une réapparition. |
+| Geste de creusage | Animation procédurale côté client : à chaque coup, l'épaule droite lève la pelle puis frappe (réglages dans `UiConfig.luau`, `SWING_*`). La terre, la secousse et le son partent à l'impact de la lame. Le serveur envoie `DigSwing` à tous les clients à chaque coup validé, pour que les autres joueurs voient le geste. |
+| Semaine 5 (polish) | On remplacera la pelle en Parts par un vrai modèle 3D, et le geste par une animation faite dans l'éditeur d'animation. |
+
+Note technique : les avatars utilisent les nouvelles articulations (`AnimationConstraint`, pas `Motor6D`). Le geste s'applique donc en ajoutant une rotation au `Transform` de l'épaule à chaque image, après l'Animator (`RunService.PreSimulation`). Cela fonctionne avec les deux types d'articulation et se combine aux animations de marche.

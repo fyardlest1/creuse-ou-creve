@@ -31,6 +31,7 @@ local remotes: {
 	inventoryFull: RemoteEvent,
 	layerCleared: RemoteEvent,
 	stratumBlocked: RemoteEvent,
+	digSwing: RemoteEvent,
 }
 
 -- Les requêtes invalides sont ignorées, et loggées en Studio seulement.
@@ -170,6 +171,9 @@ local function onDigRequest(player: Player, cellIndex: unknown)
 		return
 	end
 
+	-- Coup validé : tous les clients animent le geste (le client du joueur l'a déjà joué).
+	remotes.digSwing:FireAllClients(player)
+
 	local shovel = ShopService.getEquippedShovel(player)
 	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.
 	local power = PlotConfig.HITS_PER_CELL / shovel.hitsPerCell
@@ -190,6 +194,7 @@ function DigService.init()
 		inventoryFull = Remotes.get(Remotes.Names.InventoryFull),
 		layerCleared = Remotes.get(Remotes.Names.LayerCleared),
 		stratumBlocked = Remotes.get(Remotes.Names.StratumBlocked),
+		digSwing = Remotes.get(Remotes.Names.DigSwing),
 	}
 end
 
