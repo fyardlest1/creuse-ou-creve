@@ -1,7 +1,7 @@
 --!strict
 -- Game passes, developer products et paramètres de leurs effets (plan semaine 4, sections 3 et 4).
--- Identifiants à 0 tant que les vrais ne sont pas créés sur le Creator Hub : dans Studio, un produit à 0
--- est simulé (même traitement que les vrais reçus) ; en ligne, il est simplement indisponible.
+-- Identifiants réels du Creator Hub (branchés le 2026-11-20). Un produit remis à 0 est simulé dans Studio
+-- (même traitement que les vrais reçus) ; en ligne, il est simplement indisponible.
 -- Textes affichés en français (langue source) ; l'anglais passe par Localization sur le Creator Hub.
 
 export type PassKey = "BiggerChest" | "LuckX2" | "AutoDig" | "VIP" | "Bodyguard"
@@ -37,7 +37,7 @@ export type ProductDef = {
 local passes: { PassDef } = {
 	{
 		key = "BiggerChest",
-		id = 0,
+		id = 2096676808,
 		price = 149,
 		name = "Coffre agrandi",
 		description = "Double la taille de ton coffre : 60 places au lieu de 30.",
@@ -45,7 +45,7 @@ local passes: { PassDef } = {
 	},
 	{
 		key = "LuckX2",
-		id = 0,
+		id = 2091838874,
 		price = 299,
 		name = "Chance x2",
 		description = "Double pour toujours tes chances de déterrer des objets Rares, Épiques, Légendaires et Secrets.",
@@ -53,7 +53,7 @@ local passes: { PassDef } = {
 	},
 	{
 		key = "AutoDig",
-		id = 0,
+		id = 2092438864,
 		price = 449,
 		name = "Creusage auto",
 		description = "Ta pelle creuse toute seule ta parcelle. Active-le ou coupe-le quand tu veux.",
@@ -61,7 +61,7 @@ local passes: { PassDef } = {
 	},
 	{
 		key = "VIP",
-		id = 0,
+		id = 2092612906,
 		price = 399,
 		name = "VIP",
 		description = "+10 % de Pièces sur toutes tes ventes et une étiquette VIP dorée.",
@@ -69,7 +69,7 @@ local passes: { PassDef } = {
 	},
 	{
 		key = "Bodyguard",
-		id = 0,
+		id = 2094190831,
 		price = 349,
 		name = "Garde du corps",
 		description = "Un garde protège ton coffre : les voleurs mettent 8 secondes à le crocheter au lieu de 5.",
@@ -80,7 +80,7 @@ local passes: { PassDef } = {
 local products: { ProductDef } = {
 	{
 		key = "LuckPotion",
-		id = 0,
+		id = 3733963259,
 		price = 39,
 		name = "Potion de chance",
 		description = "Chances x3 pendant 10 minutes. Le temps s'ajoute si une potion est déjà active.",
@@ -88,7 +88,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "Shield",
-		id = 0,
+		id = 3733963471,
 		price = 49,
 		name = "Bouclier anti-vol",
 		description = "Personne ne peut crocheter ton coffre pendant une nuit entière.",
@@ -96,7 +96,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "CoinPouch",
-		id = 0,
+		id = 3733963581,
 		price = 99,
 		name = "Bourse de Pièces",
 		description = "5 000 Pièces, ajoutées tout de suite.",
@@ -105,7 +105,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "CoinBag",
-		id = 0,
+		id = 3733963810,
 		price = 249,
 		name = "Sac de Pièces",
 		description = "15 000 Pièces, ajoutées tout de suite.",
@@ -114,7 +114,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "CoinChest",
-		id = 0,
+		id = 3733963957,
 		price = 499,
 		name = "Coffret de Pièces",
 		description = "35 000 Pièces, ajoutées tout de suite. De quoi t'offrir la Pelle en acier.",
@@ -123,7 +123,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "CoinVault",
-		id = 0,
+		id = 3733964120,
 		price = 999,
 		name = "Trésor de Pièces",
 		description = "80 000 Pièces, ajoutées tout de suite. Le meilleur rapport Pièces par Robux.",
@@ -132,7 +132,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "ServerLuckEvent",
-		id = 0,
+		id = 3733964347,
 		price = 249,
 		name = "Événement chance",
 		description = "Chances x2 pour tout le serveur pendant 5 minutes, avec ton nom affiché chez chaque joueur.",
@@ -140,7 +140,7 @@ local products: { ProductDef } = {
 	},
 	{
 		key = "Revenge",
-		id = 0,
+		id = 3733964544,
 		price = 29,
 		name = "Revanche",
 		description = "La nuit : téléporte-toi devant le coffre de ton dernier voleur. Les règles du vol s'appliquent.",

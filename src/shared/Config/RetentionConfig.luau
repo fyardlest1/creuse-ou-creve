@@ -106,13 +106,13 @@ local RetentionConfig = {
 
 	-- Badges Roblox
 	BADGES = table.freeze({
-		FirstDig = 0, -- Premier coup de pelle
-		FirstSecret = 0, -- Premier Secret
-		FirstSteal = 0, -- Voleur de l'ombre
-		FirstEjection = 0, -- Gardien du coffre
-		EnterClay = 0, -- Explorateur de l'Argile
-		EnterRock = 0, -- Explorateur de la Roche
-		DirtIndex = 0, -- Archéologue de la Terre
+		FirstDig = 2381052402289384, -- Premier coup de pelle
+		FirstSecret = 1058041869514830, -- Premier Secret
+		FirstSteal = 1659728267361525, -- Voleur de l'ombre
+		FirstEjection = 295175583710677, -- Gardien du coffre
+		EnterClay = 3430935305696041, -- Explorateur de l'Argile
+		EnterRock = 0, -- Explorateur de la Roche (identifiant à fournir)
+		DirtIndex = 0, -- Archéologue de la Terre (identifiant à fournir)
 	}) :: { [BadgeKey]: number },
 
 	-- Entonnoir d'accueil (AnalyticsService:LogOnboardingFunnelStepEvent), une seule fois par joueur.
