@@ -150,12 +150,18 @@ Avant le test, réduis la protection débutant à 0 et la durée du jour à 1 mi
 
 ## 11. Critères de réussite de la semaine
 
-- [ ] Le cycle tourne pendant 30 minutes sans dérive ni erreur, et le minuteur est juste chez tous les clients.
-- [ ] Les 6 garde-fous de la section 3 sont couverts par `StealRules.luau` et vérifiés en test réel.
-- [ ] Aucun objet perdu ni dupliqué pendant un vol, même si le voleur ou la victime quitte le jeu en plein crochetage.
-- [ ] Un client modifié ne peut pas voler le jour, de loin, sans maintenir 5 secondes, ni éjecter quelqu'un qui ne vole pas son coffre.
-- [ ] La nuit reste lisible en émulation téléphone.
-- [ ] Les 7 tests de la section 10 passent.
+- [x] Le cycle tourne pendant 30 minutes sans dérive ni erreur, et le minuteur est juste chez tous les clients.
+  *Vérifié sur 31 min 43 s (vraies durées) : 6 changements de phase, chacun détecté au plus 0,031 s après l'heure prévue, sans cumul ; 3 cycles complets de 600,000 s exactement (480 s de jour, 120 s de nuit) ; minuteur client juste sur 186 mesures (écart max 1 s, arrondi à la seconde), éclairage conforme à la phase ; aucune erreur dans l'Output.*
+- [x] Les 6 garde-fous de la section 3 sont couverts par `StealRules.luau` et vérifiés en test réel.
+  *`StealRules.luau` : 38 tests réussis. Tests réels à 2 joueurs (section 10) réussis par Yardley.*
+- [x] Aucun objet perdu ni dupliqué pendant un vol, même si le voleur ou la victime quitte le jeu en plein crochetage.
+  *Transfert atomique testé par `StealRules.luau` (garde-fou 6) ; départ en plein crochetage testé à 2 joueurs par Yardley (8e test).*
+- [x] Un client modifié ne peut pas voler le jour, de loin, sans maintenir 5 secondes, ni éjecter quelqu'un qui ne vole pas son coffre.
+  *Le serveur revalide tout (jour, distance, 5 s sur l'horloge serveur) : couvert par `StealRules.luau`. Prompt forcé côté client et `EjectRequest` envoyés à la main : refusés par le serveur.*
+- [x] La nuit reste lisible en émulation téléphone.
+  *Vérifié au simulateur d'appareil Studio (iPhone 14, paysage).*
+- [x] Les 7 tests de la section 10 passent.
+  *Réussis par Yardley, ainsi que le test de départ en plein crochetage. Mode de test Studio remis à `false` ensuite.*
 
 ## 12. Message à donner à Claude Code
 
