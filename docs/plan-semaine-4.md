@@ -30,23 +30,23 @@
 
 **Game passes (achat unique) :**
 
-| Pass | Prix (Robux) | Effet exact |
-|---|---|---|
-| Coffre agrandi | 149 | Coffre de 60 places au lieu de 30. |
-| Chance x2 | 299 | Multiplicateur de chance x2 permanent (section 4). |
-| Creusage auto | 449 | Bouton dans le HUD pour activer ou couper le creusage automatique : le serveur donne 1 coup toutes les 0,8 s sur une case intacte de ta parcelle, où que tu sois, tant que ton coffre n'est pas plein. Plus lent que le creusage à la main (0,2 s), pour que jouer reste plus rentable. |
-| VIP | 399 | +10 % de Pièces à la vente, étiquette VIP dorée au-dessus du personnage et dans le chat (`TextChatService`). Le salon VIP physique viendra en semaine 5. |
-| Garde du corps | 349 | Un garde PNJ se tient près de ton coffre. Le crochetage de ton coffre dure 8 s au lieu de 5. |
+| Pass           | Prix (Robux) | Effet exact                                                                                                                                                                                                                                                                             |
+| -------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coffre agrandi | 149          | Coffre de 60 places au lieu de 30.                                                                                                                                                                                                                                                      |
+| Chance x2      | 299          | Multiplicateur de chance x2 permanent (section 4).                                                                                                                                                                                                                                      |
+| Creusage auto  | 449          | Bouton dans le HUD pour activer ou couper le creusage automatique : le serveur donne 1 coup toutes les 0,8 s sur une case intacte de ta parcelle, où que tu sois, tant que ton coffre n'est pas plein. Plus lent que le creusage à la main (0,2 s), pour que jouer reste plus rentable. |
+| VIP            | 399          | +10 % de Pièces à la vente, étiquette VIP dorée au-dessus du personnage et dans le chat (`TextChatService`). Le salon VIP physique viendra en semaine 5.                                                                                                                                |
+| Garde du corps | 349          | Un garde PNJ se tient près de ton coffre. Le crochetage de ton coffre dure 8 s au lieu de 5.                                                                                                                                                                                            |
 
 **Developer products (achats répétables) :**
 
-| Produit | Prix (Robux) | Effet exact |
-|---|---|---|
-| Potion de chance | 39 | Active tout de suite un multiplicateur x3 pendant 10 min. Si une potion est déjà active, la durée s'additionne. |
-| Bouclier anti-vol | 49 | Ton coffre ne peut pas être crocheté pendant la nuit en cours si tu l'achètes la nuit, sinon pendant la prochaine nuit. Les crochetages en cours sont annulés. |
-| Pack de Pièces | 99 / 249 / 499 / 999 | 5 000 / 15 000 / 35 000 / 80 000 Pièces (4 produits). |
-| Événement chance | 249 | Multiplicateur x2 pour **tout le serveur** pendant 5 min, avec un bandeau "Chance x2 offerte par Yardley !" chez tous les joueurs. Un seul événement actif à la fois : le produit est grisé pendant qu'un autre tourne. |
-| Revanche | 29 | Disponible seulement la nuit, si ton dernier voleur est encore dans le serveur et peut être visé. Te téléporte devant son coffre. Les règles normales du vol s'appliquent (protection, déjà pillé, limite de 2 vols). Si les conditions ne sont plus remplies à la réception du paiement, tu reçois une Potion de chance à la place. |
+| Produit           | Prix (Robux)         | Effet exact                                                                                                                                                                                                                                                                                                                          |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Potion de chance  | 39                   | Active tout de suite un multiplicateur x3 pendant 10 min. Si une potion est déjà active, la durée s'additionne.                                                                                                                                                                                                                      |
+| Bouclier anti-vol | 49                   | Ton coffre ne peut pas être crocheté pendant la nuit en cours si tu l'achètes la nuit, sinon pendant la prochaine nuit. Les crochetages en cours sont annulés.                                                                                                                                                                       |
+| Pack de Pièces    | 99 / 249 / 499 / 999 | 5 000 / 15 000 / 35 000 / 80 000 Pièces (4 produits).                                                                                                                                                                                                                                                                                |
+| Événement chance  | 249                  | Multiplicateur x2 pour **tout le serveur** pendant 5 min, avec un bandeau "Chance x2 offerte par Yardley !" chez tous les joueurs. Un seul événement actif à la fois : le produit est grisé pendant qu'un autre tourne.                                                                                                              |
+| Revanche          | 29                   | Disponible seulement la nuit, si ton dernier voleur est encore dans le serveur et peut être visé. Te téléporte devant son coffre. Les règles normales du vol s'appliquent (protection, déjà pillé, limite de 2 vols). Si les conditions ne sont plus remplies à la réception du paiement, tu reçois une Potion de chance à la place. |
 
 Tous les prix et identifiants vont dans `src/shared/Config/MonetizationConfig.luau`.
 
@@ -75,15 +75,15 @@ Le multiplicateur s'applique aux poids de Rare, Épique, Légendaire et Secret, 
 
 **Récompenses quotidiennes :** un calendrier de 7 jours qui avance d'une case à chaque nouveau jour de connexion (jour UTC). **Manquer un jour ne remet pas à zéro** : on reprend où on en était, et le calendrier recommence après le jour 7. Récompenses :
 
-| Jour | Récompense |
-|---|---|
-| 1 | 300 Pièces |
-| 2 | 600 Pièces |
-| 3 | 1 Potion de chance |
-| 4 | 1 500 Pièces |
-| 5 | 3 000 Pièces |
-| 6 | 1 Bouclier anti-vol |
-| 7 | 1 Potion de chance + 7 500 Pièces |
+| Jour | Récompense                        |
+| ---- | --------------------------------- |
+| 1    | 300 Pièces                        |
+| 2    | 600 Pièces                        |
+| 3    | 1 Potion de chance                |
+| 4    | 1 500 Pièces                      |
+| 5    | 3 000 Pièces                      |
+| 6    | 1 Bouclier anti-vol               |
+| 7    | 1 Potion de chance + 7 500 Pièces |
 
 Les potions et boucliers gagnés ainsi vont dans une **réserve**, et le joueur les active quand il veut depuis le HUD. Ceux achetés en Robux s'activent tout de suite.
 
