@@ -45,6 +45,7 @@ local TEXT_ROBBED = "Déjà pillé cette nuit"
 local TEXT_THIEF_LIMIT = "Tu as déjà volé %d fois cette nuit"
 local TEXT_CHEST_FULL = "Ton coffre est plein"
 local TEXT_BANNED = "Tu as été éjecté de ce coffre"
+local TEXT_NOTHING_TO_STEAL = "Rien à voler"
 
 local WHITE = Color3.new(1, 1, 1)
 local CARD_BACKGROUND = Color3.fromRGB(28, 26, 34)
@@ -111,6 +112,9 @@ local function getBlockText(victim: Player): string?
 	end
 	if bannedOwners[victim.UserId] then
 		return TEXT_BANNED
+	end
+	if victim:GetAttribute("HasStealableItem") == false then
+		return TEXT_NOTHING_TO_STEAL
 	end
 	local steals = player:GetAttribute("StealsTonight")
 	if typeof(steals) == "number" and steals >= StealConfig.MAX_STEALS_PER_NIGHT then

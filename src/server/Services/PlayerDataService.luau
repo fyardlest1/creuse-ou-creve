@@ -12,6 +12,7 @@ local Mutations = require(Shared.Config.Mutations)
 local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
+local StealConfig = require(Shared.Config.StealConfig)
 local Remotes = require(Shared.Remotes)
 local ProfileStore = require(script.Parent.Parent.Vendor.ProfileStore)
 
@@ -225,6 +226,15 @@ function PlayerDataService.refreshAttributes(player: Player)
 	player:SetAttribute("EquippedShovel", data.equippedShovel)
 	player:SetAttribute("OwnedShovels", table.concat(data.ownedShovels, ","))
 	player:SetAttribute("InventoryCount", #data.inventory)
+	-- Pour l'affichage "Rien à voler" chez les autres joueurs (le serveur revalide au crochetage).
+	local hasStealable = false
+	for _, item in data.inventory do
+		if StealConfig.NON_STEALABLE_RARITIES[item.rarity] ~= true then
+			hasStealable = true
+			break
+		end
+	end
+	player:SetAttribute("HasStealableItem", hasStealable)
 	player:SetAttribute("ShowDigHint", not data.digHintDone)
 end
 
