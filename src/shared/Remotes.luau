@@ -34,6 +34,10 @@ local Names = table.freeze({
 	RevengeCompensated = "RevengeCompensated", -- serveur -> joueur : Revanche impossible, potion en réserve
 	ShopStateRequest = "ShopStateRequest", -- client -> serveur : aucun (état de la boutique)
 	ShopState = "ShopState", -- serveur -> client : { [clé] = raison ou "" si achetable }
+	DailyClaim = "DailyClaim", -- client -> serveur : aucun (réclamer la récompense du jour)
+	RetentionStateRequest = "RetentionStateRequest", -- client -> serveur : aucun
+	RetentionState = "RetentionState", -- serveur -> client : quotidien, quêtes, Index, titre
+	RetentionNotice = "RetentionNotice", -- serveur -> client : texte (quête réussie, palier d'Index...)
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 })
 

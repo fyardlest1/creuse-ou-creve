@@ -24,6 +24,7 @@ local WorldConfig = require(Shared.Config.WorldConfig)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local PurchaseService = require(script.Parent.PurchaseService)
 local BoostService = require(script.Parent.BoostService)
+local GameEvents = require(script.Parent.Parent.GameEvents)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -427,6 +428,7 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 	publishNightAttributes(victim)
 	thiefData.stats.stealsSucceeded += 1
 	thiefData.thiefPoints += StealConfig.THIEF_POINTS_PER_STEAL
+	GameEvents.stealSucceeded.fire(thief, victim)
 	victimData.stats.timesRobbed += 1
 	lastThiefByVictim[victim.UserId] = thief.UserId
 
@@ -521,6 +523,7 @@ local function onEjectRequest(owner: Player, thiefUserId: unknown)
 	local ownerData = PlayerDataService.getData(owner)
 	if ownerData ~= nil then
 		ownerData.stats.ejections += 1
+		GameEvents.ejected.fire(owner, thief)
 	end
 	remotes.ejected:FireClient(thief, owner.Name, StealConfig.STUN_SECONDS)
 	logEvent(owner, StealConfig.ANALYTICS_EVENTS.Ejection)

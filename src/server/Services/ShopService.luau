@@ -15,6 +15,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local WorldService = require(script.Parent.WorldService)
 local ShovelVisualService = require(script.Parent.ShovelVisualService)
+local GameEvents = require(script.Parent.Parent.GameEvents)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -99,6 +100,7 @@ local function onBuyShovel(player: Player, shovelId: unknown)
 		return
 	end
 	table.insert(data.ownedShovels, shovel.id)
+	GameEvents.shovelBought.fire(player, shovel.id)
 	data.equippedShovel = shovel.id
 	PlayerDataService.refreshAttributes(player)
 	ShovelVisualService.refresh(player)

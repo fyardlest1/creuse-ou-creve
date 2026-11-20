@@ -128,6 +128,13 @@ local RetentionConfig = {
 	}),
 
 	SECONDS_PER_DAY = 86400, -- jour UTC : floor(os.time() / SECONDS_PER_DAY)
+	DAY_CHECK_INTERVAL = 30, -- secondes entre deux vérifications du changement de jour
+
+	-- Titre de l'Index affiché au-dessus du personnage, sous le nom
+	TITLE_TAG_SIZE = Vector2.new(200, 26), -- pixels
+	TITLE_TAG_HEIGHT = 1.6, -- studs au-dessus de la tête (le nom et l'étiquette VIP sont plus haut)
+	TITLE_TAG_MAX_DISTANCE = 60, -- studs
+	TITLE_TAG_COLOR = Color3.fromRGB(150, 230, 255),
 }
 
 return table.freeze(RetentionConfig)

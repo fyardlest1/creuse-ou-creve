@@ -34,7 +34,7 @@ export type ShovelId = "Wood" | "Iron" | "Steel"
 export type StratumId = "Dirt" | "Clay" | "Rock"
 
 -- Raison d'un gain ou d'une dépense de Pièces (analytique).
-export type EconomyReason = "Sell" | "ShovelPurchase" | "Purchase"
+export type EconomyReason = "Sell" | "ShovelPurchase" | "Purchase" | "DailyReward" | "Reward"
 
 -- Apparence de la pelle tenue en main (version simple en Parts, remplacée en semaine 5).
 export type ShovelAppearance = {
@@ -94,7 +94,7 @@ export type Boosts = { luckPotion: number, shield: number }
 -- Effets actifs : fin de la potion (os.time()), numéro de la nuit protégée par un Bouclier.
 export type Effects = { luckUntil: number, shieldNightId: number }
 
-export type DailyState = { lastClaimDay: number, calendarDay: number }
+export type DailyState = { lastClaimDay: number, calendarDay: number, firstSeenDay: number }
 
 export type QuestState = { id: string, target: number, progress: number, claimed: boolean, reward: number }
 

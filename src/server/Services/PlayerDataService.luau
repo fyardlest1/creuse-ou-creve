@@ -44,7 +44,7 @@ local TEMPLATE: Types.PlayerData = {
 	thiefPoints = 0,
 	boosts = { luckPotion = 0, shield = 0 },
 	effects = { luckUntil = 0, shieldNightId = 0 },
-	daily = { lastClaimDay = 0, calendarDay = 0 },
+	daily = { lastClaimDay = 0, calendarDay = 0, firstSeenDay = 0 },
 	quests = { day = 0, list = {}, bonusClaimed = false },
 	index = {},
 	indexRewards = {},
@@ -124,7 +124,7 @@ end
 local function migrateV3ToV4(data: any)
 	data.boosts = data.boosts or { luckPotion = 0, shield = 0 }
 	data.effects = data.effects or { luckUntil = 0, shieldNightId = 0 }
-	data.daily = data.daily or { lastClaimDay = 0, calendarDay = 0 }
+	data.daily = data.daily or { lastClaimDay = 0, calendarDay = 0, firstSeenDay = 0 }
 	data.quests = data.quests or { day = 0, list = {}, bonusClaimed = false }
 	data.index = data.index or {}
 	for _, item in data.inventory do

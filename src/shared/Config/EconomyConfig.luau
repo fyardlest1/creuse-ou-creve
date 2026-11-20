@@ -35,6 +35,8 @@ local EconomyConfig = {
 		Sell = "Gameplay",
 		ShovelPurchase = "Shop",
 		Purchase = "IAP", -- packs de Pièces achetés en Robux
+		DailyReward = "TimedReward", -- calendrier quotidien
+		Reward = "Gameplay", -- quêtes et paliers de l'Index
 	}),
 
 	-- Simulation d'équilibrage (EconomySimulation)

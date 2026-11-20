@@ -17,6 +17,7 @@ local PlotService = require(script.Parent.PlotService)
 local LootService = require(script.Parent.LootService)
 local ShopService = require(script.Parent.ShopService)
 local BoostService = require(script.Parent.BoostService)
+local GameEvents = require(script.Parent.Parent.GameEvents)
 
 local CELL_COUNT = PlotConfig.GRID_SIZE * PlotConfig.GRID_SIZE
 local HITS_ATTRIBUTE = "HitsLeft"
@@ -82,6 +83,7 @@ local function clearLayer(player: Player, data: Types.PlayerData)
 		)
 	else
 		data.depth = nextDepth
+		GameEvents.depthReached.fire(player, data.depth, nextStratum.id)
 		PlayerDataService.refreshAttributes(player)
 		remotes.layerCleared:FireClient(player, nextStratum.layer, data.depth)
 		print(string.format("[DigService] %s descend à %d m (%s)", player.Name, data.depth, nextStratum.name))
@@ -123,6 +125,7 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 		inventoryCount = #data.inventory,
 	}
 	remotes.itemRevealed:FireClient(player, payload)
+	GameEvents.itemFound.fire(player, item)
 
 	if PlotService.countRemainingCells(player) == 0 then
 		clearLayer(player, data)
@@ -134,6 +137,7 @@ end
 local function applyHit(player: Player, data: Types.PlayerData, cell: BasePart, index: number, hitsLeft: number)
 	-- Tous les clients animent le geste (le client du joueur l'a déjà joué s'il a cliqué).
 	remotes.digSwing:FireAllClients(player)
+	GameEvents.digHit.fire(player)
 
 	local shovel = ShopService.getEquippedShovel(player)
 	-- Une case vaut HITS_PER_CELL unités de travail ; la pelle la vide en hitsPerCell coups.

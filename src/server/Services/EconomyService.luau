@@ -16,6 +16,7 @@ local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local WorldService = require(script.Parent.WorldService)
 local PurchaseService = require(script.Parent.PurchaseService)
+local GameEvents = require(script.Parent.Parent.GameEvents)
 
 local LEADERSTATS_NAME = "leaderstats" -- nom imposé par Roblox
 local SKU_SELL_ALL = "SellAll"
@@ -249,6 +250,7 @@ local function onSellRequest(player: Player, payload: unknown)
 		PlayerDataService.refreshAttributes(player)
 		PlayerDataService.pushInventory(player)
 		print(string.format("[EconomyService] %s vend %d objet(s) pour %d Pièces", player.Name, soldCount, total))
+		GameEvents.sold.fire(player, total, soldCount)
 	end
 
 	local result: Types.SellResultPayload = {
