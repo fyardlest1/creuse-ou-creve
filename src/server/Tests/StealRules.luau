@@ -67,6 +67,7 @@ local function context(overrides: { [string]: any }?): StealService.AttemptConte
 		victimId = VICTIM,
 		thiefProtected = false,
 		victimProtected = false,
+		victimShielded = false,
 		victimOnline = true,
 		distance = 5,
 		thiefInventoryCount = 0,
@@ -192,6 +193,19 @@ local function testGuardrail4()
 	check("protection jamais négative", ProtectionService.remainingFor(StealConfig.PROTECTION_SECONDS * 2) == 0)
 end
 
+local function testShield()
+	table.insert(results, "Bouclier anti-vol")
+	local state = NightState.new()
+	expectReason(
+		"victime avec un Bouclier actif : refusé",
+		state,
+		context({ victimShielded = true }),
+		"victim_shielded"
+	)
+	local ok = state:checkFinish(context({ victimShielded = true }), StealConfig.PICK_DURATION)
+	check("Bouclier activé pendant le crochetage : refusé à la fin", not ok)
+end
+
 local function testGuardrail5()
 	table.insert(results, "Garde-fou 5 : les joueurs hors ligne ne perdent rien")
 	local state = NightState.new()
@@ -289,6 +303,7 @@ function StealRules.run(): (string, number, number)
 	testGuardrail3()
 	testGuardrail4()
 	testGuardrail5()
+	testShield()
 	testGuardrail6()
 	testOtherValidations()
 	local report =

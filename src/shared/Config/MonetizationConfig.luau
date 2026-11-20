@@ -191,6 +191,10 @@ local MonetizationConfig = {
 	POTION_DURATION = 10 * 60, -- secondes, s'additionnent
 	SERVER_EVENT_MULTIPLIER = 2,
 	SERVER_EVENT_DURATION = 5 * 60, -- secondes
+	TEXT_SHIELD_ALREADY = "Ton coffre est déjà protégé pour cette nuit",
+	TEXT_EVENT_RUNNING = "Un événement est déjà en cours",
+	TEXT_EVENT_BANNER = "Chance x2 offerte par %s !",
+	TEXT_REVENGE_COMPENSATED = "Ta Revanche n'était plus possible : une Potion de chance t'attend dans ta réserve",
 
 	-- Formule unique de la chance (section 4)
 	GROUP_ID = 0, -- groupe Konbit Games ; 0 = bonus désactivé

@@ -296,6 +296,15 @@ end
 
 function EconomyService.start()
 	Remotes.get(Remotes.Names.SellRequest).OnServerEvent:Connect(onSellRequest)
+	-- Packs de Pièces (developer products) : Pièces ajoutées tout de suite.
+	for _, product in MonetizationConfig.products do
+		local coins = product.coins
+		if coins ~= nil then
+			PurchaseService.registerProduct(product.key, function(player: Player): boolean
+				return EconomyService.addCoins(player, coins, "Purchase", product.key)
+			end)
+		end
+	end
 	Remotes.get(Remotes.Names.ToggleFavorite).OnServerEvent:Connect(onToggleFavorite)
 	PlayerDataService.onLoaded(function(player: Player)
 		createLeaderstats(player)

@@ -19,6 +19,7 @@ local Strata = require(Shared.Config.Strata)
 local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
+local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local ChestController = require(script.Parent.ChestController)
 
 local PILL_BACKGROUND = Color3.fromRGB(28, 26, 34)
@@ -558,6 +559,19 @@ function HudController.start()
 	for _, name in { "Depth", "InventoryCount", "InventoryLimit", "Coins" } do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
+	Remotes.get(Remotes.Names.LuckEventStarted).OnClientEvent:Connect(function(buyerName: unknown)
+		if typeof(buyerName) == "string" then
+			showBanner(
+				string.format(MonetizationConfig.TEXT_EVENT_BANNER, buyerName),
+				BANNER_SUCCESS,
+				UiConfig.BANNER_LONG_TIME
+			)
+		end
+	end)
+	Remotes.get(Remotes.Names.RevengeCompensated).OnClientEvent:Connect(function()
+		showBanner(MonetizationConfig.TEXT_REVENGE_COMPENSATED, BANNER_INFO, UiConfig.BANNER_LONG_TIME)
+	end)
+
 	Remotes.get(Remotes.Names.InventoryFull).OnClientEvent:Connect(function()
 		showBanner(TEXT_CHEST_FULL, BANNER_ALERT, UiConfig.BANNER_LONG_TIME)
 		fullSound:Play()

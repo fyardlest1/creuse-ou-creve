@@ -37,6 +37,7 @@ local CANCEL_REASONS: { [string]: string } = {
 	["trop loin"] = "tu t'es trop éloigné",
 	["jour"] = "le jour se lève",
 	["départ"] = "le joueur est parti",
+	["bouclier"] = "le coffre est protégé par un Bouclier",
 }
 -- Raisons affichées au-dessus du coffre d'un autre joueur, la nuit, quand le vol est impossible.
 local TEXT_SELF_PROTECTED = "Tu es protégé (%d min)"
@@ -46,6 +47,7 @@ local TEXT_THIEF_LIMIT = "Tu as déjà volé %d fois cette nuit"
 local TEXT_CHEST_FULL = "Ton coffre est plein"
 local TEXT_BANNED = "Tu as été éjecté de ce coffre"
 local TEXT_NOTHING_TO_STEAL = "Rien à voler"
+local TEXT_SHIELDED = "Protégé par un Bouclier"
 
 local WHITE = Color3.new(1, 1, 1)
 local CARD_BACKGROUND = Color3.fromRGB(28, 26, 34)
@@ -112,6 +114,9 @@ local function getBlockText(victim: Player): string?
 	local victimRemaining = remainingProtection(victim)
 	if victimRemaining > 0 then
 		return string.format(TEXT_VICTIM_PROTECTED, math.ceil(victimRemaining / 60))
+	end
+	if victim:GetAttribute("ShieldTonight") == true then
+		return TEXT_SHIELDED
 	end
 	if victim:GetAttribute("RobbedTonight") == true then
 		return TEXT_ROBBED

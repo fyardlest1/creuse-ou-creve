@@ -23,6 +23,7 @@ local WorldService = require(script.Parent.WorldService)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local PurchaseService = require(script.Parent.PurchaseService)
+local BoostService = require(script.Parent.BoostService)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -32,6 +33,7 @@ export type Reason =
 	| "own_chest"
 	| "thief_protected"
 	| "victim_protected"
+	| "victim_shielded"
 	| "victim_offline"
 	| "already_robbed"
 	| "thief_limit"
@@ -49,6 +51,7 @@ export type AttemptContext = {
 	victimId: number,
 	thiefProtected: boolean,
 	victimProtected: boolean,
+	victimShielded: boolean, -- Bouclier anti-vol actif pour la nuit en cours
 	victimOnline: boolean,
 	distance: number,
 	thiefInventoryCount: number,
@@ -146,6 +149,9 @@ function NightState.checkStart(self: NightState, context: AttemptContext): (bool
 	if context.victimProtected then
 		return false, "victim_protected" -- garde-fou 4
 	end
+	if context.victimShielded then
+		return false, "victim_shielded" -- Bouclier anti-vol
+	end
 	if self:isRobbed(context.victimId) then
 		return false, "already_robbed" -- garde-fou 1
 	end
@@ -231,6 +237,7 @@ local remotes: {
 	stealCancelled: RemoteEvent,
 	stealSucceeded: RemoteEvent,
 	ejected: RemoteEvent,
+	revengeCompensated: RemoteEvent,
 }
 
 local function log(message: string)
@@ -294,6 +301,7 @@ local function buildContext(thief: Player, victim: Player): AttemptContext?
 		victimId = victim.UserId,
 		thiefProtected = ProtectionService.isProtected(thief),
 		victimProtected = ProtectionService.isProtected(victim),
+		victimShielded = BoostService.isShieldActive(victim),
 		victimOnline = victim.Parent == Players,
 		distance = if body ~= nil then (body.Position - position).Magnitude else math.huge,
 		thiefInventoryCount = #thiefData.inventory,
@@ -525,6 +533,45 @@ function StealService.isPicking(thief: Player, victim: Player): boolean
 	return pick ~= nil and pick.victim == victim
 end
 
+-- Revanche : le joueur peut-il viser son dernier voleur maintenant ? Retourne le voleur, ou nil et la
+-- raison affichée. La distance ne compte pas : la Revanche téléporte devant son coffre.
+function StealService.getRevengeTarget(player: Player): (Player?, string?)
+	if not DayNightService.isNight() then
+		return nil, StealConfig.TEXT_REVENGE_DAY
+	end
+	local thiefId = lastThiefByVictim[player.UserId]
+	local thief = if thiefId ~= nil then Players:GetPlayerByUserId(thiefId) else nil
+	if thief == nil then
+		return nil, StealConfig.TEXT_REVENGE_NO_THIEF
+	end
+	local context = buildContext(player, thief)
+	if context == nil then
+		return nil, StealConfig.TEXT_REVENGE_BLOCKED
+	end
+	context.distance = 0
+	local ok = night:checkStart(context)
+	if not ok then
+		return nil, StealConfig.TEXT_REVENGE_BLOCKED
+	end
+	return thief, nil
+end
+
+-- Téléporte le joueur devant le coffre de son dernier voleur. false si les conditions ne sont plus remplies.
+function StealService.applyRevenge(player: Player): boolean
+	local thief = StealService.getRevengeTarget(player)
+	local chest = if thief ~= nil then WorldService.getChest(thief) else nil
+	local body = if chest ~= nil then chest.PrimaryPart else nil
+	local character = player.Character
+	if thief == nil or body == nil or character == nil then
+		return false
+	end
+	local front = body.Position + body.CFrame.LookVector * StealConfig.REVENGE_TELEPORT_DISTANCE
+	local position = front + Vector3.new(0, StealConfig.REVENGE_TELEPORT_HEIGHT, 0)
+	character:PivotTo(CFrame.lookAt(position, Vector3.new(body.Position.X, position.Y, body.Position.Z)))
+	log(string.format("%s se venge : téléporté devant le coffre de %s", player.Name, thief.Name))
+	return true
+end
+
 function StealService.isRobbedTonight(victim: Player): boolean
 	return night:isRobbed(victim.UserId)
 end
@@ -539,6 +586,7 @@ function StealService.init()
 		stealCancelled = Remotes.get(Remotes.Names.StealCancelled),
 		stealSucceeded = Remotes.get(Remotes.Names.StealSucceeded),
 		ejected = Remotes.get(Remotes.Names.Ejected),
+		revengeCompensated = Remotes.get(Remotes.Names.RevengeCompensated),
 	}
 end
 
@@ -601,6 +649,34 @@ function StealService.start()
 	end)
 
 	Remotes.get(Remotes.Names.EjectRequest).OnServerEvent:Connect(onEjectRequest)
+
+	-- Bouclier : les crochetages en cours sur ce coffre sont annulés.
+	BoostService.onShieldActivated(function(owner: Player)
+		if not BoostService.isShieldActive(owner) then
+			return -- bouclier prévu pour la prochaine nuit
+		end
+		for thief, pick in activePicks do
+			if pick.victim == owner then
+				StealService.cancelPick(thief, "bouclier")
+			end
+		end
+	end)
+
+	-- Revanche : la nuit, si le dernier voleur peut être visé. Sinon, Potion de chance dans la réserve.
+	PurchaseService.registerCondition("Revenge", function(player: Player): string?
+		local _, reason = StealService.getRevengeTarget(player)
+		return reason
+	end)
+	PurchaseService.registerProduct("Revenge", function(player: Player, data: any): boolean
+		local canRevenge = StealService.getRevengeTarget(player) ~= nil
+		if PurchaseService.resolveRevenge(canRevenge) == "Revenge" and StealService.applyRevenge(player) then
+			return true
+		end
+		BoostService.addToReserve(player, data, "luckPotion", 1)
+		remotes.revengeCompensated:FireClient(player)
+		log(string.format("%s : Revanche impossible, Potion de chance ajoutée à la réserve", player.Name))
+		return true
+	end)
 
 	-- Garde du corps : prompt à 8 s et garde posté près du coffre.
 	PurchaseService.onPassOwned(function(player: Player, key)

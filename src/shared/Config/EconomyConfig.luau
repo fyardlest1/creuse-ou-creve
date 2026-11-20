@@ -34,6 +34,7 @@ local EconomyConfig = {
 	ANALYTICS_TRANSACTION_TYPES = table.freeze({
 		Sell = "Gameplay",
 		ShovelPurchase = "Shop",
+		Purchase = "IAP", -- packs de Pièces achetés en Robux
 	}),
 
 	-- Simulation d'équilibrage (EconomySimulation)

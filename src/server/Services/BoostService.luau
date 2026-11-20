@@ -125,11 +125,12 @@ function BoostService.activateShield(player: Player, data: any): boolean
 end
 
 -- Événement chance : x2 pour tout le serveur pendant SERVER_EVENT_DURATION. Un seul à la fois.
-function BoostService.startServerEvent(buyer: Player): boolean
-	if BoostService.isServerEventActive() then
+-- Avec extend, un événement déjà en cours est prolongé (achat payé pendant qu'un autre tournait).
+function BoostService.startServerEvent(buyer: Player, extend: boolean?): boolean
+	if BoostService.isServerEventActive() and not extend then
 		return false
 	end
-	serverEventEndsAt = now() + MonetizationConfig.SERVER_EVENT_DURATION
+	serverEventEndsAt = math.max(serverEventEndsAt, now()) + MonetizationConfig.SERVER_EVENT_DURATION
 	ReplicatedStorage:SetAttribute(ATTRIBUTE_EVENT_ENDS_AT, serverEventEndsAt)
 	ReplicatedStorage:SetAttribute(ATTRIBUTE_EVENT_BUYER, buyer.DisplayName)
 	eventStartedRemote:FireAllClients(buyer.DisplayName, serverEventEndsAt)
@@ -221,6 +222,29 @@ end
 
 function BoostService.start()
 	Remotes.get(Remotes.Names.UseBoost).OnServerEvent:Connect(onUseBoost)
+
+	-- Developer products. Achetés en Robux, ils s'activent tout de suite.
+	PurchaseService.registerProduct("LuckPotion", function(player: Player, data: any): boolean
+		return BoostService.activatePotion(player, data)
+	end)
+	PurchaseService.registerCondition("Shield", function(player: Player): string?
+		return if BoostService.canActivateShield(player) then nil else MonetizationConfig.TEXT_SHIELD_ALREADY
+	end)
+	PurchaseService.registerProduct("Shield", function(player: Player, data: any): boolean
+		if BoostService.canActivateShield(player) then
+			return BoostService.activateShield(player, data)
+		end
+		-- Déjà protégé pour cette nuit (achat payé entre-temps) : le Bouclier va dans la réserve.
+		BoostService.addToReserve(player, data, "shield", 1)
+		return true
+	end)
+	PurchaseService.registerCondition("ServerLuckEvent", function(): string?
+		return if BoostService.isServerEventActive() then MonetizationConfig.TEXT_EVENT_RUNNING else nil
+	end)
+	PurchaseService.registerProduct("ServerLuckEvent", function(player: Player): boolean
+		-- Payé pendant qu'un autre événement tournait : l'événement est prolongé (valeur égale).
+		return BoostService.startServerEvent(player, true)
+	end)
 	PlayerDataService.onLoaded(function(player: Player)
 		publish(player)
 		task.spawn(checkGroup, player)
