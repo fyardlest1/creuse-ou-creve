@@ -21,10 +21,10 @@ local DayNightConfig = {
 		OutdoorAmbient = Color3.fromRGB(128, 128, 128),
 	}),
 	NIGHT_LIGHTING = table.freeze({
-		ClockTime = 0,
-		Brightness = 1,
-		Ambient = Color3.fromRGB(90, 100, 150), -- sombre et bleuté, jamais noir
-		OutdoorAmbient = Color3.fromRGB(80, 95, 150),
+		ClockTime = 19.6, -- crépuscule tardif : ciel bleu sombre (à 0 h le ciel est noir)
+		Brightness = 1.5,
+		Ambient = Color3.fromRGB(110, 120, 175), -- sombre et bleuté, jamais noir
+		OutdoorAmbient = Color3.fromRGB(105, 115, 175),
 	}),
 
 	-- Lanterne près de chaque coffre, allumée la nuit
@@ -40,6 +40,10 @@ local DayNightConfig = {
 	SOUND_PHASE_BELL = "rbxasset://sounds/electronicpingshort.wav",
 	VOLUME_PHASE_BELL = 0.8,
 	PITCH_PHASE_BELL = 0.6,
+	-- Ambiance nocturne discrète : aucun son intégré ne convient, à renseigner avec un asset
+	-- ("rbxassetid://..."). Vide = pas d'ambiance.
+	SOUND_NIGHT_AMBIENCE = "",
+	VOLUME_NIGHT_AMBIENCE = 0.25,
 }
 
 return table.freeze(DayNightConfig)

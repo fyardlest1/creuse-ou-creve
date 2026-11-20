@@ -420,6 +420,14 @@ local function updateMerchantArrow()
 	arrowFrame.Visible = true
 end
 
+export type BannerKind = "alert" | "success" | "info"
+
+-- Bandeau d'information, utilisable par les autres contrôleurs (nuit, vol...).
+function HudController.showBanner(text: string, kind: BannerKind, long: boolean?)
+	local color = if kind == "alert" then BANNER_ALERT elseif kind == "success" then BANNER_SUCCESS else BANNER_INFO
+	showBanner(text, color, if long then UiConfig.BANNER_LONG_TIME else nil)
+end
+
 function HudController.init()
 	buildUi()
 	fullSound = Instance.new("Sound")

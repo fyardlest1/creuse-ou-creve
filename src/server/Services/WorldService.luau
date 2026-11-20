@@ -8,7 +8,9 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
+local DayNightConfig = require(Shared.Config.DayNightConfig)
 local PlotService = require(script.Parent.PlotService)
+local DayNightService = require(script.Parent.DayNightService)
 
 type StandStyle = {
 	name: string,
@@ -22,6 +24,9 @@ type StandStyle = {
 local FOLDER_NAME = "Stands"
 
 local WorldService = {}
+
+-- Lanternes des coffres : la partie lumineuse et sa lumière, allumées la nuit.
+local lanterns: { { glass: BasePart, light: PointLight } } = {}
 
 local merchantPosition: Vector3
 local forgePosition: Vector3
@@ -172,7 +177,43 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 	lid.Parent = model
 
 	createPrompt(body, WorldConfig.CHEST_TITLE, WorldConfig.CHEST_ACTION, WorldConfig.INTERACTIONS.Chest)
+
+	-- Lanterne à côté du coffre, allumée la nuit (le serveur l'allume : tout le monde la voit).
+	local postSize = DayNightConfig.LANTERN_POST_SIZE
+	local base = position - Vector3.new(0, size.Y / 2, 0) + DayNightConfig.LANTERN_OFFSET
+	local post = createPart(
+		"LanternPost",
+		postSize,
+		CFrame.new(base + Vector3.new(0, postSize.Y / 2, 0)),
+		WorldConfig.STAND_WOOD_COLOR,
+		Enum.Material.Wood
+	)
+	post.Parent = model
+	local glass = createPart(
+		"Lantern",
+		DayNightConfig.LANTERN_SIZE,
+		CFrame.new(base + Vector3.new(0, postSize.Y + DayNightConfig.LANTERN_SIZE.Y / 2, 0)),
+		DayNightConfig.LANTERN_COLOR_OFF,
+		Enum.Material.SmoothPlastic
+	)
+	glass.Parent = model
+	local light = Instance.new("PointLight")
+	light.Range = DayNightConfig.LANTERN_LIGHT_RANGE
+	light.Brightness = DayNightConfig.LANTERN_LIGHT_BRIGHTNESS
+	light.Color = DayNightConfig.LANTERN_COLOR_ON
+	light.Enabled = false
+	light.Parent = glass
+	table.insert(lanterns, { glass = glass, light = light })
+
 	model.Parent = plotModel
+end
+
+local function setLanterns(on: boolean)
+	for _, lantern in lanterns do
+		lantern.light.Enabled = on
+		lantern.glass.Material = if on then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		lantern.glass.Color = if on then DayNightConfig.LANTERN_COLOR_ON else DayNightConfig.LANTERN_COLOR_OFF
+	end
 end
 
 -- Position du comptoir du Marchand, pour la validation de distance côté serveur.
@@ -234,6 +275,11 @@ function WorldService.init()
 	print("[WorldService] Marchand, Forge et coffres générés")
 end
 
-function WorldService.start() end
+function WorldService.start()
+	setLanterns(DayNightService.isNight())
+	DayNightService.onPhaseChanged(function(phase)
+		setLanterns(phase == "Night")
+	end)
+end
 
 return WorldService

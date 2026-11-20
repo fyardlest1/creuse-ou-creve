@@ -91,6 +91,7 @@ local UiConfig = {
 	HUD_TOP_MARGIN = 6, -- pixels depuis le haut de la zone d'interface
 	HUD_SPACING = 8, -- pixels entre deux éléments empilés du HUD
 	MERCHANT_ARROW_SIZE = 60, -- pixels, sous le compteur de Pièces
+	DAY_NIGHT_TIMER_SIZE = Vector2.new(130, 30), -- pixels, minuteur en haut à gauche
 
 	-- Sons
 	SOUND_SELL = "rbxasset://sounds/electronicpingshort.wav", -- son de caisse temporaire
