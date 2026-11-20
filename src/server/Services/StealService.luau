@@ -21,6 +21,8 @@ local DayNightService = require(script.Parent.DayNightService)
 local ProtectionService = require(script.Parent.ProtectionService)
 local WorldService = require(script.Parent.WorldService)
 local WorldConfig = require(Shared.Config.WorldConfig)
+local MonetizationConfig = require(Shared.Config.MonetizationConfig)
+local PurchaseService = require(script.Parent.PurchaseService)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -52,6 +54,7 @@ export type AttemptContext = {
 	thiefInventoryCount: number,
 	thiefInventoryLimit: number,
 	victimInventory: { Types.ItemInstance },
+	pickDuration: number, -- 5 s, ou 8 s si la victime a le Garde du corps
 }
 
 local StealService = {}
@@ -174,7 +177,7 @@ function NightState.checkFinish(self: NightState, context: AttemptContext, heldS
 	if not ok then
 		return false, reason
 	end
-	if heldSeconds < StealConfig.PICK_DURATION - StealConfig.PICK_TIME_TOLERANCE then
+	if heldSeconds < context.pickDuration - StealConfig.PICK_TIME_TOLERANCE then
 		return false, "hold_too_short"
 	end
 	return true, nil
@@ -296,7 +299,26 @@ local function buildContext(thief: Player, victim: Player): AttemptContext?
 		thiefInventoryCount = #thiefData.inventory,
 		thiefInventoryLimit = PlayerDataService.getInventoryLimit(thief),
 		victimInventory = victimData.inventory,
+		pickDuration = StealService.getPickDuration(victim),
 	}
+end
+
+-- Durée du crochetage du coffre de cette victime : 8 s avec le Garde du corps, sinon 5 s.
+function StealService.getPickDuration(victim: Player): number
+	return if PurchaseService.ownsPass(victim, "Bodyguard")
+		then MonetizationConfig.BODYGUARD_PICK_DURATION
+		else StealConfig.PICK_DURATION
+end
+
+-- Le prompt "Crocheter" de chaque coffre affiche la durée de son propriétaire.
+local function refreshPickDurations()
+	for _, entry in WorldService.getPickPrompts() do
+		local ownerId = entry.plot:GetAttribute("OwnerUserId")
+		local owner = if typeof(ownerId) == "number" and ownerId ~= 0 then Players:GetPlayerByUserId(ownerId) else nil
+		entry.prompt.HoldDuration = if owner ~= nil
+			then StealService.getPickDuration(owner)
+			else StealConfig.PICK_DURATION
+	end
 end
 
 -- Raison pour laquelle ce voleur ne peut pas viser ce coffre maintenant (nil si possible).
@@ -579,6 +601,18 @@ function StealService.start()
 	end)
 
 	Remotes.get(Remotes.Names.EjectRequest).OnServerEvent:Connect(onEjectRequest)
+
+	-- Garde du corps : prompt à 8 s et garde posté près du coffre.
+	PurchaseService.onPassOwned(function(player: Player, key)
+		if key == "Bodyguard" then
+			WorldService.setBodyguard(player, true)
+			refreshPickDurations()
+		end
+	end)
+	-- Les parcelles changent de propriétaire à l'arrivée et au départ des joueurs.
+	for _, entry in WorldService.getPickPrompts() do
+		entry.plot:GetAttributeChangedSignal("OwnerUserId"):Connect(refreshPickDurations)
+	end
 
 	-- Le voleur s'éloigne du coffre pendant le maintien : annulé.
 	local sinceCheck = 0

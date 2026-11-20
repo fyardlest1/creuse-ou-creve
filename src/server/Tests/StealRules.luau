@@ -72,6 +72,7 @@ local function context(overrides: { [string]: any }?): StealService.AttemptConte
 		thiefInventoryCount = 0,
 		thiefInventoryLimit = PlayerConfig.INVENTORY_LIMIT,
 		victimInventory = inventory(3, "Common"),
+		pickDuration = StealConfig.PICK_DURATION,
 	}
 	for key, value in overrides or {} do
 		base[key] = value
@@ -271,6 +272,10 @@ local function testOtherValidations()
 	check("maintenu juste sous la marge : refusé", not tooShortOk)
 	local fullOk = state:checkFinish(context(), StealConfig.PICK_DURATION)
 	check("maintenu 5 s : autorisé", fullOk)
+	local guardShort = state:checkFinish(context({ pickDuration = 8 }), 6)
+	check("Garde du corps : maintenu 6 s sur 8 : refusé", not guardShort)
+	local guardFull = state:checkFinish(context({ pickDuration = 8 }), 8)
+	check("Garde du corps : maintenu 8 s : autorisé", guardFull)
 	local dayOk, dayReason = state:checkFinish(context({ isNight = false }), StealConfig.PICK_DURATION)
 	check("5 s maintenues mais le jour s'est levé : refusé", not dayOk and dayReason == "day")
 end

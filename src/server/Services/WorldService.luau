@@ -299,6 +299,53 @@ function WorldService.getPickPrompts(): { { plot: Model, prompt: ProximityPrompt
 	return pickPrompts
 end
 
+-- Garde du corps : un garde PNJ se tient près du coffre de ce joueur (visible par tous), retiré à son départ.
+local bodyguards: { [Player]: Model } = {}
+function WorldService.setBodyguard(player: Player, enabled: boolean)
+	local existing = bodyguards[player]
+	if existing ~= nil then
+		existing:Destroy()
+		bodyguards[player] = nil
+	end
+	local chest = WorldService.getChest(player)
+	local body = if chest ~= nil then chest.PrimaryPart else nil
+	if not enabled or body == nil then
+		return
+	end
+	local ok, guard = pcall(function()
+		local description = Instance.new("HumanoidDescription")
+		for _, part in { "Head", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg" } do
+			(description :: any)[part .. "Color"] = WorldConfig.BODYGUARD_COLOR
+		end
+		description.HeadColor = WorldConfig.BODYGUARD_SKIN_COLOR
+		return Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
+	end)
+	if not ok or guard == nil then
+		warn("[WorldService] Garde du corps impossible à créer : " .. tostring(guard))
+		return
+	end
+	local model = guard :: Model
+	model.Name = "Bodyguard"
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	if humanoid ~= nil then
+		humanoid.DisplayName = WorldConfig.BODYGUARD_NAME
+		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+	end
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+			part.CanCollide = false
+			part.CanQuery = false
+		end
+	end
+	-- À côté du coffre, de l'autre côté de la lanterne (décalages dans le repère du monde), tourné vers
+	-- l'extérieur comme le coffre.
+	local position = body.Position + WorldConfig.BODYGUARD_OFFSET
+	model:PivotTo(CFrame.lookAt(position, position + body.CFrame.LookVector))
+	model.Parent = chest
+	bodyguards[player] = model
+end
+
 -- Coffre de la parcelle d'un joueur, ou nil.
 function WorldService.getChest(player: Player): Model?
 	local plot = PlotService.getPlot(player)
@@ -349,6 +396,9 @@ function WorldService.init()
 end
 
 function WorldService.start()
+	Players.PlayerRemoving:Connect(function(player)
+		WorldService.setBodyguard(player, false)
+	end)
 	setLanterns(DayNightService.isNight())
 	DayNightService.onPhaseChanged(function(phase)
 		setLanterns(phase == "Night")
