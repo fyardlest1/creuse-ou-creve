@@ -23,6 +23,9 @@ local Names = table.freeze({
 	StratumBlocked = "StratumBlocked", -- serveur -> client : requiredShovel (shovelId)
 	DigSwing = "DigSwing", -- serveur -> tous les clients : player (coup de pelle validé, à animer)
 	PhaseChanged = "PhaseChanged", -- serveur -> tous : phase ("Day" | "Night"), endsAt (GetServerTimeNow)
+	StealStarted = "StealStarted", -- serveur -> victime : thiefName, thiefUserId
+	StealCancelled = "StealCancelled", -- serveur -> victime et voleur : reason, otherName
+	StealSucceeded = "StealSucceeded", -- serveur -> victime et voleur : itemName, rarity, thiefName, victimName
 })
 
 local function getFolderOnServer(): Folder

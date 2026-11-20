@@ -8,6 +8,7 @@ local StealConfig = {
 	PICK_DURATION = 5, -- secondes de maintien du prompt "Crocheter"
 	PICK_TIME_TOLERANCE = 0.25, -- secondes : marge de décalage réseau entre début et fin du maintien
 	PICK_MAX_DISTANCE = 10, -- studs entre le voleur et le coffre
+	PICK_DISTANCE_CHECK_INTERVAL = 0.25, -- secondes entre deux vérifications de distance pendant le maintien
 
 	-- Garde-fous (plan semaine 3, section 3)
 	MAX_LOSSES_PER_NIGHT = 1, -- objets perdus au maximum par une victime, par nuit
