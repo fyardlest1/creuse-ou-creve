@@ -8,6 +8,7 @@ local WorldConfig = {
 		Merchant = "Merchant",
 		Forge = "Forge",
 		Chest = "Chest",
+		Pick = "Pick", -- crocheter le coffre d'un autre joueur (la nuit)
 	}),
 
 	-- Stands, placés sur la place centrale (décalage depuis PlotConfig.PLOT_ORIGIN), tournés vers le centre
@@ -43,10 +44,14 @@ local WorldConfig = {
 	CHEST_TRIM_COLOR = Color3.fromRGB(240, 190, 60),
 	CHEST_TITLE = "Coffre",
 	CHEST_ACTION = "Ouvrir le coffre",
+	PICK_ACTION = "Crocheter",
+	-- Attributs d'affichage du vol
+	ATTRIBUTE_BEING_PICKED = "BeingPicked", -- sur le coffre : un crochetage est en cours (clignote)
 
 	-- ProximityPrompt (portée inférieure à la distance validée par le serveur)
 	PROMPT_MAX_DISTANCE = 10,
 	PROMPT_KEY = Enum.KeyCode.E,
+	PICK_PROMPT_OFFSET = Vector2.new(0, 70), -- pixels : décale "Crocheter" sous "Ouvrir le coffre"
 }
 
 return table.freeze(WorldConfig)

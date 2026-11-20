@@ -69,6 +69,9 @@ local arrowDial: Frame
 local bannerGeneration = 0
 local fullSound: Sound
 local merchantPosition: Vector3? = nil
+-- Cible prioritaire de la flèche (ex. son coffre attaqué), avec sa légende. Sinon : le Marchand.
+local arrowOverride: { position: Vector3, caption: string, reachDistance: number }? = nil
+local arrowCaption: TextLabel
 local protectionPill: Frame
 local protectionLabel: TextLabel
 
@@ -286,6 +289,7 @@ local function buildMerchantArrow(gui: ScreenGui)
 	caption.TextColor3 = WHITE
 	caption.TextStrokeTransparency = 0.3
 	caption.Text = TEXT_ARROW_LABEL
+	arrowCaption = caption
 	caption.Parent = arrowFrame
 end
 
@@ -433,21 +437,24 @@ local function updateMerchantArrow()
 	local character = player.Character
 	local rootPart = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
 	local camera = Workspace.CurrentCamera
-	if not isChestFull() or rootPart == nil or not rootPart:IsA("BasePart") or camera == nil then
+	local override = arrowOverride
+	if (override == nil and not isChestFull()) or rootPart == nil or not rootPart:IsA("BasePart") or camera == nil then
 		arrowFrame.Visible = false
 		return
 	end
 	if merchantPosition == nil then
 		merchantPosition = findMerchantPosition()
 	end
-	local target = merchantPosition
+	local target = if override ~= nil then override.position else merchantPosition
+	local reach = if override ~= nil then override.reachDistance else EconomyConfig.MERCHANT_MAX_DISTANCE
+	arrowCaption.Text = if override ~= nil then override.caption else TEXT_ARROW_LABEL
 	if target == nil then
 		arrowFrame.Visible = false
 		return
 	end
 
 	local toMerchant = (target - rootPart.Position) * Vector3.new(1, 0, 1)
-	if toMerchant.Magnitude <= EconomyConfig.MERCHANT_MAX_DISTANCE then
+	if toMerchant.Magnitude <= reach then
 		arrowFrame.Visible = false
 		return
 	end
@@ -465,6 +472,16 @@ local function updateMerchantArrow()
 end
 
 export type BannerKind = "alert" | "success" | "info"
+
+-- Force la flèche vers une position (prioritaire sur le Marchand), cachée à moins de reachDistance.
+-- nil rend la flèche au Marchand.
+function HudController.setArrowTarget(position: Vector3?, caption: string?, reachDistance: number?)
+	if position == nil then
+		arrowOverride = nil
+		return
+	end
+	arrowOverride = { position = position, caption = caption or "", reachDistance = reachDistance or 0 }
+end
 
 -- Bandeau d'information, utilisable par les autres contrôleurs (nuit, vol...).
 function HudController.showBanner(text: string, kind: BannerKind, long: boolean?)

@@ -93,7 +93,19 @@ local UiConfig = {
 	MERCHANT_ARROW_SIZE = 60, -- pixels, sous le compteur de Pièces
 	DAY_NIGHT_TIMER_SIZE = Vector2.new(130, 30), -- pixels, minuteur en haut à gauche
 
+	-- Vol (la nuit)
+	STEAL_REFRESH_INTERVAL = 0.25, -- secondes entre deux mises à jour des prompts de coffre
+	STEAL_LABEL_HEIGHT = 4.5, -- studs au-dessus du coffre
+	STEAL_LABEL_SIZE = Vector2.new(220, 34), -- pixels
+	STEAL_LABEL_MAX_DISTANCE = 30, -- studs
+	STEAL_BLINK_FREQUENCY = 2, -- clignotements par seconde du coffre crocheté
+	STEAL_ARROW_REACH = 8, -- studs : la flèche vers son coffre disparaît une fois arrivé
+	STEAL_CARD_TIME = 3, -- secondes d'affichage de la carte "Tu as volé" / "On t'a volé"
+
 	-- Sons
+	SOUND_STEAL_ALARM = "rbxasset://sounds/electronicpingshort.wav", -- alarme temporaire
+	VOLUME_STEAL_ALARM = 0.6,
+	PITCH_STEAL_ALARM = 2,
 	SOUND_SELL = "rbxasset://sounds/electronicpingshort.wav", -- son de caisse temporaire
 	PITCH_SELL = 1.6,
 	VOLUME_SELL = 0.7,

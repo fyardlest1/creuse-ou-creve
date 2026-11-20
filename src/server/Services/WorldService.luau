@@ -9,6 +9,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local DayNightConfig = require(Shared.Config.DayNightConfig)
+local StealConfig = require(Shared.Config.StealConfig)
 local PlotService = require(script.Parent.PlotService)
 local DayNightService = require(script.Parent.DayNightService)
 
@@ -24,6 +25,9 @@ type StandStyle = {
 local FOLDER_NAME = "Stands"
 
 local WorldService = {}
+
+-- Prompts "Crocheter" de chaque coffre, avec la parcelle qui les porte (écoutés par StealService).
+local pickPrompts: { { plot: Model, prompt: ProximityPrompt } } = {}
 
 -- Lanternes des coffres : la partie lumineuse et sa lumière, allumées la nuit.
 local lanterns: { { glass: BasePart, light: PointLight } } = {}
@@ -44,7 +48,12 @@ local function createPart(name: string, size: Vector3, cframe: CFrame, color: Co
 	return part
 end
 
-local function createPrompt(parent: Instance, objectText: string, actionText: string, interaction: string)
+local function createPrompt(
+	parent: Instance,
+	objectText: string,
+	actionText: string,
+	interaction: string
+): ProximityPrompt
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ObjectText = objectText
 	prompt.ActionText = actionText
@@ -54,6 +63,7 @@ local function createPrompt(parent: Instance, objectText: string, actionText: st
 	prompt.KeyboardKeyCode = WorldConfig.PROMPT_KEY
 	prompt:SetAttribute(WorldConfig.INTERACTION_ATTRIBUTE, interaction)
 	prompt.Parent = parent
+	return prompt
 end
 
 local function createSign(anchor: Attachment, text: string)
@@ -178,6 +188,14 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 
 	createPrompt(body, WorldConfig.CHEST_TITLE, WorldConfig.CHEST_ACTION, WorldConfig.INTERACTIONS.Chest)
 
+	-- Second prompt, distinct : "Crocheter" (maintien de 5 s). Le client ne l'affiche que sur les coffres
+	-- des autres, la nuit ; le serveur revalide tout (StealService).
+	local pick = createPrompt(body, WorldConfig.CHEST_TITLE, WorldConfig.PICK_ACTION, WorldConfig.INTERACTIONS.Pick)
+	pick.HoldDuration = StealConfig.PICK_DURATION
+	pick.MaxActivationDistance = StealConfig.PICK_MAX_DISTANCE
+	pick.UIOffset = WorldConfig.PICK_PROMPT_OFFSET
+	table.insert(pickPrompts, { plot = plotModel, prompt = pick })
+
 	-- Lanterne à côté du coffre, allumée la nuit (le serveur l'allume : tout le monde la voit).
 	local postSize = DayNightConfig.LANTERN_POST_SIZE
 	local base = position - Vector3.new(0, size.Y / 2, 0) + DayNightConfig.LANTERN_OFFSET
@@ -224,6 +242,11 @@ end
 -- Position du comptoir de la Forge, pour la validation de distance côté serveur.
 function WorldService.getForgePosition(): Vector3
 	return forgePosition
+end
+
+-- Prompts "Crocheter" de tous les coffres, avec leur parcelle.
+function WorldService.getPickPrompts(): { { plot: Model, prompt: ProximityPrompt } }
+	return pickPrompts
 end
 
 -- Coffre de la parcelle d'un joueur, ou nil.

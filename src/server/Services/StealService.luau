@@ -19,6 +19,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local DayNightService = require(script.Parent.DayNightService)
 local ProtectionService = require(script.Parent.ProtectionService)
 local WorldService = require(script.Parent.WorldService)
+local WorldConfig = require(Shared.Config.WorldConfig)
 
 local IS_STUDIO = RunService:IsStudio()
 
@@ -233,6 +234,24 @@ local function reject(thief: Player, reason: string)
 	end
 end
 
+-- Le coffre clignote pour tout le monde tant qu'au moins un voleur le crochète.
+local function setBeingPicked(victim: Player)
+	local picked = false
+	for _, pick in activePicks do
+		picked = picked or pick.victim == victim
+	end
+	local chest = WorldService.getChest(victim)
+	if chest ~= nil then
+		chest:SetAttribute(WorldConfig.ATTRIBUTE_BEING_PICKED, picked)
+	end
+end
+
+-- Attributs d'affichage du vol, lus par les clients pour les messages des prompts.
+local function publishNightAttributes(player: Player)
+	player:SetAttribute("RobbedTonight", night:isRobbed(player.UserId))
+	player:SetAttribute("StealsTonight", night:countSteals(player.UserId))
+end
+
 local function getCharacterPosition(player: Player): Vector3?
 	local character = player.Character
 	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
@@ -289,6 +308,7 @@ function StealService.beginPick(thief: Player, victim: Player): boolean
 		return false
 	end
 	activePicks[thief] = { victim = victim, startedAt = os.clock() }
+	setBeingPicked(victim)
 	local thiefData = PlayerDataService.getData(thief)
 	if thiefData ~= nil then
 		thiefData.stats.stealsAttempted += 1
@@ -305,6 +325,7 @@ function StealService.cancelPick(thief: Player, reason: string)
 		return
 	end
 	activePicks[thief] = nil
+	setBeingPicked(pick.victim)
 	if pick.victim.Parent == Players then
 		remotes.stealCancelled:FireClient(pick.victim, reason, thief.Name)
 	end
@@ -322,6 +343,7 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 		return nil
 	end
 	activePicks[thief] = nil
+	setBeingPicked(victim)
 	local context = buildContext(thief, victim)
 	local held = os.clock() - pick.startedAt
 	local ok, reason = if context ~= nil then night:checkFinish(context, held) else false, "victim_offline"
@@ -343,6 +365,8 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 		return nil
 	end
 	night:recordSuccess(thief.UserId, victim.UserId)
+	publishNightAttributes(thief)
+	publishNightAttributes(victim)
 	thiefData.stats.stealsSucceeded += 1
 	thiefData.thiefPoints += StealConfig.THIEF_POINTS_PER_STEAL
 	victimData.stats.timesRobbed += 1
@@ -397,8 +421,54 @@ function StealService.start()
 				StealService.cancelPick(thief, "jour")
 			end
 			night:reset()
+			for _, player in Players:GetPlayers() do
+				publishNightAttributes(player)
+			end
 			log("Lever du jour : compteurs de la nuit remis à zéro")
 		end
+	end)
+
+	-- Prompts "Crocheter" : écoutés côté serveur. La victime est le propriétaire de la parcelle.
+	for _, entry in WorldService.getPickPrompts() do
+		local plot, prompt = entry.plot, entry.prompt
+		local function getOwner(): Player?
+			local ownerId = plot:GetAttribute("OwnerUserId")
+			if typeof(ownerId) ~= "number" or ownerId == 0 then
+				return nil
+			end
+			return Players:GetPlayerByUserId(ownerId)
+		end
+		prompt.PromptButtonHoldBegan:Connect(function(thief: Player)
+			local victim = getOwner()
+			if victim == nil then
+				reject(thief, "parcelle libre")
+				return
+			end
+			StealService.beginPick(thief, victim)
+		end)
+		prompt.Triggered:Connect(function(thief: Player)
+			local victim = getOwner()
+			if victim ~= nil then
+				StealService.finishPick(thief, victim)
+			end
+		end)
+		-- Relâché avant la fin. À la fin d'un maintien, HoldEnded peut arriver avant Triggered :
+		-- on laisse une courte marge à Triggered avant d'annuler.
+		prompt.PromptButtonHoldEnded:Connect(function(thief: Player)
+			local pick = activePicks[thief]
+			if pick == nil then
+				return
+			end
+			task.delay(StealConfig.RELEASE_GRACE, function()
+				if activePicks[thief] == pick then
+					StealService.cancelPick(thief, "relâché")
+				end
+			end)
+		end)
+	end
+
+	PlayerDataService.onLoaded(function(player: Player)
+		publishNightAttributes(player)
 	end)
 
 	-- Le voleur s'éloigne du coffre pendant le maintien : annulé.
