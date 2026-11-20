@@ -18,6 +18,7 @@ local orderedServices: { [number]: { name: string, module: Service } } = {
 	{ name = "ShovelVisualService", module = require(Services.ShovelVisualService) :: any },
 	{ name = "ShopService", module = require(Services.ShopService) :: any },
 	{ name = "StealService", module = require(Services.StealService) :: any },
+	{ name = "PurchaseService", module = require(Services.PurchaseService) :: any },
 	{ name = "LootService", module = require(Services.LootService) :: any },
 	{ name = "DigService", module = require(Services.DigService) :: any },
 }
