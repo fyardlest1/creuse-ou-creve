@@ -111,8 +111,8 @@ local RetentionConfig = {
 		FirstSteal = 1659728267361525, -- Voleur de l'ombre
 		FirstEjection = 295175583710677, -- Gardien du coffre
 		EnterClay = 3430935305696041, -- Explorateur de l'Argile
-		EnterRock = 0, -- Explorateur de la Roche (identifiant à fournir)
-		DirtIndex = 0, -- Archéologue de la Terre (identifiant à fournir)
+		EnterRock = 1093807471607011, -- Explorateur de la Roche
+		DirtIndex = 2497206725514027, -- Archéologue de la Terre
 	}) :: { [BadgeKey]: number },
 
 	-- Entonnoir d'accueil (AnalyticsService:LogOnboardingFunnelStepEvent), une seule fois par joueur.
