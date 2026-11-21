@@ -26,9 +26,6 @@ local StealConfig = {
 	-- Revanche (developer product)
 	REVENGE_TELEPORT_DISTANCE = 6, -- studs devant le coffre du voleur
 	REVENGE_TELEPORT_HEIGHT = 3,
-	TEXT_REVENGE_DAY = "Disponible la nuit",
-	TEXT_REVENGE_NO_THIEF = "Personne ne t'a volé",
-	TEXT_REVENGE_BLOCKED = "Ton voleur ne peut pas être visé",
 
 	-- Récompense
 	THIEF_POINTS_PER_STEAL = 1,

@@ -96,11 +96,11 @@ export type Effects = { luckUntil: number, shieldNightId: number }
 
 export type RetentionStatePayload = {
 	daily: { available: boolean, nextDay: number, lastDay: number },
-	quests: { { text: string, progress: number, target: number, reward: number, done: boolean } },
+	quests: { { kind: string, progress: number, target: number, reward: number, done: boolean } },
 	questsBonusClaimed: boolean,
 	index: { [string]: { [string]: boolean } },
 	indexRewards: { [string]: boolean },
-	title: string?,
+	title: string?, -- clé Locale du titre ("title.index.Clay")
 }
 
 export type DailyState = { lastClaimDay: number, calendarDay: number, firstSeenDay: number }
@@ -125,7 +125,7 @@ export type PlayerData = {
 	quests: { day: number, list: { QuestState }, bonusClaimed: boolean },
 	index: { [string]: { [string]: boolean } }, -- [itemId] = { [mutationId ou "Normal"] = true }
 	indexRewards: { [string]: boolean }, -- paliers réclamés, clé "couche:pourcentage"
-	title: string?, -- titre affiché sous le nom ("Archéologue de l'Argile")
+	title: string?, -- clé Locale du titre affiché sous le nom ("title.index.Clay")
 	funnelSteps: { [string]: boolean }, -- étapes de l'entonnoir déjà journalisées
 	processedPurchases: { string }, -- 100 derniers PurchaseId traités (idempotence)
 }
@@ -143,8 +143,7 @@ export type SellResultPayload = {
 }
 
 export type RevealPayload = {
-	itemId: string,
-	name: string,
+	itemId: string, -- le client affiche le nom dans sa langue (Locale.item)
 	rarity: RarityId,
 	mutation: MutationId?,
 	value: number,

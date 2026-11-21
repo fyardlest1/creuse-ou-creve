@@ -17,6 +17,10 @@ local StudioTestMode = {
 	-- Valeurs remplacées quand le mode est actif.
 	DAY_DURATION = 60, -- secondes (au lieu de 8 minutes)
 	PROTECTION_SECONDS = 0, -- au lieu de 20 minutes
+
+	-- Langue forcée dans Studio ("fr" ou "en"), indépendante du mode ci-dessus ; nil = langue du compte.
+	-- Ignorée en ligne (Locale vérifie RunService:IsStudio()).
+	FORCED_LANGUAGE = nil :: string?,
 }
 
 return table.freeze(StudioTestMode)

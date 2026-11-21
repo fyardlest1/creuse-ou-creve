@@ -43,8 +43,9 @@ export type Condition = (player: Player) -> string?
 local IS_STUDIO = RunService:IsStudio()
 local PROFILE_WAIT_TIMEOUT = 30 -- secondes d'attente du profil dans ProcessReceipt
 local PROFILE_WAIT_STEP = 0.25
-local TEXT_UNAVAILABLE = "Bientôt disponible"
-local TEXT_RESTRICTED = "Indisponible dans ton pays"
+-- Raisons affichées dans la boutique : clés Locale, traduites par le client.
+local REASON_UNAVAILABLE = "shop.unavailable"
+local REASON_RESTRICTED = "shop.restricted"
 local SHOP_STATE_COOLDOWN = 0.5 -- secondes entre deux demandes d'état de la boutique
 
 local PurchaseService = {}
@@ -229,22 +230,22 @@ function PurchaseService.isLuckRestricted(player: Player): boolean
 	return luckRestricted[player] ~= false
 end
 
--- Raison pour laquelle cet achat ne peut pas être affiché maintenant (nil si possible).
+-- Raison (clé Locale) pour laquelle cet achat ne peut pas être affiché maintenant (nil si possible).
 function PurchaseService.getBlockReason(player: Player, key: string): string?
 	local pass = MonetizationConfig.passByKey[key]
 	local product = MonetizationConfig.productByKey[key]
 	local def: any = pass or product
 	if def == nil then
-		return TEXT_UNAVAILABLE
+		return REASON_UNAVAILABLE
 	end
 	if def.isLuck and PurchaseService.isLuckRestricted(player) then
-		return TEXT_RESTRICTED
+		return REASON_RESTRICTED
 	end
 	if def.id == 0 and not IS_STUDIO then
-		return TEXT_UNAVAILABLE
+		return REASON_UNAVAILABLE
 	end
 	if product ~= nil and grantHandlers[product.key] == nil then
-		return TEXT_UNAVAILABLE
+		return REASON_UNAVAILABLE
 	end
 	local condition = conditions[key]
 	return if condition ~= nil then condition(player) else nil

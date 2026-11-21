@@ -17,6 +17,7 @@ local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 
 export type ChestMode = "view" | "sell"
 export type SellCallbacks = {
@@ -35,18 +36,12 @@ local MUTED_TEXT = Color3.fromRGB(190, 190, 200)
 local STAR_ON_COLOR = Color3.fromRGB(255, 200, 40)
 local STAR_OFF_COLOR = Color3.fromRGB(120, 120, 135)
 
-local TEXT_TITLE = "Coffre"
-local TEXT_TITLE_SELL = "Marchand"
+-- Symboles, identiques dans toutes les langues (les textes passent par Locale).
 local TEXT_COUNTER = "%d/%d"
-local TEXT_VALUE = "%s Pièces"
-local TEXT_SELL_ONE = "Vendre"
-local TEXT_SELL_ALL = "Tout vendre (%s Pièces)"
-local TEXT_EMPTY = "Ton coffre est vide. Va creuser !"
 local TEXT_CLOSE = "X"
 local TEXT_STAR_ON = "★"
-local TEXT_STOLEN_FROM = "Volé à %s"
-local STOLEN_COLOR = Color3.fromRGB(255, 110, 110)
 local TEXT_STAR_OFF = "☆"
+local STOLEN_COLOR = Color3.fromRGB(255, 110, 110)
 
 local player = Players.LocalPlayer
 
@@ -71,13 +66,6 @@ local sellAllButton: TextButton
 local grid: ScrollingFrame
 local emptyLabel: TextLabel
 local gridLayout: UIGridLayout
-
--- 12345 -> "12 345"
-local function formatNumber(value: number): string
-	local text = tostring(math.floor(value))
-	local formatted = text:reverse():gsub("(%d%d%d)", "%1 "):reverse()
-	return (formatted:gsub("^ ", ""))
-end
 
 local function addCorner(parent: GuiObject, radius: number)
 	local corner = Instance.new("UICorner")
@@ -171,7 +159,7 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 	local hasSellButton = mode == "sell" and not item.favorite
 	local bottomReserved = if hasSellButton then touch + UiConfig.CHEST_CARD_GAP else 0
 
-	local rarityLabel = createLabel("Rarity", if rarity ~= nil then rarity.displayName else item.rarity, card)
+	local rarityLabel = createLabel("Rarity", Locale.rarity(item.rarity), card)
 	rarityLabel.Size = UDim2.new(1, -touch, 0, line)
 	rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
 	rarityLabel.TextColor3 = rarityColor
@@ -199,7 +187,7 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 
 	local mutation = if item.mutation ~= nil then Mutations.byId[item.mutation] else nil
 	if mutation ~= nil then
-		local badge = createLabel("Mutation", mutation.displayName, card)
+		local badge = createLabel("Mutation", Locale.mutation(mutation.id), card)
 		badge.Position = UDim2.fromOffset(0, line + 2)
 		badge.Size = UDim2.new(1, -touch, 0, UiConfig.CHEST_CARD_BADGE_HEIGHT)
 		badge.BackgroundTransparency = 0
@@ -212,7 +200,7 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 
 	-- Le nom commence sous l'étoile, pour ne jamais la chevaucher.
 	local nameTop = touch - UiConfig.CHEST_CARD_STAR_INSET
-	local nameLabel = createLabel("ItemName", if itemDef ~= nil then itemDef.name else item.itemId, card)
+	local nameLabel = createLabel("ItemName", if itemDef ~= nil then Locale.item(item.itemId) else item.itemId, card)
 	nameLabel.Position = UDim2.fromOffset(0, nameTop)
 	local stolenReserved = if item.stolenFrom ~= nil then line else 0
 	nameLabel.Size = UDim2.new(1, 0, 1, -(nameTop + line + stolenReserved + bottomReserved + 2))
@@ -223,21 +211,21 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 
 	-- Trophée : un objet volé affiche sa provenance.
 	if item.stolenFrom ~= nil then
-		local stolen = createLabel("StolenFrom", string.format(TEXT_STOLEN_FROM, item.stolenFrom), card)
+		local stolen = createLabel("StolenFrom", Locale.t("chest.stolenFrom", item.stolenFrom), card)
 		stolen.AnchorPoint = Vector2.new(0, 1)
 		stolen.Position = UDim2.new(0, 0, 1, -(bottomReserved + line))
 		stolen.Size = UDim2.new(1, 0, 0, line)
 		stolen.TextColor3 = STOLEN_COLOR
 	end
 
-	local valueLabel = createLabel("Value", string.format(TEXT_VALUE, formatNumber(item.value)), card)
+	local valueLabel = createLabel("Value", Locale.t("common.coins", Locale.number(item.value)), card)
 	valueLabel.AnchorPoint = Vector2.new(0, 1)
 	valueLabel.Position = UDim2.new(0, 0, 1, -bottomReserved)
 	valueLabel.Size = UDim2.new(1, 0, 0, line)
 	valueLabel.TextColor3 = MUTED_TEXT
 
 	if hasSellButton then
-		local sellButton = createButton("Sell", TEXT_SELL_ONE, SELL_ONE_COLOR, card)
+		local sellButton = createButton("Sell", Locale.t("chest.sellOne"), SELL_ONE_COLOR, card)
 		sellButton.AnchorPoint = Vector2.new(0.5, 1)
 		sellButton.Position = UDim2.fromScale(0.5, 1)
 		sellButton.Size = UDim2.new(1, 0, 0, touch)
@@ -261,12 +249,12 @@ local function render()
 		end
 	end
 
-	titleLabel.Text = if mode == "sell" then TEXT_TITLE_SELL else TEXT_TITLE
+	titleLabel.Text = Locale.t(if mode == "sell" then "chest.titleSell" else "chest.title")
 	counterLabel.Text = string.format(TEXT_COUNTER, #inventory, getInventoryLimit())
 
 	local sellable = getSellableTotal()
 	sellAllButton.Visible = mode == "sell"
-	sellAllButton.Text = string.format(TEXT_SELL_ALL, formatNumber(sellable))
+	sellAllButton.Text = Locale.t("chest.sellAll", Locale.number(sellable))
 	sellAllButton.BackgroundColor3 = if sellable > 0 then SELL_ALL_COLOR else SELL_ALL_DISABLED_COLOR
 	sellAllButton.Active = sellable > 0
 
@@ -306,7 +294,7 @@ local function buildUi()
 
 	-- En-tête : titre, compteur, bouton fermer
 	local headerHeight = UiConfig.CHEST_BUTTON_MIN_HEIGHT
-	titleLabel = createLabel("Title", TEXT_TITLE, panel)
+	titleLabel = createLabel("Title", Locale.t("chest.title"), panel)
 	titleLabel.Size = UDim2.new(0.22, 0, 0, headerHeight)
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -357,7 +345,7 @@ local function buildUi()
 	gridPadding.PaddingBottom = UDim.new(0, 4)
 	gridPadding.Parent = grid
 
-	emptyLabel = createLabel("Empty", TEXT_EMPTY, panel)
+	emptyLabel = createLabel("Empty", Locale.t("chest.empty"), panel)
 	emptyLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 	emptyLabel.Position = UDim2.fromScale(0.5, 0.55)
 	emptyLabel.Size = UDim2.fromScale(0.8, 0.1)

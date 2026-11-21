@@ -2,7 +2,7 @@
 -- Game passes, developer products et paramètres de leurs effets (plan semaine 4, sections 3 et 4).
 -- Identifiants réels du Creator Hub (branchés le 2026-11-20). Un produit remis à 0 est simulé dans Studio
 -- (même traitement que les vrais reçus) ; en ligne, il est simplement indisponible.
--- Textes affichés en français (langue source) ; l'anglais passe par Localization sur le Creator Hub.
+-- Noms et descriptions en français (langue source) ; l'anglais est dans src/shared/Locale/en.luau.
 
 export type PassKey = "BiggerChest" | "LuckX2" | "AutoDig" | "VIP" | "Bodyguard"
 export type ProductKey =
@@ -178,7 +178,6 @@ local MonetizationConfig = {
 	LUCK_PASS_MULTIPLIER = 2,
 	AUTO_DIG_INTERVAL = 0.8, -- secondes entre deux coups automatiques (le creusage à la main reste à 0,2 s)
 	VIP_SELL_BONUS = 0.10, -- +10 % de Pièces à la vente
-	VIP_TAG_TEXT = "VIP",
 	VIP_TAG_COLOR = Color3.fromRGB(255, 200, 40),
 	VIP_TAG_COLOR_HEX = "#FFC828", -- même couleur, pour la balise du chat
 	VIP_TAG_SIZE = Vector2.new(90, 34), -- pixels
@@ -191,10 +190,6 @@ local MonetizationConfig = {
 	POTION_DURATION = 10 * 60, -- secondes, s'additionnent
 	SERVER_EVENT_MULTIPLIER = 2,
 	SERVER_EVENT_DURATION = 5 * 60, -- secondes
-	TEXT_SHIELD_ALREADY = "Ton coffre est déjà protégé pour cette nuit",
-	TEXT_EVENT_RUNNING = "Un événement est déjà en cours",
-	TEXT_EVENT_BANNER = "Chance x2 offerte par %s !",
-	TEXT_REVENGE_COMPENSATED = "Ta Revanche n'était plus possible : une Potion de chance t'attend dans ta réserve",
 
 	-- Formule unique de la chance (section 4)
 	GROUP_ID = 0, -- groupe Konbit Games ; 0 = bonus désactivé

@@ -118,7 +118,6 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 	end
 	local payload: Types.RevealPayload = {
 		itemId = item.itemId,
-		name = Items.byId[item.itemId].name,
 		rarity = item.rarity,
 		mutation = item.mutation,
 		value = item.value,

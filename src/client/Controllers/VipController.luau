@@ -8,6 +8,7 @@ local TextChatService = game:GetService("TextChatService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
+local Locale = require(Shared.Locale)
 
 local VipController = {}
 
@@ -21,7 +22,7 @@ local function onIncomingMessage(message: TextChatMessage): TextChatMessagePrope
 	properties.PrefixText = string.format(
 		'<font color="%s">[%s]</font> %s',
 		MonetizationConfig.VIP_TAG_COLOR_HEX,
-		MonetizationConfig.VIP_TAG_TEXT,
+		Locale.t("vip.tag"),
 		message.PrefixText
 	)
 	return properties

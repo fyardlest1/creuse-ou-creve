@@ -23,13 +23,9 @@ local WorldConfig = {
 	STAND_SIGN_TEXT_HEIGHT = 3.5, -- studs
 	STAND_SIGN_MAX_DISTANCE = 200,
 
-	MERCHANT_TITLE = "💰 Marchand",
-	MERCHANT_ACTION = "Vendre",
 	MERCHANT_COLOR = Color3.fromRGB(70, 160, 90),
 	MERCHANT_ROOF_COLOR = Color3.fromRGB(240, 200, 70),
 
-	FORGE_TITLE = "⚒️ Forge",
-	FORGE_ACTION = "Acheter une pelle",
 	FORGE_COLOR = Color3.fromRGB(85, 85, 95),
 	FORGE_ROOF_COLOR = Color3.fromRGB(230, 110, 40),
 
@@ -42,14 +38,10 @@ local WorldConfig = {
 	CHEST_EDGE_OFFSET = 3, -- studs au-delà du bord de la parcelle
 	CHEST_COLOR = Color3.fromRGB(130, 85, 45),
 	CHEST_TRIM_COLOR = Color3.fromRGB(240, 190, 60),
-	CHEST_TITLE = "Coffre",
-	CHEST_ACTION = "Ouvrir le coffre",
 	-- Garde du corps (game pass) posté près du coffre
-	BODYGUARD_NAME = "Garde du corps",
 	BODYGUARD_COLOR = Color3.fromRGB(35, 45, 80), -- uniforme bleu nuit
 	BODYGUARD_SKIN_COLOR = Color3.fromRGB(205, 160, 125),
 	BODYGUARD_OFFSET = Vector3.new(-4.5, 1.5, 0), -- studs depuis le coffre ; la lanterne est du côté +X
-	PICK_ACTION = "Crocheter",
 	-- Attributs d'affichage du vol
 	ATTRIBUTE_BEING_PICKED = "BeingPicked", -- sur le coffre : un crochetage est en cours (clignote)
 

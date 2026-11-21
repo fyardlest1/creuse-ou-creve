@@ -13,6 +13,7 @@ local EconomyConfig = require(Shared.Config.EconomyConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local WorldService = require(script.Parent.WorldService)
 local PurchaseService = require(script.Parent.PurchaseService)
@@ -122,11 +123,12 @@ local function createLeaderstats(player: Player)
 	folder.Name = LEADERSTATS_NAME
 
 	local coins = Instance.new("IntValue")
-	coins.Name = EconomyConfig.LEADERSTAT_COINS
+	-- Nom affiché dans la liste des joueurs : traduit localement par chaque client.
+	Locale.bind(coins, "Name", Locale.text("leaderstat.coins"))
 	coins.Parent = folder
 
 	local depth = Instance.new("IntValue")
-	depth.Name = EconomyConfig.LEADERSTAT_DEPTH
+	Locale.bind(depth, "Name", Locale.text("leaderstat.depth"))
 	depth.Parent = folder
 
 	local function sync()

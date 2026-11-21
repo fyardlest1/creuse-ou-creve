@@ -14,6 +14,7 @@ local RetentionConfig = require(Shared.Config.RetentionConfig)
 local Items = require(Shared.Config.Items)
 local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local BoostService = require(script.Parent.BoostService)
@@ -25,10 +26,7 @@ type Reward = RetentionConfig.Reward
 type QuestKind = RetentionConfig.QuestKind
 type BadgeKey = RetentionConfig.BadgeKey
 
-local TEXT_INDEX_TIER = "Index de %s : %d %% trouvés !"
-local TEXT_TITLE_EARNED = "Nouveau titre : %s"
-local TEXT_QUEST_DONE = "Quête réussie : %s"
-local TEXT_ALL_QUESTS = "Les 3 quêtes du jour sont faites : +1 Potion de chance"
+local TITLE_INDEX_PREFIX = "title.index." -- titre stocké = clé Locale "title.index.<couche>"
 local DAILY_CLAIM_COOLDOWN = 1 -- secondes
 local STATE_REQUEST_COOLDOWN = 0.5
 local RARE_OR_BETTER = { Rare = true, Epic = true, Legendary = true, Secret = true }
@@ -73,7 +71,8 @@ local function grantReward(player: Player, data: any, reward: Reward, reason: Ty
 	end
 end
 
-local function notify(player: Player, text: string)
+-- Annonce traduite par le client dans sa langue (LocText).
+local function notify(player: Player, text: Locale.LocText)
 	remotes.notice:FireClient(player, text)
 end
 
@@ -117,13 +116,8 @@ end
 -- Quêtes
 ------------------------------------------------------------------------------------------------
 
-local function questText(kind: string, target: number): string
-	for _, template in RetentionConfig.QUEST_TEMPLATES do
-		if template.kind == kind then
-			return string.format(template.text, tostring(target))
-		end
-	end
-	return kind
+local function questText(kind: string, target: number): Locale.LocText
+	return Locale.text("quest." .. kind, tostring(target))
 end
 
 -- Tire 3 quêtes distinctes pour le jour, adaptées à la couche ; jamais de quête de vol si le joueur est protégé.
@@ -177,7 +171,7 @@ local function progressQuest(player: Player, kind: QuestKind, amount: number)
 			if quest.progress >= quest.target then
 				quest.claimed = true
 				grantReward(player, data, { coins = quest.reward }, "Reward", "Quest" .. kind)
-				notify(player, string.format(TEXT_QUEST_DONE, questText(kind, quest.target)))
+				notify(player, Locale.text("notice.questDone", questText(kind, quest.target)))
 			end
 		end
 	end
@@ -189,7 +183,7 @@ local function progressQuest(player: Player, kind: QuestKind, amount: number)
 		if allDone then
 			data.quests.bonusClaimed = true
 			grantReward(player, data, RetentionConfig.QUEST_ALL_DONE_REWARD, "Reward", "QuestsAllDone")
-			notify(player, TEXT_ALL_QUESTS)
+			notify(player, Locale.text("notice.allQuests"))
 		end
 	end
 	if changed then
@@ -213,6 +207,20 @@ function RetentionService.indexPercent(index: { [string]: any }, layer: number):
 		end
 	end
 	return if total == 0 then 0 else found / total * 100
+end
+
+-- Titres d'avant la traduction ("Archéologue de l'Argile") -> clé "title.index.Clay".
+local function normalizeTitle(data: any)
+	local title = data.title
+	if typeof(title) ~= "string" or title == "" or string.sub(title, 1, #TITLE_INDEX_PREFIX) == TITLE_INDEX_PREFIX then
+		return
+	end
+	for _, stratum in Strata.list do
+		if title == Locale.tIn("fr", TITLE_INDEX_PREFIX .. stratum.id) then
+			data.title = TITLE_INDEX_PREFIX .. stratum.id
+			return
+		end
+	end
 end
 
 local function applyTitle(player: Player, title: string?)
@@ -247,7 +255,7 @@ local function applyTitle(player: Player, title: string?)
 		label.Parent = tag
 		tag.Parent = head
 	end
-	((tag :: BillboardGui):FindFirstChild("Text") :: TextLabel).Text = title
+	Locale.bind((tag :: BillboardGui):FindFirstChild("Text") :: TextLabel, "Text", Locale.text(title))
 end
 
 local function checkIndexTiers(player: Player, data: any, layer: number)
@@ -260,7 +268,10 @@ local function checkIndexTiers(player: Player, data: any, layer: number)
 		local key = layer .. ":" .. tier.percent
 		if percent >= tier.percent and not data.indexRewards[key] then
 			data.indexRewards[key] = true
-			notify(player, string.format(TEXT_INDEX_TIER, stratum.nameWithArticle, tier.percent))
+			notify(
+				player,
+				Locale.text("notice.indexTier", Locale.text("stratum." .. stratum.id .. ".the"), tier.percent)
+			)
 			if tier.reward ~= nil then
 				local reward = table.clone(tier.reward)
 				if reward.coins ~= nil then
@@ -269,9 +280,9 @@ local function checkIndexTiers(player: Player, data: any, layer: number)
 				grantReward(player, data, reward, "Reward", "Index" .. key)
 			end
 			if tier.title then
-				data.title = string.format(RetentionConfig.INDEX_TITLE, stratum.nameWithArticle)
+				data.title = TITLE_INDEX_PREFIX .. stratum.id
 				applyTitle(player, data.title)
-				notify(player, string.format(TEXT_TITLE_EARNED, data.title))
+				notify(player, Locale.text("notice.titleEarned", Locale.text(data.title)))
 				if layer == 1 then
 					awardBadge(player, "DirtIndex")
 				end
@@ -325,7 +336,7 @@ pushState = function(player: Player)
 	local quests = {}
 	for _, quest in data.quests.list do
 		table.insert(quests, {
-			text = questText(quest.id, quest.target),
+			kind = quest.id,
 			progress = quest.progress,
 			target = quest.target,
 			reward = quest.reward,
@@ -369,6 +380,7 @@ end
 
 local function onLoaded(player: Player, data: any)
 	badgesAwarded[player] = {}
+	normalizeTitle(data)
 	local today = RetentionService.today()
 	funnelStep(player, data, "Arrivee")
 	if data.daily.firstSeenDay == 0 then

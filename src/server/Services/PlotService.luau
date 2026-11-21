@@ -11,6 +11,7 @@ local PlotConfig = require(Shared.Config.PlotConfig)
 local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
 local Types = require(Shared.Types)
+local Locale = require(Shared.Locale)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
 type PlotState = {
@@ -31,9 +32,6 @@ local ROW_PITCH = PLOT_WIDTH + PlotConfig.ROW_SPACING
 local ROW_COUNT = math.ceil(PlotConfig.PLOT_COUNT / PlotConfig.PLOTS_PER_ROW)
 local HITS_ATTRIBUTE = "HitsLeft"
 local CHARACTER_WAIT_TIMEOUT = 5
-
-local TEXT_FREE = "Parcelle libre"
-local TEXT_OWNED = "Parcelle de %s"
 
 local PlotService = {}
 
@@ -177,7 +175,7 @@ local function createPlot(index: number, parent: Instance): PlotState
 	label.TextScaled = true
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.3
-	label.Text = TEXT_FREE
+	Locale.bind(label, "Text", Locale.text("plot.free"))
 	label.Parent = billboard
 
 	local spawnPosition = center
@@ -236,7 +234,7 @@ local function assignPlot(player: Player, _data: Types.PlayerData)
 	plot.owner = player
 	plotByPlayer[player] = plot
 	plot.model:SetAttribute("OwnerUserId", player.UserId)
-	plot.signLabel.Text = string.format(TEXT_OWNED, player.DisplayName)
+	Locale.bind(plot.signLabel, "Text", Locale.text("plot.owned", player.DisplayName))
 	local color = getCellColor(player)
 	for _, cell in plot.cells do
 		restoreCell(cell, color)
@@ -265,7 +263,7 @@ local function releasePlot(player: Player)
 	end
 	plot.owner = nil
 	plot.model:SetAttribute("OwnerUserId", 0)
-	plot.signLabel.Text = TEXT_FREE
+	Locale.bind(plot.signLabel, "Text", Locale.text("plot.free"))
 	local color = getCellColor(nil)
 	for _, cell in plot.cells do
 		restoreCell(cell, color)

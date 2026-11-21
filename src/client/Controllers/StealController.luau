@@ -18,36 +18,18 @@ local WorldConfig = require(Shared.Config.WorldConfig)
 local Rarities = require(Shared.Config.Rarities)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local HudController = require(script.Parent.HudController)
 
-local TEXT_ALERT = "Un voleur ouvre ton coffre !"
-local TEXT_ARROW_CHEST = "Ton coffre"
-local TEXT_VICTIM_SAFE = "Le voleur est reparti les mains vides"
-local TEXT_THIEF_EJECTED = "Voleur éjecté !"
-local TEXT_EJECT_ACTION = "Éjecter"
-local TEXT_EJECTED = "Éjecté par %s ! Étourdi %d s"
-local TEXT_THIEF_CANCELLED = "Crochetage annulé : %s"
-local TEXT_STOLEN_BY_ME = "Tu as volé :"
-local TEXT_STOLEN_FROM_ME = "On t'a volé :"
-local TEXT_STOLEN_FROM_ME_BY = "par %s"
-local TEXT_STOLEN_BY_ME_FROM = "à %s"
-local CANCEL_REASONS: { [string]: string } = {
-	["relâché"] = "tu as relâché",
-	["éjecté"] = "tu as été éjecté",
-	["trop loin"] = "tu t'es trop éloigné",
-	["jour"] = "le jour se lève",
-	["départ"] = "le joueur est parti",
-	["bouclier"] = "le coffre est protégé par un Bouclier",
+-- Codes d'annulation envoyés par le serveur (StealService) -> clé de traduction affichée au voleur.
+local CANCEL_REASON_KEYS: { [string]: string } = {
+	["relâché"] = "steal.cancel.released",
+	["éjecté"] = "steal.cancel.ejected",
+	["trop loin"] = "steal.cancel.tooFar",
+	["jour"] = "steal.cancel.day",
+	["départ"] = "steal.cancel.left",
+	["bouclier"] = "steal.cancel.shield",
 }
--- Raisons affichées au-dessus du coffre d'un autre joueur, la nuit, quand le vol est impossible.
-local TEXT_SELF_PROTECTED = "Tu es protégé (%d min)"
-local TEXT_VICTIM_PROTECTED = "Protégé (%d min)"
-local TEXT_ROBBED = "Déjà pillé cette nuit"
-local TEXT_THIEF_LIMIT = "Tu as déjà volé %d fois cette nuit"
-local TEXT_CHEST_FULL = "Ton coffre est plein"
-local TEXT_BANNED = "Tu as été éjecté de ce coffre"
-local TEXT_NOTHING_TO_STEAL = "Rien à voler"
-local TEXT_SHIELDED = "Protégé par un Bouclier"
 
 local WHITE = Color3.new(1, 1, 1)
 local CARD_BACKGROUND = Color3.fromRGB(28, 26, 34)
@@ -109,31 +91,31 @@ end
 local function getBlockText(victim: Player): string?
 	local selfRemaining = remainingProtection(player)
 	if selfRemaining > 0 then
-		return string.format(TEXT_SELF_PROTECTED, math.ceil(selfRemaining / 60))
+		return Locale.t("steal.selfProtected", math.ceil(selfRemaining / 60))
 	end
 	local victimRemaining = remainingProtection(victim)
 	if victimRemaining > 0 then
-		return string.format(TEXT_VICTIM_PROTECTED, math.ceil(victimRemaining / 60))
+		return Locale.t("steal.victimProtected", math.ceil(victimRemaining / 60))
 	end
 	if victim:GetAttribute("ShieldTonight") == true then
-		return TEXT_SHIELDED
+		return Locale.t("steal.shielded")
 	end
 	if victim:GetAttribute("RobbedTonight") == true then
-		return TEXT_ROBBED
+		return Locale.t("steal.robbed")
 	end
 	if bannedOwners[victim.UserId] then
-		return TEXT_BANNED
+		return Locale.t("steal.banned")
 	end
 	if victim:GetAttribute("HasStealableItem") == false then
-		return TEXT_NOTHING_TO_STEAL
+		return Locale.t("steal.nothing")
 	end
 	local steals = player:GetAttribute("StealsTonight")
 	if typeof(steals) == "number" and steals >= StealConfig.MAX_STEALS_PER_NIGHT then
-		return string.format(TEXT_THIEF_LIMIT, steals)
+		return Locale.t("steal.thiefLimit", steals)
 	end
 	local count = player:GetAttribute("InventoryCount")
 	if typeof(count) == "number" and count >= getInventoryLimit() then
-		return TEXT_CHEST_FULL
+		return Locale.t("steal.chestFull")
 	end
 	return nil
 end
@@ -269,7 +251,7 @@ local function showEjectPrompt(thief: Player)
 	end
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "EjectPrompt"
-	prompt.ActionText = TEXT_EJECT_ACTION
+	prompt.ActionText = Locale.t("steal.ejectAction")
 	prompt.ObjectText = thief.DisplayName
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = StealConfig.EJECT_MAX_DISTANCE
@@ -357,11 +339,11 @@ local function onStealStarted(thiefName: unknown, thiefUserId: unknown)
 	if thief ~= nil then
 		showEjectPrompt(thief)
 	end
-	HudController.showBanner(TEXT_ALERT, "alert", true)
+	HudController.showBanner(Locale.t("steal.alert"), "alert", true)
 	alarm:Play()
 	local chestPosition = findMyChestPosition()
 	if chestPosition ~= nil then
-		HudController.setArrowTarget(chestPosition, TEXT_ARROW_CHEST, UiConfig.STEAL_ARROW_REACH)
+		HudController.setArrowTarget(chestPosition, Locale.t("steal.arrowChest"), UiConfig.STEAL_ARROW_REACH)
 	end
 end
 
@@ -373,25 +355,35 @@ local function onStealCancelled(reason: unknown, otherName: unknown)
 			-- Je suis la victime : mon coffre est sauf.
 			stopAlert()
 			HudController.showBanner(
-				if reasonText == "éjecté" then TEXT_THIEF_EJECTED else TEXT_VICTIM_SAFE,
+				Locale.t(if reasonText == "éjecté" then "steal.thiefEjected" else "steal.victimSafe"),
 				"success"
 			)
 			return
 		end
 	end
 	-- Je suis le voleur.
-	HudController.showBanner(string.format(TEXT_THIEF_CANCELLED, CANCEL_REASONS[reasonText] or reasonText), "info")
+	local reasonKey = CANCEL_REASON_KEYS[reasonText]
+	HudController.showBanner(
+		Locale.t("steal.thiefCancelled", if reasonKey ~= nil then Locale.t(reasonKey) else reasonText),
+		"info"
+	)
 end
 
-local function onStealSucceeded(itemName: unknown, rarity: unknown, thiefName: unknown, victimName: unknown)
-	if typeof(itemName) ~= "string" or typeof(rarity) ~= "string" then
+local function onStealSucceeded(itemId: unknown, rarity: unknown, thiefName: unknown, victimName: unknown)
+	if typeof(itemId) ~= "string" or typeof(rarity) ~= "string" then
 		return
 	end
+	local itemName = Locale.item(itemId)
 	if thiefName == player.Name then
-		showCard(TEXT_STOLEN_BY_ME, itemName, rarity, string.format(TEXT_STOLEN_BY_ME_FROM, tostring(victimName)))
+		showCard(Locale.t("steal.stolenByMe"), itemName, rarity, Locale.t("steal.stolenByMeFrom", tostring(victimName)))
 	else
 		stopAlert()
-		showCard(TEXT_STOLEN_FROM_ME, itemName, rarity, string.format(TEXT_STOLEN_FROM_ME_BY, tostring(thiefName)))
+		showCard(
+			Locale.t("steal.stolenFromMe"),
+			itemName,
+			rarity,
+			Locale.t("steal.stolenFromMeBy", tostring(thiefName))
+		)
 	end
 end
 
@@ -404,7 +396,7 @@ local function onEjected(ownerName: unknown, stunSeconds: unknown)
 	if owner ~= nil and owner:IsA("Player") then
 		bannedOwners[owner.UserId] = true
 	end
-	HudController.showBanner(string.format(TEXT_EJECTED, ownerName, stunSeconds), "alert", true)
+	HudController.showBanner(Locale.t("steal.ejected", ownerName, stunSeconds), "alert", true)
 	stunGui.Enabled = true
 	task.delay(stunSeconds, function()
 		stunGui.Enabled = false

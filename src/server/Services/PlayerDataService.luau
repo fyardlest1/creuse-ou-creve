@@ -14,13 +14,12 @@ local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local StealConfig = require(Shared.Config.StealConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local ProfileStore = require(script.Parent.Parent.Vendor.ProfileStore)
 
 type LoadedCallback = (player: Player, data: Types.PlayerData) -> ()
 
 local PROFILE_KEY_PREFIX = "Player_"
-local KICK_LOAD_FAILED = "Impossible de charger tes données. Reviens dans un instant !"
-local KICK_SESSION_ENDED = "Ta partie a été ouverte sur un autre serveur. Reconnecte-toi !"
 
 local TEMPLATE: Types.PlayerData = {
 	version = PlayerConfig.DATA_VERSION,
@@ -165,7 +164,7 @@ local function onPlayerAdded(player: Player)
 	if profile == nil then
 		if player.Parent == Players then
 			warn("[PlayerData] Échec du chargement du profil de " .. player.Name)
-			player:Kick(KICK_LOAD_FAILED)
+			player:Kick(Locale.tIn(Locale.languageOf(player), "kick.loadFailed"))
 		end
 		return
 	end
@@ -185,7 +184,7 @@ local function onPlayerAdded(player: Player)
 		profiles[player] = nil
 		log("Profil libéré pour " .. player.Name)
 		if player.Parent == Players then
-			player:Kick(KICK_SESSION_ENDED)
+			player:Kick(Locale.tIn(Locale.languageOf(player), "kick.sessionEnded"))
 		end
 	end)
 

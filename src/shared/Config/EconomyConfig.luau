@@ -21,12 +21,7 @@ local EconomyConfig = {
 	NO_AUTO_FAVORITE_MUTATIONS = table.freeze({ Cursed = true }),
 
 	-- Monnaie
-	CURRENCY_NAME = "Pièces",
 	STARTING_COINS = 0,
-
-	-- Classement du serveur (leaderstats), textes affichés
-	LEADERSTAT_COINS = "Pièces",
-	LEADERSTAT_DEPTH = "Profondeur",
 
 	-- Analytique (AnalyticsService:LogEconomyEvent)
 	ANALYTICS_CURRENCY = "Coins",

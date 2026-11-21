@@ -15,12 +15,9 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DayNightConfig = require(Shared.Config.DayNightConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local HudController = require(script.Parent.HudController)
 
-local TEXT_UNTIL_NIGHT = "Nuit dans %d:%02d"
-local TEXT_UNTIL_DAY = "Jour dans %d:%02d"
-local TEXT_NIGHTFALL = "La nuit tombe : protège ton coffre !"
-local TEXT_DAYBREAK = "Le jour se lève"
 local DAY_TIMER_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local NIGHT_TIMER_BACKGROUND = Color3.fromRGB(170, 40, 40)
 local WHITE = Color3.new(1, 1, 1)
@@ -119,7 +116,8 @@ end
 local function updateTimer()
 	local remaining = math.max(0, math.ceil(getEndsAt() - Workspace:GetServerTimeNow()))
 	local night = getPhase() == "Night"
-	timerLabel.Text = string.format(if night then TEXT_UNTIL_DAY else TEXT_UNTIL_NIGHT, remaining // 60, remaining % 60)
+	timerLabel.Text =
+		Locale.t(if night then "daynight.untilDay" else "daynight.untilNight", remaining // 60, remaining % 60)
 	timerPill.BackgroundColor3 = if night then NIGHT_TIMER_BACKGROUND else DAY_TIMER_BACKGROUND
 end
 
@@ -128,9 +126,9 @@ local function onPhaseChanged(phase: unknown)
 	applyLighting(current, false)
 	bell:Play()
 	if current == "Night" then
-		HudController.showBanner(TEXT_NIGHTFALL, "alert", true)
+		HudController.showBanner(Locale.t("daynight.nightfall"), "alert", true)
 	else
-		HudController.showBanner(TEXT_DAYBREAK, "info")
+		HudController.showBanner(Locale.t("daynight.daybreak"), "info")
 	end
 	local ambience = nightAmbience
 	if ambience ~= nil then

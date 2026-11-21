@@ -14,6 +14,7 @@ local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 
 local RAINBOW = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
@@ -162,7 +163,7 @@ local function isRevealPayload(value: unknown): boolean
 		return false
 	end
 	local payload = value :: { [string]: unknown }
-	return typeof(payload.name) == "string"
+	return typeof(payload.itemId) == "string"
 		and typeof(payload.rarity) == "string"
 		and Rarities.byId[payload.rarity :: string] ~= nil
 		and typeof(payload.value) == "number"
@@ -199,21 +200,21 @@ local function showReveal(payload: Types.RevealPayload)
 	local isRainbowRarity = payload.rarity == "Secret"
 	local isRainbowMutation = payload.mutation == "Rainbow"
 
-	ui.rarityLabel.Text = string.upper(rarity.displayName)
+	ui.rarityLabel.Text = string.upper(Locale.rarity(rarity.id))
 	ui.rarityLabel.TextColor3 = if isRainbowRarity then WHITE else rarity.color
 	ui.rarityGradient.Enabled = isRainbowRarity
-	ui.nameLabel.Text = payload.name
+	ui.nameLabel.Text = Locale.item(payload.itemId)
 	ui.stroke.Color = if mutation ~= nil then mutation.color else rarity.color
 	ui.stroke.Thickness = if spectacular then STROKE_THICKNESS_SPECTACULAR else STROKE_THICKNESS
 	ui.strokeGradient.Enabled = isRainbowRarity or isRainbowMutation
 	if mutation ~= nil then
 		ui.mutationLabel.Visible = true
-		ui.mutationLabel.Text = string.format("%s  x%d", mutation.displayName, mutation.multiplier)
+		ui.mutationLabel.Text = string.format("%s  x%d", Locale.mutation(mutation.id), mutation.multiplier)
 		ui.mutationLabel.TextColor3 = mutation.color
 	else
 		ui.mutationLabel.Visible = false
 	end
-	ui.valueLabel.Text = string.format("Valeur : %d", payload.value)
+	ui.valueLabel.Text = Locale.t("reveal.value", Locale.number(payload.value))
 
 	local targetScale = if spectacular then UiConfig.REVEAL_SPECTACULAR_SCALE else 1
 	ui.card.Visible = true

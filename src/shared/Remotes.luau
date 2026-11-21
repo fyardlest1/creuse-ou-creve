@@ -25,7 +25,7 @@ local Names = table.freeze({
 	PhaseChanged = "PhaseChanged", -- serveur -> tous : phase ("Day" | "Night"), endsAt (GetServerTimeNow)
 	StealStarted = "StealStarted", -- serveur -> victime : thiefName, thiefUserId
 	StealCancelled = "StealCancelled", -- serveur -> victime et voleur : reason, otherName
-	StealSucceeded = "StealSucceeded", -- serveur -> victime et voleur : itemName, rarity, thiefName, victimName
+	StealSucceeded = "StealSucceeded", -- serveur -> victime et voleur : itemId, rarity, thiefName, victimName
 	EjectRequest = "EjectRequest", -- client -> serveur : thiefUserId
 	Ejected = "Ejected", -- serveur -> voleur : ownerName, stunSeconds
 	PurchaseRequest = "PurchaseRequest", -- client -> serveur : clé du pass ou du produit
@@ -33,11 +33,11 @@ local Names = table.freeze({
 	AutoDigToggle = "AutoDigToggle", -- client -> serveur : enabled (pass Creusage auto)
 	RevengeCompensated = "RevengeCompensated", -- serveur -> joueur : Revanche impossible, potion en réserve
 	ShopStateRequest = "ShopStateRequest", -- client -> serveur : aucun (état de la boutique)
-	ShopState = "ShopState", -- serveur -> client : { [clé] = raison ou "" si achetable }
+	ShopState = "ShopState", -- serveur -> client : { [clé] = "" si achetable, "owned", ou clé Locale de la raison }
 	DailyClaim = "DailyClaim", -- client -> serveur : aucun (réclamer la récompense du jour)
 	RetentionStateRequest = "RetentionStateRequest", -- client -> serveur : aucun
 	RetentionState = "RetentionState", -- serveur -> client : quotidien, quêtes, Index, titre
-	RetentionNotice = "RetentionNotice", -- serveur -> client : texte (quête réussie, palier d'Index...)
+	RetentionNotice = "RetentionNotice", -- serveur -> client : LocText (quête réussie, palier d'Index...)
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 })
 

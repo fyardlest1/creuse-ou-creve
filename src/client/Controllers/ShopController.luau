@@ -12,6 +12,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local UiKit = require(script.Parent.Parent.UiKit)
 
 type Tab = "Passes" | "Bonus"
@@ -28,13 +29,9 @@ local TAB_OFF_COLOR = Color3.fromRGB(60, 58, 72)
 local CLOSE_COLOR = Color3.fromRGB(200, 60, 60)
 local PRICE_COLOR = Color3.fromRGB(255, 205, 60)
 
-local TEXT_TITLE = "Boutique"
-local TEXT_TAB_PASSES = "Passes"
-local TEXT_TAB_BONUS = "Bonus"
+-- Symboles, identiques dans toutes les langues (les textes passent par Locale).
 local TEXT_CLOSE = "X"
 local TEXT_PRICE = "%d R$"
-local TEXT_BUY = "Acheter"
-local TEXT_OWNED = "Possédé"
 local TEXT_LOADING = "..."
 
 local player = Players.LocalPlayer
@@ -94,7 +91,7 @@ local function isRestricted(): boolean
 	return player:GetAttribute("PaidRandomItemsRestricted") == true
 end
 
-local function createCard(def: any, order: number)
+local function createCard(def: any, order: number, kind: "pass" | "product")
 	local card = Instance.new("Frame")
 	card.Name = def.key
 	card.LayoutOrder = order
@@ -104,7 +101,7 @@ local function createCard(def: any, order: number)
 	addCorner(card, 0.1)
 	addPadding(card, 8, 12)
 
-	local name = createLabel("ItemName", def.name, card)
+	local name = createLabel("ItemName", Locale.t(kind .. "." .. def.key), card)
 	name.Size = UDim2.new(0.62, 0, 0, UiConfig.SHOP_TITLE_HEIGHT)
 	name.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -115,7 +112,7 @@ local function createCard(def: any, order: number)
 	price.TextXAlignment = Enum.TextXAlignment.Right
 	price.TextColor3 = PRICE_COLOR
 
-	local description = createLabel("Description", def.description, card)
+	local description = createLabel("Description", Locale.t(kind .. "." .. def.key .. ".desc"), card)
 	description.Position = UDim2.fromOffset(0, UiConfig.SHOP_TITLE_HEIGHT + 2)
 	description.Size = UDim2.new(0.62, 0, 1, -(UiConfig.SHOP_TITLE_HEIGHT + 2))
 	description.TextWrapped = true
@@ -126,17 +123,18 @@ local function createCard(def: any, order: number)
 	limit.MaxTextSize = UiConfig.SHOP_DESCRIPTION_MAX_TEXT
 	limit.Parent = description
 
-	-- État : "" = achetable, "owned" = pass possédé, sinon la raison (grisé). nil = en attente du serveur.
+	-- État : "" = achetable, "owned" = pass possédé, sinon la clé de traduction de la raison (grisé).
+	-- nil = en attente du serveur.
 	local state = shopState[def.key]
 	local text, color, enabled
 	if state == nil then
 		text, color, enabled = TEXT_LOADING, DISABLED_COLOR, false
 	elseif state == "owned" then
-		text, color, enabled = TEXT_OWNED, OWNED_COLOR, false
+		text, color, enabled = Locale.t("shop.owned"), OWNED_COLOR, false
 	elseif state == "" then
-		text, color, enabled = TEXT_BUY, BUY_COLOR, true
+		text, color, enabled = Locale.t("shop.buy"), BUY_COLOR, true
 	else
-		text, color, enabled = state, DISABLED_COLOR, false
+		text, color, enabled = Locale.t(state), DISABLED_COLOR, false
 	end
 	local button = createButton("Action", text, color, card)
 	button.AnchorPoint = Vector2.new(1, 1)
@@ -164,11 +162,12 @@ local function render()
 	end
 	local restricted = isRestricted()
 	local defs: { any } = if currentTab == "Passes" then MonetizationConfig.passes else MonetizationConfig.products
+	local kind: "pass" | "product" = if currentTab == "Passes" then "pass" else "product"
 	local order = 0
 	for _, def in defs do
 		if not (def.isLuck and restricted) then
 			order += 1
-			createCard(def, order)
+			createCard(def, order, kind)
 		end
 	end
 	if currentTab == "Bonus" then
@@ -198,14 +197,14 @@ local function buildUi()
 	sizeLimit.Parent = panel
 
 	local header = UiConfig.TOUCH_TARGET_MIN
-	local title = createLabel("Title", TEXT_TITLE, panel)
+	local title = createLabel("Title", Locale.t("shop.title"), panel)
 	title.Size = UDim2.new(0.28, 0, 0, header)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 
 	for index, tab in { "Passes", "Bonus" } :: { Tab } do
 		local button = createButton(
 			"Tab" .. tab,
-			if tab == "Passes" then TEXT_TAB_PASSES else TEXT_TAB_BONUS,
+			Locale.t(if tab == "Passes" then "shop.tabPasses" else "shop.tabBonus"),
 			TAB_OFF_COLOR,
 			panel
 		)

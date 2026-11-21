@@ -16,6 +16,7 @@ local EconomyConfig = require(Shared.Config.EconomyConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 
 local WHITE = Color3.new(1, 1, 1)
 local PANEL_BACKGROUND = Color3.fromRGB(28, 26, 34)
@@ -27,17 +28,7 @@ local EQUIPPED_COLOR = Color3.fromRGB(240, 190, 60)
 local OWNED_COLOR = Color3.fromRGB(70, 120, 200)
 local CLOSE_COLOR = Color3.fromRGB(200, 60, 60)
 
-local TEXT_TITLE = "Forge"
-local TEXT_CLOSE = "X"
-local TEXT_PRICE_FREE = "Gratuite"
-local TEXT_PRICE = "%s Pièces"
-local TEXT_STATS = "%d coups par case  •  Chance +%d %%  •  Jusqu'à : %s"
-local TEXT_EQUIPPED = "Équipée"
-local TEXT_OWNED = "Possédée"
-local TEXT_BUY = "Acheter (%s)"
-local TEXT_MISSING = "Il manque %s Pièces"
-local TEXT_LOCKED = "Bloquée : %s requise"
-local TEXT_COINS = "Tes Pièces : %s"
+local TEXT_CLOSE = "X" -- symbole, identique dans toutes les langues
 
 local player = Players.LocalPlayer
 
@@ -50,12 +41,6 @@ local buyShovelRemote: RemoteEvent
 local buySound: Sound
 local forgePosition: Vector3? = nil
 local awaitingResult = false
-
-local function formatNumber(value: number): string
-	local text = tostring(math.floor(value))
-	local formatted = text:reverse():gsub("(%d%d%d)", "%1 "):reverse()
-	return (formatted:gsub("^ ", ""))
-end
 
 local function addCorner(parent: GuiObject, radius: number)
 	local corner = Instance.new("UICorner")
@@ -95,20 +80,20 @@ end
 -- Texte, couleur et activation du bouton d'une pelle.
 local function getButtonState(shovel: Types.ShovelDef, owned: { [string]: boolean }): (string, Color3, boolean)
 	if player:GetAttribute("EquippedShovel") == shovel.id then
-		return TEXT_EQUIPPED, EQUIPPED_COLOR, false
+		return Locale.t("forge.equipped"), EQUIPPED_COLOR, false
 	end
 	if owned[shovel.id] then
-		return TEXT_OWNED, OWNED_COLOR, false
+		return Locale.t("forge.owned"), OWNED_COLOR, false
 	end
 	local previous = Shovels.getPrevious(shovel.id)
 	if previous ~= nil and not owned[previous.id] then
-		return string.format(TEXT_LOCKED, previous.name), DISABLED_COLOR, false
+		return Locale.t("forge.locked", Locale.shovel(previous.id)), DISABLED_COLOR, false
 	end
 	local missing = shovel.price - getCoins()
 	if missing > 0 then
-		return string.format(TEXT_MISSING, formatNumber(missing)), DISABLED_COLOR, false
+		return Locale.t("forge.missing", Locale.number(missing)), DISABLED_COLOR, false
 	end
-	return string.format(TEXT_BUY, string.format(TEXT_PRICE, formatNumber(shovel.price))), BUY_COLOR, true
+	return Locale.t("forge.buy", Locale.t("common.coins", Locale.number(shovel.price))), BUY_COLOR, true
 end
 
 -- Hauteur des lignes : les pelles se partagent la place visible pour tenir sans défiler,
@@ -134,13 +119,13 @@ local function createRow(shovel: Types.ShovelDef, order: number, owned: { [strin
 	padding.PaddingRight = UDim.new(0, 12)
 	padding.Parent = row
 
-	local nameLabel = createLabel("ShovelName", shovel.name, row)
+	local nameLabel = createLabel("ShovelName", Locale.shovel(shovel.id), row)
 	nameLabel.Size = UDim2.fromScale(0.42, 0.38)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 	local priceText = if shovel.price == 0
-		then TEXT_PRICE_FREE
-		else string.format(TEXT_PRICE, formatNumber(shovel.price))
+		then Locale.t("forge.free")
+		else Locale.t("common.coins", Locale.number(shovel.price))
 	local priceLabel = createLabel("Price", priceText, row)
 	priceLabel.Position = UDim2.fromScale(0.42, 0)
 	priceLabel.Size = UDim2.fromScale(0.2, 0.38)
@@ -149,7 +134,7 @@ local function createRow(shovel: Types.ShovelDef, order: number, owned: { [strin
 
 	local stats = createLabel(
 		"Stats",
-		string.format(TEXT_STATS, shovel.hitsPerCell, shovel.luckBonus, Strata.byId[shovel.maxStratum].name),
+		Locale.t("forge.stats", shovel.hitsPerCell, shovel.luckBonus, Locale.stratum(Strata.byId[shovel.maxStratum].id)),
 		row
 	)
 	stats.Position = UDim2.fromScale(0, 0.5)
@@ -204,7 +189,7 @@ local function render()
 			child:Destroy()
 		end
 	end
-	coinsLabel.Text = string.format(TEXT_COINS, formatNumber(getCoins()))
+	coinsLabel.Text = Locale.t("forge.coins", Locale.number(getCoins()))
 	local owned = getOwned()
 	local rowHeight = getRowHeight()
 	for order, shovel in Shovels.list do
@@ -241,7 +226,7 @@ local function buildUi()
 	padding.Parent = panel
 
 	local headerHeight = UiConfig.CHEST_BUTTON_MIN_HEIGHT
-	local title = createLabel("Title", TEXT_TITLE, panel)
+	local title = createLabel("Title", Locale.t("forge.title"), panel)
 	title.Size = UDim2.new(0.3, 0, 0, headerHeight)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 

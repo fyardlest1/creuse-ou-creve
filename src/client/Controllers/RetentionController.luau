@@ -18,37 +18,13 @@ local RetentionConfig = require(Shared.Config.RetentionConfig)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local UiKit = require(script.Parent.Parent.UiKit)
 
 type Payload = Types.RetentionStatePayload
 
-local TEXT_QUESTS_TITLE = "Aujourd'hui"
-local TEXT_DAILY_SECTION = "Récompense du jour"
-local TEXT_DAY = "Jour %d"
-local TEXT_CLAIM = "Récupérer"
-local TEXT_COME_BACK = "Reviens demain !"
-local TEXT_QUESTS_SECTION = "Quêtes du jour"
-local TEXT_QUEST_REWARD = "+%s Pièces"
-local TEXT_QUEST_DONE = "Réussie !"
-local TEXT_BONUS = "Fais les 3 quêtes : +1 Potion de chance"
-local TEXT_BONUS_DONE = "Les 3 quêtes sont faites : Potion de chance gagnée !"
-local TEXT_INDEX_TITLE = "Index"
-local TEXT_INDEX_PROGRESS = "%s : %d/%d objets trouvés (%d %%)"
-local TEXT_TIER = "%d %% : %s"
+-- Symboles, identiques dans toutes les langues (les textes passent par Locale).
 local TEXT_UNKNOWN = "???"
-local TEXT_RESERVE_TITLE = "Réserve"
-local TEXT_RESERVE_HINT = "Les bonus gagnés (calendrier, quêtes, Index) arrivent ici. Active-les quand tu veux."
-local TEXT_POTION_ROW = "Potion de chance x%d"
-local TEXT_POTION_DESCRIPTION = "Chances x%d pendant %d minutes."
-local TEXT_SHIELD_ROW = "Bouclier anti-vol x%d"
-local TEXT_SHIELD_DESCRIPTION = "Personne ne peut crocheter ton coffre pendant une nuit."
-local TEXT_ACTIVATE = "Activer"
-local TEXT_EMPTY = "Vide"
-local TEXT_SHIELD_PLANNED = "Déjà prévu"
-local TEXT_COINS_REWARD = "%s Pièces"
-local TEXT_POTION_REWARD = "Potion"
-local TEXT_SHIELD_REWARD = "Bouclier"
-local TEXT_TITLE_REWARD = "Titre"
 local TEXT_REWARD_JOIN = " + "
 
 local player = Players.LocalPlayer
@@ -64,7 +40,7 @@ local state: Payload? = nil
 local dailyClaim: RemoteEvent
 local useBoost: RemoteEvent
 local stateRequest: RemoteEvent
-local notices: { string } = {}
+local notices: { Locale.LocText } = {}
 local showingNotices = false
 local autoOpened = false
 local showBanner: ((text: string) -> ())? = nil
@@ -72,13 +48,13 @@ local showBanner: ((text: string) -> ())? = nil
 local function rewardText(reward: RetentionConfig.Reward, coinMultiplier: number?): string
 	local parts = {}
 	if reward.coins ~= nil and reward.coins > 0 then
-		table.insert(parts, string.format(TEXT_COINS_REWARD, UiKit.formatNumber(reward.coins * (coinMultiplier or 1))))
+		table.insert(parts, Locale.t("common.coins", UiKit.formatNumber(reward.coins * (coinMultiplier or 1))))
 	end
 	if reward.luckPotion ~= nil and reward.luckPotion > 0 then
-		table.insert(parts, TEXT_POTION_REWARD)
+		table.insert(parts, Locale.t("retention.rewardPotion"))
 	end
 	if reward.shield ~= nil and reward.shield > 0 then
-		table.insert(parts, TEXT_SHIELD_REWARD)
+		table.insert(parts, Locale.t("retention.rewardShield"))
 	end
 	return table.concat(parts, TEXT_REWARD_JOIN)
 end
@@ -108,7 +84,7 @@ end
 ------------------------------------------------------------------------------------------------
 
 local function renderDaily(current: Payload, list: ScrollingFrame)
-	section(list, "DailySection", TEXT_DAILY_SECTION, 1)
+	section(list, "DailySection", Locale.t("retention.dailySection"), 1)
 	local daily = current.daily
 	local calendar = card(list, "Calendar", 2, UiConfig.DAILY_CELL_HEIGHT)
 	local layout = Instance.new("UIListLayout")
@@ -132,7 +108,7 @@ local function renderDaily(current: Payload, list: ScrollingFrame)
 		cell.Parent = calendar
 		UiKit.addCorner(cell, 0.15)
 		UiKit.addPadding(cell, 3, 3)
-		local title = UiKit.label("Day", string.format(TEXT_DAY, day), cell)
+		local title = UiKit.label("Day", Locale.t("retention.day", day), cell)
 		title.Size = UDim2.fromScale(1, 0.4)
 		local text = UiKit.label("Reward", (if day <= checkedUpTo then "✓ " else "") .. rewardText(reward), cell)
 		text.Position = UDim2.fromScale(0, 0.42)
@@ -143,7 +119,7 @@ local function renderDaily(current: Payload, list: ScrollingFrame)
 
 	local claim = UiKit.button(
 		"Claim",
-		if daily.available then TEXT_CLAIM else TEXT_COME_BACK,
+		Locale.t(if daily.available then "retention.claim" else "retention.comeBack"),
 		if daily.available then UiKit.ACTION_COLOR else UiKit.DISABLED_COLOR,
 		list
 	)
@@ -168,16 +144,18 @@ local function renderQuests()
 		return
 	end
 	renderDaily(current, list)
-	section(list, "QuestsSection", TEXT_QUESTS_SECTION, 4)
+	section(list, "QuestsSection", Locale.t("retention.questsSection"), 4)
 	for index, quest in current.quests do
 		local row = card(list, "Quest" .. index, 4 + index, UiConfig.QUEST_ROW_HEIGHT)
 		row.BackgroundColor3 = if quest.done then UiKit.DONE_COLOR else UiKit.CARD_BACKGROUND
-		local text = UiKit.label("Text", quest.text, row)
+		local text = UiKit.label("Text", Locale.t("quest." .. quest.kind, UiKit.formatNumber(quest.target)), row)
 		text.Size = UDim2.new(0.68, 0, 0.5, 0)
 		text.TextXAlignment = Enum.TextXAlignment.Left
 		local reward = UiKit.label(
 			"Reward",
-			if quest.done then TEXT_QUEST_DONE else string.format(TEXT_QUEST_REWARD, UiKit.formatNumber(quest.reward)),
+			if quest.done
+				then Locale.t("retention.questDone")
+				else Locale.t("retention.questReward", UiKit.formatNumber(quest.reward)),
 			row
 		)
 		reward.AnchorPoint = Vector2.new(1, 0)
@@ -205,7 +183,11 @@ local function renderQuests()
 		count.Size = UDim2.fromScale(1, 1)
 		count.TextStrokeTransparency = 0.4
 	end
-	local bonus = UiKit.label("Bonus", if current.questsBonusClaimed then TEXT_BONUS_DONE else TEXT_BONUS, list)
+	local bonus = UiKit.label(
+		"Bonus",
+		Locale.t(if current.questsBonusClaimed then "retention.bonusDone" else "retention.bonus"),
+		list
+	)
 	bonus.LayoutOrder = 10
 	bonus.Size = UDim2.new(1, -12, 0, UiConfig.RETENTION_SECTION_HEIGHT)
 	bonus.TextColor3 = UiKit.MUTED_TEXT
@@ -241,8 +223,11 @@ local function renderIndex()
 	end
 	local percent = if #items == 0 then 0 else math.floor(found / #items * 100)
 
-	local progress =
-		UiKit.label("Progress", string.format(TEXT_INDEX_PROGRESS, stratum.name, found, #items, percent), list)
+	local progress = UiKit.label(
+		"Progress",
+		Locale.t("retention.indexProgress", Locale.stratum(stratum.id), found, #items, percent),
+		list
+	)
 	progress.LayoutOrder = 1
 	progress.Size = UDim2.new(1, -12, 0, UiConfig.RETENTION_SECTION_HEIGHT)
 	progress.TextXAlignment = Enum.TextXAlignment.Left
@@ -257,11 +242,11 @@ local function renderIndex()
 	for index, tier in RetentionConfig.INDEX_TIERS do
 		local reached = current.indexRewards[currentLayer .. ":" .. tier.percent] == true
 		local rewardLabel = if tier.title
-			then TEXT_TITLE_REWARD
+			then Locale.t("retention.rewardTitle")
 			else rewardText(tier.reward or {}, RetentionConfig.INDEX_COIN_REWARD_MULTIPLIER_BY_LAYER[currentLayer])
 		local cell = UiKit.label(
 			"Tier" .. tier.percent,
-			(if reached then "✓ " else "") .. string.format(TEXT_TIER, tier.percent, rewardLabel),
+			(if reached then "✓ " else "") .. Locale.t("retention.tier", tier.percent, rewardLabel),
 			tiers
 		)
 		cell.LayoutOrder = index
@@ -302,12 +287,12 @@ local function renderIndex()
 		stroke.Transparency = if mutationsFound ~= nil then 0 else 0.6
 		stroke.Parent = cell
 
-		local name = UiKit.label("ItemName", if mutationsFound ~= nil then item.name else TEXT_UNKNOWN, cell)
+		local name = UiKit.label("ItemName", if mutationsFound ~= nil then Locale.item(item.id) else TEXT_UNKNOWN, cell)
 		name.Size = UDim2.fromScale(1, 0.55)
 		name.TextWrapped = true
 		name.TextColor3 = if mutationsFound ~= nil then UiKit.WHITE else UiKit.MUTED_TEXT
 		UiKit.limitText(name, UiConfig.RETENTION_SMALL_TEXT)
-		local rarityLabel = UiKit.label("Rarity", rarity.displayName, cell)
+		local rarityLabel = UiKit.label("Rarity", Locale.rarity(rarity.id), cell)
 		rarityLabel.Position = UDim2.fromScale(0, 0.55)
 		rarityLabel.Size = UDim2.fromScale(1, 0.22)
 		rarityLabel.TextColor3 = rarity.color
@@ -366,7 +351,9 @@ local function reserveRow(list: Instance, order: number, kind: string, title: st
 
 	local planned = kind == "shield" and player:GetAttribute("ShieldPlanned") == true
 	local enabled = count > 0 and not planned
-	local label = if count <= 0 then TEXT_EMPTY elseif planned then TEXT_SHIELD_PLANNED else TEXT_ACTIVATE
+	local label = Locale.t(
+		if count <= 0 then "retention.empty" elseif planned then "retention.shieldPlanned" else "retention.activate"
+	)
 	local button = UiKit.button("Action", label, if enabled then UiKit.ACTION_COLOR else UiKit.DISABLED_COLOR, row)
 	button.AnchorPoint = Vector2.new(1, 0.5)
 	button.Position = UDim2.fromScale(1, 0.5)
@@ -385,7 +372,7 @@ local function renderReserve()
 	end
 	local list = reserveWindow.content
 	UiKit.clear(list)
-	local hint = UiKit.label("Hint", TEXT_RESERVE_HINT, list)
+	local hint = UiKit.label("Hint", Locale.t("retention.reserveHint"), list)
 	hint.Size = UDim2.new(1, -12, 0, UiConfig.RETENTION_SECTION_HEIGHT)
 	hint.TextWrapped = true
 	hint.TextColor3 = UiKit.MUTED_TEXT
@@ -393,14 +380,20 @@ local function renderReserve()
 		list,
 		1,
 		"luckPotion",
-		string.format(TEXT_POTION_ROW, readNumber("ReserveLuckPotion")),
-		string.format(
-			TEXT_POTION_DESCRIPTION,
+		Locale.t("retention.potionRow", readNumber("ReserveLuckPotion")),
+		Locale.t(
+			"retention.potionDescription",
 			MonetizationConfig.POTION_MULTIPLIER,
 			MonetizationConfig.POTION_DURATION // 60
 		)
 	)
-	reserveRow(list, 2, "shield", string.format(TEXT_SHIELD_ROW, readNumber("ReserveShield")), TEXT_SHIELD_DESCRIPTION)
+	reserveRow(
+		list,
+		2,
+		"shield",
+		Locale.t("retention.shieldRow", readNumber("ReserveShield")),
+		Locale.t("retention.shieldDescription")
+	)
 end
 
 ------------------------------------------------------------------------------------------------
@@ -414,9 +407,9 @@ local function pumpNotices()
 	showingNotices = true
 	task.spawn(function()
 		while #notices > 0 do
-			local text = table.remove(notices, 1) :: string
+			local text = table.remove(notices, 1) :: Locale.LocText
 			if showBanner ~= nil then
-				showBanner(text)
+				showBanner(Locale.render(text))
 			end
 			task.wait(UiConfig.BANNER_LONG_TIME + UiConfig.BANNER_FADE_TIME)
 		end
@@ -457,13 +450,17 @@ function RetentionController.init()
 	dailyClaim = Remotes.get(Remotes.Names.DailyClaim)
 	useBoost = Remotes.get(Remotes.Names.UseBoost)
 	stateRequest = Remotes.get(Remotes.Names.RetentionStateRequest)
-	questsWindow = UiKit.window("QuestsGui", TEXT_QUESTS_TITLE, UiConfig.RETENTION_PANEL_MAX_SIZE)
-	indexWindow = UiKit.window("IndexGui", TEXT_INDEX_TITLE, UiConfig.RETENTION_PANEL_MAX_SIZE)
-	reserveWindow =
-		UiKit.window("ReserveGui", TEXT_RESERVE_TITLE, UiConfig.RESERVE_PANEL_MAX_SIZE, UiConfig.RESERVE_PANEL_SCALE)
+	questsWindow = UiKit.window("QuestsGui", Locale.t("retention.todayTitle"), UiConfig.RETENTION_PANEL_MAX_SIZE)
+	indexWindow = UiKit.window("IndexGui", Locale.t("retention.indexTitle"), UiConfig.RETENTION_PANEL_MAX_SIZE)
+	reserveWindow = UiKit.window(
+		"ReserveGui",
+		Locale.t("retention.reserveTitle"),
+		UiConfig.RESERVE_PANEL_MAX_SIZE,
+		UiConfig.RESERVE_PANEL_SCALE
+	)
 	local entries = {}
 	for _, stratum in Strata.list do
-		table.insert(entries, { key = tostring(stratum.layer), text = stratum.name })
+		table.insert(entries, { key = tostring(stratum.layer), text = Locale.stratum(stratum.id) })
 	end
 	indexTabs = UiKit.tabs(indexWindow.header, entries, function(key: string)
 		currentLayer = tonumber(key) or 1
@@ -490,8 +487,8 @@ function RetentionController.start()
 		end
 	end)
 	Remotes.get(Remotes.Names.RetentionNotice).OnClientEvent:Connect(function(text: unknown)
-		if typeof(text) == "string" then
-			table.insert(notices, text)
+		if Locale.isLocText(text) then
+			table.insert(notices, text :: Locale.LocText)
 			pumpNotices()
 		end
 	end)

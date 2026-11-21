@@ -439,7 +439,8 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 
 	local name = Items.byId[item.itemId] and Items.byId[item.itemId].name or item.itemId
 	for _, player in { thief, victim } do
-		remotes.stealSucceeded:FireClient(player, name, item.rarity, thief.Name, victim.Name)
+		-- L'identifiant de l'objet : chaque client affiche le nom dans sa langue.
+		remotes.stealSucceeded:FireClient(player, item.itemId, item.rarity, thief.Name, victim.Name)
 	end
 	logEvent(thief, StealConfig.ANALYTICS_EVENTS.Success, item.value, item.rarity)
 	log(string.format("%s a volé %s (%s) à %s", thief.Name, name, item.rarity, victim.Name))
@@ -540,21 +541,21 @@ end
 -- raison affichée. La distance ne compte pas : la Revanche téléporte devant son coffre.
 function StealService.getRevengeTarget(player: Player): (Player?, string?)
 	if not DayNightService.isNight() then
-		return nil, StealConfig.TEXT_REVENGE_DAY
+		return nil, "shop.revengeDay"
 	end
 	local thiefId = lastThiefByVictim[player.UserId]
 	local thief = if thiefId ~= nil then Players:GetPlayerByUserId(thiefId) else nil
 	if thief == nil then
-		return nil, StealConfig.TEXT_REVENGE_NO_THIEF
+		return nil, "shop.revengeNoThief"
 	end
 	local context = buildContext(player, thief)
 	if context == nil then
-		return nil, StealConfig.TEXT_REVENGE_BLOCKED
+		return nil, "shop.revengeBlocked"
 	end
 	context.distance = 0
 	local ok = night:checkStart(context)
 	if not ok then
-		return nil, StealConfig.TEXT_REVENGE_BLOCKED
+		return nil, "shop.revengeBlocked"
 	end
 	return thief, nil
 end

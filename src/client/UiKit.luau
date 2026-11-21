@@ -9,6 +9,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Rarities = require(Shared.Config.Rarities)
 local UiConfig = require(Shared.Config.UiConfig)
 local LuckOdds = require(Shared.LuckOdds)
+local Locale = require(Shared.Locale)
 
 local UiKit = {}
 
@@ -24,10 +25,7 @@ UiKit.CLOSE_COLOR = Color3.fromRGB(200, 60, 60)
 UiKit.GOLD = Color3.fromRGB(255, 205, 60)
 UiKit.DONE_COLOR = Color3.fromRGB(70, 160, 90)
 
-local TEXT_CLOSE = "X"
-local TEXT_ODDS_TITLE = "Chances de trouver chaque rareté"
-local TEXT_ODDS_HEADER = "Sans bonus  •  Avec tes bonus (x%s)"
-local TEXT_ODDS_ROW = "%s : %s %%  •  %s %%"
+local TEXT_CLOSE = "X" -- symbole, identique dans toutes les langues
 
 function UiKit.addCorner(parent: GuiObject, radius: number)
 	local corner = Instance.new("UICorner")
@@ -76,11 +74,9 @@ function UiKit.button(name: string, text: string, color: Color3, parent: Instanc
 	return button
 end
 
--- 12345 -> "12 345"
+-- 12345 -> "12 345" (français) ou "12,345" (anglais)
 function UiKit.formatNumber(value: number): string
-	local text = tostring(math.floor(value))
-	local formatted = text:reverse():gsub("(%d%d%d)", "%1 "):reverse()
-	return (formatted:gsub("^ ", ""))
+	return Locale.number(value)
 end
 
 -- 125 -> "2:05"
@@ -215,10 +211,10 @@ function UiKit.oddsBlock(parent: Instance, order: number): Frame
 	layout.Parent = block
 
 	local lineHeight = UiConfig.SHOP_ODDS_LINE_HEIGHT
-	local title = UiKit.label("Title", TEXT_ODDS_TITLE, block)
+	local title = UiKit.label("Title", Locale.t("odds.title"), block)
 	title.Size = UDim2.new(1, 0, 0, lineHeight)
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	local header = UiKit.label("Header", string.format(TEXT_ODDS_HEADER, LuckOdds.formatMultiplier(luck)), block)
+	local header = UiKit.label("Header", Locale.t("odds.header", LuckOdds.formatMultiplier(luck)), block)
 	header.LayoutOrder = 1
 	header.Size = UDim2.new(1, 0, 0, lineHeight)
 	header.TextXAlignment = Enum.TextXAlignment.Left
@@ -226,9 +222,9 @@ function UiKit.oddsBlock(parent: Instance, order: number): Frame
 	for index, rarity in Rarities.list do
 		local row = UiKit.label(
 			rarity.id,
-			string.format(
-				TEXT_ODDS_ROW,
-				rarity.displayName,
+			Locale.t(
+				"odds.row",
+				Locale.rarity(rarity.id),
 				LuckOdds.formatPercent(base[rarity.id]),
 				LuckOdds.formatPercent(boosted[rarity.id])
 			),

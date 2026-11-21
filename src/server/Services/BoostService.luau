@@ -11,6 +11,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local Remotes = require(Shared.Remotes)
+local Locale = require(Shared.Locale)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ShopService = require(script.Parent.ShopService)
 local DayNightService = require(script.Parent.DayNightService)
@@ -198,7 +199,7 @@ addVipTag = function(character: Model?)
 	label.BackgroundTransparency = 1
 	label.Font = Enum.Font.FredokaOne
 	label.TextScaled = true
-	label.Text = MonetizationConfig.VIP_TAG_TEXT
+	Locale.bind(label, "Text", Locale.text("vip.tag"))
 	label.TextColor3 = MonetizationConfig.VIP_TAG_COLOR
 	label.TextStrokeTransparency = 0.2
 	label.Parent = tag
@@ -230,7 +231,7 @@ function BoostService.start()
 		return BoostService.activatePotion(player, data)
 	end)
 	PurchaseService.registerCondition("Shield", function(player: Player): string?
-		return if BoostService.canActivateShield(player) then nil else MonetizationConfig.TEXT_SHIELD_ALREADY
+		return if BoostService.canActivateShield(player) then nil else "shop.shieldAlready"
 	end)
 	PurchaseService.registerProduct("Shield", function(player: Player, data: any): boolean
 		if BoostService.canActivateShield(player) then
@@ -241,7 +242,7 @@ function BoostService.start()
 		return true
 	end)
 	PurchaseService.registerCondition("ServerLuckEvent", function(): string?
-		return if BoostService.isServerEventActive() then MonetizationConfig.TEXT_EVENT_RUNNING else nil
+		return if BoostService.isServerEventActive() then "shop.eventRunning" else nil
 	end)
 	PurchaseService.registerProduct("ServerLuckEvent", function(player: Player): boolean
 		-- Payé pendant qu'un autre événement tournait : l'événement est prolongé (valeur égale).

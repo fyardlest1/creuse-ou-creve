@@ -11,14 +11,15 @@ local PlotConfig = require(Shared.Config.PlotConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local DayNightConfig = require(Shared.Config.DayNightConfig)
 local StealConfig = require(Shared.Config.StealConfig)
+local Locale = require(Shared.Locale)
 local PlotService = require(script.Parent.PlotService)
 local DayNightService = require(script.Parent.DayNightService)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
 type StandStyle = {
 	name: string,
-	title: string,
-	action: string,
+	title: string, -- clé Locale
+	action: string, -- clé Locale
 	interaction: string,
 	color: Color3,
 	roofColor: Color3,
@@ -53,15 +54,16 @@ local function createPart(name: string, size: Vector3, cframe: CFrame, color: Co
 	return part
 end
 
+-- objectKey et actionKey : clés Locale (chaque client traduit le prompt dans sa langue).
 local function createPrompt(
 	parent: Instance,
-	objectText: string,
-	actionText: string,
+	objectKey: string,
+	actionKey: string,
 	interaction: string
 ): ProximityPrompt
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ObjectText = objectText
-	prompt.ActionText = actionText
+	Locale.bind(prompt, "ObjectText", Locale.text(objectKey))
+	Locale.bind(prompt, "ActionText", Locale.text(actionKey))
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = WorldConfig.PROMPT_MAX_DISTANCE
 	prompt.RequiresLineOfSight = false
@@ -71,7 +73,7 @@ local function createPrompt(
 	return prompt
 end
 
-local function createSign(anchor: Attachment, text: string)
+local function createSign(anchor: Attachment, textKey: string)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "Sign"
 	billboard.Size = UDim2.fromScale(WorldConfig.STAND_SIGN_WIDTH, WorldConfig.STAND_SIGN_TEXT_HEIGHT) -- en studs
@@ -87,7 +89,7 @@ local function createSign(anchor: Attachment, text: string)
 	label.TextScaled = true
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.2
-	label.Text = text
+	Locale.bind(label, "Text", Locale.text(textKey))
 	label.Parent = billboard
 end
 
@@ -191,11 +193,11 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 	)
 	lid.Parent = model
 
-	createPrompt(body, WorldConfig.CHEST_TITLE, WorldConfig.CHEST_ACTION, WorldConfig.INTERACTIONS.Chest)
+	createPrompt(body, "world.chest", "world.openChest", WorldConfig.INTERACTIONS.Chest)
 
 	-- Second prompt, distinct : "Crocheter" (maintien de 5 s). Le client ne l'affiche que sur les coffres
 	-- des autres, la nuit ; le serveur revalide tout (StealService).
-	local pick = createPrompt(body, WorldConfig.CHEST_TITLE, WorldConfig.PICK_ACTION, WorldConfig.INTERACTIONS.Pick)
+	local pick = createPrompt(body, "world.chest", "world.pick", WorldConfig.INTERACTIONS.Pick)
 	pick.HoldDuration = StealConfig.PICK_DURATION
 	pick.MaxActivationDistance = StealConfig.PICK_MAX_DISTANCE
 	pick.UIOffset = WorldConfig.PICK_PROMPT_OFFSET
@@ -328,7 +330,7 @@ function WorldService.setBodyguard(player: Player, enabled: boolean)
 	model.Name = "Bodyguard"
 	local humanoid = model:FindFirstChildOfClass("Humanoid")
 	if humanoid ~= nil then
-		humanoid.DisplayName = WorldConfig.BODYGUARD_NAME
+		Locale.bind(humanoid, "DisplayName", Locale.text("world.bodyguard"))
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
 	end
 	for _, part in model:GetDescendants() do
@@ -368,8 +370,8 @@ function WorldService.init()
 
 	local merchant = createStand({
 		name = "Merchant",
-		title = WorldConfig.MERCHANT_TITLE,
-		action = WorldConfig.MERCHANT_ACTION,
+		title = "world.merchant",
+		action = "world.sell",
 		interaction = WorldConfig.INTERACTIONS.Merchant,
 		color = WorldConfig.MERCHANT_COLOR,
 		roofColor = WorldConfig.MERCHANT_ROOF_COLOR,
@@ -377,8 +379,8 @@ function WorldService.init()
 
 	local forge = createStand({
 		name = "Forge",
-		title = WorldConfig.FORGE_TITLE,
-		action = WorldConfig.FORGE_ACTION,
+		title = "world.forge",
+		action = "world.buyShovel",
 		interaction = WorldConfig.INTERACTIONS.Forge,
 		color = WorldConfig.FORGE_COLOR,
 		roofColor = WorldConfig.FORGE_ROOF_COLOR,

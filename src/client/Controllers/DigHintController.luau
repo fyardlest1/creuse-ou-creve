@@ -14,10 +14,9 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local UiConfig = require(Shared.Config.UiConfig)
+local Locale = require(Shared.Locale)
 
-local TEXT_PC = "Clique sur une case pour creuser"
-local TEXT_MOBILE = "Touche une case pour creuser"
-local TEXT_HAND = "👇"
+local TEXT_HAND = "👇" -- symbole, identique dans toutes les langues
 local WHITE = Color3.new(1, 1, 1)
 local LABEL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 
@@ -87,7 +86,7 @@ local function buildUi()
 	label.Font = Enum.Font.FredokaOne
 	label.TextScaled = true
 	label.TextColor3 = WHITE
-	label.Text = if isMobile() then TEXT_MOBILE else TEXT_PC
+	label.Text = Locale.t(if isMobile() then "dighint.mobile" else "dighint.pc")
 	label.Parent = gui
 
 	local limit = Instance.new("UISizeConstraint")

@@ -8,8 +8,7 @@ export type Reward = { coins: number?, luckPotion: number?, shield: number? }
 export type QuestKind = "FindRare" | "DigCells" | "SellCoins" | "Steal" | "Eject" | "FindMutation" | "NewDepth"
 
 export type QuestTemplate = {
-	kind: QuestKind,
-	text: string, -- %s reçoit l'objectif mis en forme
+	kind: QuestKind, -- texte affiché : clé Locale "quest.<kind>"
 	targetByLayer: { number }, -- objectif selon la couche actuelle (Terre, Argile, Roche)
 	rewardFactor: number, -- multiplie la récompense de base de la couche
 	stealRelated: boolean, -- jamais tirée pour un joueur encore protégé
@@ -44,49 +43,42 @@ local RetentionConfig = {
 	QUEST_TEMPLATES = table.freeze({
 		table.freeze({
 			kind = "FindRare",
-			text = "Trouve %s objets Rares ou mieux",
 			targetByLayer = { 3, 4, 5 },
 			rewardFactor = 1.5,
 			stealRelated = false,
 		}),
 		table.freeze({
 			kind = "DigCells",
-			text = "Creuse %s cases",
 			targetByLayer = { 40, 60, 80 },
 			rewardFactor = 1,
 			stealRelated = false,
 		}),
 		table.freeze({
 			kind = "SellCoins",
-			text = "Vends pour %s Pièces",
 			targetByLayer = { 1500, 5000, 15000 },
 			rewardFactor = 1,
 			stealRelated = false,
 		}),
 		table.freeze({
 			kind = "Steal",
-			text = "Réussis %s vol",
 			targetByLayer = { 1, 1, 1 },
 			rewardFactor = 2,
 			stealRelated = true,
 		}),
 		table.freeze({
 			kind = "Eject",
-			text = "Éjecte %s voleur",
 			targetByLayer = { 1, 1, 1 },
 			rewardFactor = 2,
 			stealRelated = true,
 		}),
 		table.freeze({
 			kind = "FindMutation",
-			text = "Trouve %s objet muté",
 			targetByLayer = { 1, 1, 1 },
 			rewardFactor = 2,
 			stealRelated = false,
 		}),
 		table.freeze({
 			kind = "NewDepth",
-			text = "Descends %s fois de 10 m",
 			targetByLayer = { 1, 1, 1 },
 			rewardFactor = 1.5,
 			stealRelated = false,
@@ -100,8 +92,7 @@ local RetentionConfig = {
 		table.freeze({ percent = 75, reward = table.freeze({ shield = 1 }) :: Reward }),
 		table.freeze({ percent = 100, title = true }),
 	}),
-	-- Titre affiché sous le nom à 100 % d'une couche ; %s = nom de la couche avec article ("l'Argile").
-	INDEX_TITLE = "Archéologue de %s",
+	-- Titre affiché sous le nom à 100 % d'une couche : clé Locale "title.index" ("Archéologue de %s").
 	INDEX_COIN_REWARD_MULTIPLIER_BY_LAYER = table.freeze({ 1, 3, 8 }), -- palier de 25 % selon la couche
 
 	-- Badges Roblox

@@ -19,7 +19,7 @@ local Strata = require(Shared.Config.Strata)
 local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
-local MonetizationConfig = require(Shared.Config.MonetizationConfig)
+local Locale = require(Shared.Locale)
 local ChestController = require(script.Parent.ChestController)
 local ShopController = require(script.Parent.ShopController)
 local RetentionController = require(script.Parent.RetentionController)
@@ -38,13 +38,8 @@ local CHEST_BUTTON_COLOR = Color3.fromRGB(130, 85, 45)
 local PROTECTED_COLOR = Color3.fromRGB(60, 140, 90)
 local AUTO_DIG_OFF_COLOR = Color3.fromRGB(80, 80, 90)
 local SHOP_BUTTON_COLOR = Color3.fromRGB(200, 70, 150)
-local TEXT_SHOP_BUTTON = "🛒\nBoutique"
 local AUTO_DIG_ON_COLOR = Color3.fromRGB(60, 160, 80)
 local AUTO_DIG_PAUSED_COLOR = Color3.fromRGB(200, 120, 40)
-local TEXT_AUTO_DIG_OFF = "Auto\nOFF"
-local TEXT_AUTO_DIG_ON = "Auto\nON"
-local TEXT_AUTO_DIG_PAUSED = "Auto\nen pause"
-local TEXT_PROTECTED = "Protégé : %d min"
 local QUESTS_BUTTON_COLOR = Color3.fromRGB(60, 120, 200)
 local INDEX_BUTTON_COLOR = Color3.fromRGB(120, 80, 190)
 local RESERVE_BUTTON_COLOR = Color3.fromRGB(50, 150, 130)
@@ -52,33 +47,18 @@ local NOTIFY_DOT_COLOR = Color3.fromRGB(230, 50, 50)
 local POTION_CHIP_COLOR = Color3.fromRGB(60, 150, 70)
 local EVENT_CHIP_COLOR = Color3.fromRGB(220, 140, 30)
 local SHIELD_CHIP_COLOR = Color3.fromRGB(60, 110, 200)
-local TEXT_QUESTS_BUTTON = "📜\nQuêtes"
-local TEXT_INDEX_BUTTON = "📖\nIndex"
-local TEXT_RESERVE_BUTTON = "🎒\nRéserve"
-local TEXT_POTION_CHIP = "🍀 %s"
+local TEXT_POTION_CHIP = "🍀 %s" -- symbole + minuteur, identique dans toutes les langues
 local TEXT_EVENT_CHIP = "⚡ %s"
-local TEXT_SHIELD_CHIP_ACTIVE = "🛡 Actif"
-local TEXT_SHIELD_CHIP_READY = "🛡 Prêt"
 
-local TEXT_DEPTH = "Profondeur : %d m"
-local TEXT_CHEST = "Coffre : %d/%d"
-local TEXT_COINS = "%s"
 local COIN_COLOR = Color3.fromRGB(255, 200, 40)
 local COIN_STROKE_COLOR = Color3.fromRGB(180, 120, 20)
 local ARROW_BACKGROUND = Color3.fromRGB(28, 26, 34)
-local TEXT_CHEST_FULL = "Coffre plein : vends tes objets au Marchand"
-local TEXT_NEW_STRATUM = "Nouvelle couche : %s ! (%d m)"
-local TEXT_DEEPER = "Tu descends à %d m"
-local TEXT_STRATUM_BLOCKED = "Il te faut la %s pour creuser %s"
-local TEXT_SHOVEL_EQUIPPED = "%s équipée !"
-local TEXT_CHEST_BUTTON = "🧰\nCoffre"
 -- Géométrie de la flèche, en fraction du disque
 local ARROW_BAR_THICKNESS = 0.13
 local ARROW_TIP_Y = 0.18
 local ARROW_SHAFT_LENGTH = 0.62
 local ARROW_HEAD_LENGTH = 0.36
 local ARROW_HEAD_ANGLE = 40 -- degrés
-local TEXT_ARROW_LABEL = "Marchand"
 
 local player = Players.LocalPlayer
 
@@ -108,13 +88,6 @@ local boostChips: Frame
 local potionChip: TextLabel
 local eventChip: TextLabel
 local shieldChip: TextLabel
-
--- 12345 -> "12 345"
-local function formatNumber(value: number): string
-	local text = tostring(math.floor(value))
-	local formatted = text:reverse():gsub("(%d%d%d)", "%1 "):reverse()
-	return (formatted:gsub("^ ", ""))
-end
 
 local function addCorner(parent: GuiObject, radius: number)
 	local corner = Instance.new("UICorner")
@@ -322,7 +295,7 @@ local function buildMerchantArrow(gui: ScreenGui)
 	caption.TextScaled = true
 	caption.TextColor3 = WHITE
 	caption.TextStrokeTransparency = 0.3
-	caption.Text = TEXT_ARROW_LABEL
+	caption.Text = Locale.t("hud.merchantArrow")
 	arrowCaption = caption
 	caption.Parent = arrowFrame
 end
@@ -362,7 +335,7 @@ local function updateProtection()
 	local remaining = if typeof(protectedUntil) == "number" then protectedUntil - Workspace:GetServerTimeNow() else 0
 	protectionPill.Visible = remaining > 0
 	if remaining > 0 then
-		protectionLabel.Text = string.format(TEXT_PROTECTED, math.ceil(remaining / 60))
+		protectionLabel.Text = Locale.t("hud.protected", math.ceil(remaining / 60))
 	end
 end
 
@@ -378,7 +351,7 @@ local function buildShopButton(gui: ScreenGui)
 	button.Font = Enum.Font.FredokaOne
 	button.TextScaled = true
 	button.TextColor3 = WHITE
-	button.Text = TEXT_SHOP_BUTTON
+	button.Text = Locale.t("hud.shop")
 	button.Parent = gui
 	addCorner(button, 0.25)
 	local padding = Instance.new("UIPadding")
@@ -402,7 +375,7 @@ local function buildAutoDigButton(gui: ScreenGui)
 	autoDigButton.Font = Enum.Font.FredokaOne
 	autoDigButton.TextScaled = true
 	autoDigButton.TextColor3 = WHITE
-	autoDigButton.Text = TEXT_AUTO_DIG_OFF
+	autoDigButton.Text = Locale.t("hud.autoOff")
 	autoDigButton.Visible = false
 	autoDigButton.Parent = gui
 	addCorner(autoDigButton, 0.25)
@@ -426,7 +399,7 @@ local function refreshAutoDig()
 	autoDigButton.Visible = ownsPass("AutoDig")
 	local on = player:GetAttribute("AutoDig") == true
 	local paused = on and player:GetAttribute("AutoDigPaused") == true
-	autoDigButton.Text = if paused then TEXT_AUTO_DIG_PAUSED elseif on then TEXT_AUTO_DIG_ON else TEXT_AUTO_DIG_OFF
+	autoDigButton.Text = Locale.t(if paused then "hud.autoPaused" elseif on then "hud.autoOn" else "hud.autoOff")
 	autoDigButton.BackgroundColor3 = if paused
 		then AUTO_DIG_PAUSED_COLOR
 		elseif on then AUTO_DIG_ON_COLOR
@@ -444,7 +417,7 @@ local function buildChestButton(gui: ScreenGui)
 	chestButton.Font = Enum.Font.FredokaOne
 	chestButton.TextScaled = true
 	chestButton.TextColor3 = WHITE
-	chestButton.Text = TEXT_CHEST_BUTTON
+	chestButton.Text = Locale.t("hud.chest")
 	chestButton.Parent = gui
 	chestButton.Activated:Connect(ChestController.toggle)
 	addCorner(chestButton, 0.25)
@@ -488,7 +461,7 @@ local function buildRetentionButtons(gui: ScreenGui)
 	local quests = sideButton(
 		gui,
 		"QuestsButton",
-		TEXT_QUESTS_BUTTON,
+		Locale.t("hud.quests"),
 		QUESTS_BUTTON_COLOR,
 		Vector2.new(0, 0.5),
 		UDim2.new(0, UiConfig.HUD_MARGIN + step, 0.45, 0)
@@ -508,7 +481,7 @@ local function buildRetentionButtons(gui: ScreenGui)
 	local index = sideButton(
 		gui,
 		"IndexButton",
-		TEXT_INDEX_BUTTON,
+		Locale.t("hud.index"),
 		INDEX_BUTTON_COLOR,
 		Vector2.new(0, 0.5),
 		UDim2.new(0, UiConfig.HUD_MARGIN + 2 * step, 0.45, 0)
@@ -518,7 +491,7 @@ local function buildRetentionButtons(gui: ScreenGui)
 	local reserve = sideButton(
 		gui,
 		"ReserveButton",
-		TEXT_RESERVE_BUTTON,
+		Locale.t("hud.reserve"),
 		RESERVE_BUTTON_COLOR,
 		Vector2.new(1, 0.5),
 		UDim2.new(1, -(UiConfig.HUD_MARGIN + UiConfig.HUD_SHOP_BUTTON_SIZE + UiConfig.HUD_SPACING), 0.45, 0)
@@ -593,7 +566,7 @@ local function updateBoostChips()
 	end
 	local shieldActive = player:GetAttribute("ShieldTonight") == true
 	shieldChip.Visible = shieldActive or player:GetAttribute("ShieldPlanned") == true
-	shieldChip.Text = if shieldActive then TEXT_SHIELD_CHIP_ACTIVE else TEXT_SHIELD_CHIP_READY
+	shieldChip.Text = Locale.t(if shieldActive then "hud.shieldActive" else "hud.shieldReady")
 	-- Sous le minuteur, et sous la protection débutant quand elle est affichée.
 	local timer = UiConfig.DAY_NIGHT_TIMER_SIZE
 	local top = UiConfig.HUD_TOP_MARGIN + timer.Y + UiConfig.HUD_SPACING
@@ -646,12 +619,12 @@ end
 local function refresh()
 	local depth = readNumberAttribute("Depth", 0)
 	local count = readNumberAttribute("InventoryCount", 0)
-	depthLabel.Text = string.format(TEXT_DEPTH, depth)
-	stratumLabel.Text = Strata.fromDepth(depth).name
+	depthLabel.Text = Locale.t("hud.depth", depth)
+	stratumLabel.Text = Locale.stratum(Strata.fromDepth(depth).id)
 	local limit = readNumberAttribute("InventoryLimit", PlayerConfig.INVENTORY_LIMIT)
-	chestLabel.Text = string.format(TEXT_CHEST, count, limit)
+	chestLabel.Text = Locale.t("hud.chestCount", count, limit)
 	chestPill.BackgroundColor3 = if count >= limit then PILL_FULL_BACKGROUND else PILL_BACKGROUND
-	coinsLabel.Text = string.format(TEXT_COINS, formatNumber(readNumberAttribute("Coins", 0)))
+	coinsLabel.Text = Locale.number(readNumberAttribute("Coins", 0))
 end
 
 local function showBanner(text: string, color: Color3, duration: number?)
@@ -712,7 +685,7 @@ local function updateMerchantArrow()
 	end
 	local target = if override ~= nil then override.position else merchantPosition
 	local reach = if override ~= nil then override.reachDistance else EconomyConfig.MERCHANT_MAX_DISTANCE
-	arrowCaption.Text = if override ~= nil then override.caption else TEXT_ARROW_LABEL
+	arrowCaption.Text = if override ~= nil then override.caption else Locale.t("hud.merchantArrow")
 	if target == nil then
 		arrowFrame.Visible = false
 		return
@@ -771,19 +744,15 @@ function HudController.start()
 	end
 	Remotes.get(Remotes.Names.LuckEventStarted).OnClientEvent:Connect(function(buyerName: unknown)
 		if typeof(buyerName) == "string" then
-			showBanner(
-				string.format(MonetizationConfig.TEXT_EVENT_BANNER, buyerName),
-				BANNER_SUCCESS,
-				UiConfig.BANNER_LONG_TIME
-			)
+			showBanner(Locale.t("hud.luckEvent", buyerName), BANNER_SUCCESS, UiConfig.BANNER_LONG_TIME)
 		end
 	end)
 	Remotes.get(Remotes.Names.RevengeCompensated).OnClientEvent:Connect(function()
-		showBanner(MonetizationConfig.TEXT_REVENGE_COMPENSATED, BANNER_INFO, UiConfig.BANNER_LONG_TIME)
+		showBanner(Locale.t("hud.revengeCompensated"), BANNER_INFO, UiConfig.BANNER_LONG_TIME)
 	end)
 
 	Remotes.get(Remotes.Names.InventoryFull).OnClientEvent:Connect(function()
-		showBanner(TEXT_CHEST_FULL, BANNER_ALERT, UiConfig.BANNER_LONG_TIME)
+		showBanner(Locale.t("hud.chestFull"), BANNER_ALERT, UiConfig.BANNER_LONG_TIME)
 		fullSound:Play()
 	end)
 
@@ -794,9 +763,9 @@ function HudController.start()
 		local stratum = Strata.byLayer[layer]
 		local previous = Strata.fromDepth(depth - PlotConfig.DEPTH_PER_LAYER)
 		if stratum ~= nil and stratum.id ~= previous.id then
-			showBanner(string.format(TEXT_NEW_STRATUM, stratum.nameWithArticle, depth), BANNER_SUCCESS)
+			showBanner(Locale.t("hud.newStratum", Locale.t("stratum." .. stratum.id .. ".the"), depth), BANNER_SUCCESS)
 		else
-			showBanner(string.format(TEXT_DEEPER, depth), BANNER_SUCCESS)
+			showBanner(Locale.t("hud.deeper", depth), BANNER_SUCCESS)
 		end
 	end)
 
@@ -807,7 +776,7 @@ function HudController.start()
 		end
 		local stratum = Strata.byId[shovel.maxStratum]
 		showBanner(
-			string.format(TEXT_STRATUM_BLOCKED, shovel.name, stratum.nameWithArticle),
+			Locale.t("hud.stratumBlocked", Locale.shovel(shovel.id), Locale.t("stratum." .. stratum.id .. ".the")),
 			BANNER_ALERT,
 			UiConfig.BANNER_LONG_TIME
 		)
@@ -817,7 +786,7 @@ function HudController.start()
 	Remotes.get(Remotes.Names.ShovelChanged).OnClientEvent:Connect(function(shovelId: unknown)
 		local shovel = if typeof(shovelId) == "string" then Shovels.byId[shovelId] else nil
 		if shovel ~= nil then
-			showBanner(string.format(TEXT_SHOVEL_EQUIPPED, shovel.name), BANNER_INFO)
+			showBanner(Locale.t("hud.shovelEquipped", Locale.shovel(shovel.id)), BANNER_INFO)
 		end
 	end)
 
