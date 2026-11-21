@@ -1,5 +1,7 @@
 --!strict
 -- Objets à déterrer, par couche. Chaque couche a au moins 2 objets de chaque rareté.
+-- Noms en français (langue source) ; l'anglais est dans src/shared/Locale/en.luau ("item.<id>").
+-- Semaine 5 : objets originaux d'inspiration anime (codes du genre, jamais une œuvre précise).
 
 local Types = require(script.Parent.Parent.Types)
 
@@ -18,6 +20,8 @@ local list: { Types.ItemDef } = {
 	{ id = "mermaid_trident", name = "Trident de Sirène", rarity = "Legendary", layer = 1 },
 	{ id = "cosmic_egg", name = "Œuf Cosmique", rarity = "Secret", layer = 1 },
 	{ id = "alien_remote", name = "Télécommande Extraterrestre", rarity = "Secret", layer = 1 },
+	{ id = "rusty_ninja_mask", name = "Masque de Ninja Rouillé", rarity = "Common", layer = 1 },
+	{ id = "lost_captain_compass", name = "Boussole du Capitaine Perdu", rarity = "Uncommon", layer = 1 },
 
 	-- Couche 2 : l'Argile (fossiles, jouets perdus)
 	{ id = "odd_marbles", name = "Billes Dépareillées", rarity = "Common", layer = 2 },
@@ -32,6 +36,8 @@ local list: { Types.ItemDef } = {
 	{ id = "ancient_console", name = "Console de Jeu Préhistorique", rarity = "Legendary", layer = 2 },
 	{ id = "roaring_trex_plush", name = "T-Rex en Peluche Qui Rugit Vraiment", rarity = "Secret", layer = 2 },
 	{ id = "unicorn_fossil", name = "Fossile de Licorne", rarity = "Secret", layer = 2 },
+	{ id = "faded_pirate_map", name = "Carte de Pirate Délavée", rarity = "Rare", layer = 2 },
+	{ id = "ghost_katana", name = "Katana Fantôme", rarity = "Epic", layer = 2 },
 
 	-- Couche 3 : la Roche (cristaux, trésors de pirates)
 	{ id = "shiny_pebble", name = "Caillou Qui Brille Un Peu", rarity = "Common", layer = 3 },
@@ -41,11 +47,15 @@ local list: { Types.ItemDef } = {
 	{ id = "sulky_amethyst", name = "Améthyste Boudeuse", rarity = "Rare", layer = 3 },
 	{ id = "torn_treasure_map", name = "Carte au Trésor Déchirée", rarity = "Rare", layer = 3 },
 	{ id = "starry_geode", name = "Géode Pleine d'Étoiles", rarity = "Epic", layer = 3 },
-	{ id = "captain_hook", name = "Crochet du Capitaine", rarity = "Epic", layer = 3 },
+	{ id = "captain_hook", name = "Crochet de Pirate", rarity = "Epic", layer = 3 }, -- id gardé (coffres existants)
 	{ id = "storm_captain_chest", name = "Coffre du Capitaine Tempête", rarity = "Legendary", layer = 3 },
 	{ id = "singing_crystal", name = "Cristal Qui Chante Faux", rarity = "Legendary", layer = 3 },
 	{ id = "crystal_parrot", name = "Perroquet de Cristal Qui Parle", rarity = "Secret", layer = 3 },
 	{ id = "earth_heart_diamond", name = "Diamant du Cœur de la Terre", rarity = "Secret", layer = 3 },
+	{ id = "cracked_oni_mask", name = "Masque d'Oni Fendu", rarity = "Epic", layer = 3 },
+	{ id = "sunken_ship_anchor", name = "Ancre du Navire Englouti", rarity = "Legendary", layer = 3 },
+	{ id = "celestial_pearl", name = "Perle Céleste", rarity = "Legendary", layer = 3 },
+	{ id = "celestial_dragon_egg", name = "Œuf du Dragon Céleste", rarity = "Secret", layer = 3 },
 }
 
 local byId: { [string]: Types.ItemDef } = {}

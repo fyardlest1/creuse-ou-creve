@@ -224,6 +224,8 @@ return table.freeze({
 	["item.mermaid_trident"] = "Mermaid's Trident",
 	["item.cosmic_egg"] = "Cosmic Egg",
 	["item.alien_remote"] = "Alien Remote",
+	["item.rusty_ninja_mask"] = "Rusty Ninja Mask",
+	["item.lost_captain_compass"] = "Lost Captain's Compass",
 
 	-- Objets : l'Argile
 	["item.odd_marbles"] = "Mismatched Marbles",
@@ -238,6 +240,8 @@ return table.freeze({
 	["item.ancient_console"] = "Prehistoric Game Console",
 	["item.roaring_trex_plush"] = "T-Rex Plush That Really Roars",
 	["item.unicorn_fossil"] = "Unicorn Fossil",
+	["item.faded_pirate_map"] = "Faded Pirate Map",
+	["item.ghost_katana"] = "Ghost Katana",
 
 	-- Objets : la Roche
 	["item.shiny_pebble"] = "Slightly Shiny Pebble",
@@ -247,11 +251,15 @@ return table.freeze({
 	["item.sulky_amethyst"] = "Sulky Amethyst",
 	["item.torn_treasure_map"] = "Torn Treasure Map",
 	["item.starry_geode"] = "Geode Full of Stars",
-	["item.captain_hook"] = "Captain's Hook",
+	["item.captain_hook"] = "Pirate's Hook",
 	["item.storm_captain_chest"] = "Captain Storm's Chest",
 	["item.singing_crystal"] = "Off-Key Singing Crystal",
 	["item.crystal_parrot"] = "Talking Crystal Parrot",
 	["item.earth_heart_diamond"] = "Diamond of the Earth's Heart",
+	["item.cracked_oni_mask"] = "Cracked Oni Mask",
+	["item.sunken_ship_anchor"] = "Sunken Ship's Anchor",
+	["item.celestial_pearl"] = "Celestial Pearl",
+	["item.celestial_dragon_egg"] = "Celestial Dragon Egg",
 
 	-- Game passes
 	["pass.BiggerChest"] = "Bigger Chest",
