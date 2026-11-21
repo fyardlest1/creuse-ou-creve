@@ -13,6 +13,11 @@ local orderedControllers: { [number]: { name: string, module: Controller } } = {
 	{ name = "HudController", module = require(Controllers:WaitForChild("HudController")) :: any },
 	{ name = "DayNightController", module = require(Controllers:WaitForChild("DayNightController")) :: any },
 	{ name = "RevealController", module = require(Controllers:WaitForChild("RevealController")) :: any },
+	{
+		name = "AnnouncementController",
+		module = require(Controllers:WaitForChild("AnnouncementController")) :: any,
+	},
+	{ name = "AuraController", module = require(Controllers:WaitForChild("AuraController")) :: any },
 	{ name = "ShovelController", module = require(Controllers:WaitForChild("ShovelController")) :: any },
 	{ name = "DigController", module = require(Controllers:WaitForChild("DigController")) :: any },
 	{ name = "DigHintController", module = require(Controllers:WaitForChild("DigHintController")) :: any },

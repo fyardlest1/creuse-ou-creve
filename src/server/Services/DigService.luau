@@ -11,6 +11,7 @@ local PlotConfig = require(Shared.Config.PlotConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local Items = require(Shared.Config.Items)
 local Strata = require(Shared.Config.Strata)
+local Rarities = require(Shared.Config.Rarities)
 local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local PlotService = require(script.Parent.PlotService)
@@ -34,6 +35,7 @@ local remotes: {
 	layerCleared: RemoteEvent,
 	stratumBlocked: RemoteEvent,
 	digSwing: RemoteEvent,
+	itemAnnounced: RemoteEvent,
 }
 
 -- Les requêtes invalides sont ignorées, et loggées en Studio seulement.
@@ -109,6 +111,18 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 
 	PlotService.removeCell(cell)
 	remotes.cellHit:FireClient(player, index, 0)
+	DigService.recordFind(player, data, item)
+
+	if PlotService.countRemainingCells(player) == 0 then
+		clearLayer(player, data)
+	end
+	return true
+end
+
+-- Ce qui suit l'arrivée d'un objet dans le coffre : statistiques, indice de premier lancement, révélation,
+-- annonce à tout le serveur (Légendaire, Secret) et événement itemFound (Index, quêtes, badges, entonnoir).
+-- Seul chemin d'une trouvaille, utilisé par le creusage (et par le pont de test dans Studio).
+function DigService.recordFind(player: Player, data: Types.PlayerData, item: Types.ItemInstance)
 	data.stats.totalDigs += 1
 	data.stats.foundByRarity[item.rarity] = (data.stats.foundByRarity[item.rarity] or 0) + 1
 	-- Indice de premier lancement : il disparaît pour toujours après les premiers objets trouvés.
@@ -124,12 +138,11 @@ local function digOut(player: Player, data: Types.PlayerData, cell: BasePart, in
 		inventoryCount = #data.inventory,
 	}
 	remotes.itemRevealed:FireClient(player, payload)
-	GameEvents.itemFound.fire(player, item)
-
-	if PlotService.countRemainingCells(player) == 0 then
-		clearLayer(player, data)
+	-- Légendaire et Secret : annonce à tout le serveur (chaque client affiche le nom dans sa langue).
+	if Rarities.byId[item.rarity].isSpectacular then
+		remotes.itemAnnounced:FireAllClients(player.UserId, player.DisplayName, item.itemId, item.rarity)
 	end
-	return true
+	GameEvents.itemFound.fire(player, item)
 end
 
 -- Un coup validé sur une case : geste chez tous les clients, puis la case perd des unités de travail.
@@ -228,6 +241,7 @@ function DigService.init()
 		layerCleared = Remotes.get(Remotes.Names.LayerCleared),
 		stratumBlocked = Remotes.get(Remotes.Names.StratumBlocked),
 		digSwing = Remotes.get(Remotes.Names.DigSwing),
+		itemAnnounced = Remotes.get(Remotes.Names.ItemAnnounced),
 	}
 end
 

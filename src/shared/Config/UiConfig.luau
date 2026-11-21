@@ -12,6 +12,48 @@ local UiConfig = {
 	REVEAL_FLASH_TIME = 0.6,
 	RAINBOW_SPIN_SPEED = 180, -- degrés par seconde pour le dégradé arc-en-ciel
 
+	-- Moments forts (plan semaine 5, section 3) : révélation par rareté, lisible en 1 seconde sur téléphone.
+	REVEAL_EPIC_SCALE = 1.15, -- carte Épique plus grande
+	REVEAL_HALO_SCALE = 1.18, -- halo derrière la carte, par rapport à la carte (Épique et mieux)
+	REVEAL_HALO_TRANSPARENCY = 0.45,
+	REVEAL_HALO_PULSE_SPEED = 4, -- radians par seconde (pulsation du halo)
+	REVEAL_FREEZE_TIME = 0.3, -- Légendaire et Secret : l'écran se fige avant l'impact
+	REVEAL_FREEZE_DARKNESS = 0.45, -- transparence du voile sombre pendant l'arrêt sur image
+	SPEED_LINE_COUNT = 18, -- chaque ligne traverse l'écran : 36 traits visibles
+	SPEED_LINE_THICKNESS = 5, -- pixels
+	SPEED_LINE_LENGTH = 2.6, -- en hauteurs d'écran (couvre la diagonale d'un téléphone en paysage)
+	SPEED_LINE_GAP = 0.36, -- part centrale de chaque ligne laissée vide (autour de la carte)
+	SPEED_LINES_TIME = 1.1, -- secondes après l'impact
+	SPEED_LINE_JITTER = 0.6, -- variation aléatoire de l'épaisseur (scintillement façon anime)
+	CAMERA_SHAKE_TIME = 0.35,
+	CAMERA_SHAKE_STRENGTH = 0.35, -- studs
+	LEGENDARY_FLASH_COLOR = Color3.fromRGB(255, 200, 60), -- flash doré
+
+	-- Aura du Secret (3 s, visible par les joueurs proches) et aura de collectionneur (Secret dans le coffre)
+	SECRET_AURA_TIME = 3,
+	SECRET_AURA_MAX_DISTANCE = 90, -- studs entre la caméra et le joueur qui a trouvé le Secret
+	SECRET_AURA_RATE = 45, -- particules par seconde
+	SECRET_AURA_LIFETIME = 1.2,
+	SECRET_AURA_SPEED = 7, -- studs par seconde, vers le haut
+	SECRET_AURA_SIZE = 1.4,
+	COLLECTOR_AURA_RATE = 5, -- discrète
+	COLLECTOR_AURA_LIFETIME = 1.6,
+	COLLECTOR_AURA_SPEED = 1.5,
+	COLLECTOR_AURA_SIZE = 0.6,
+	COLLECTOR_AURA_MAX_COUNT = 8, -- auras affichées au plus (les plus proches)
+	COLLECTOR_AURA_MAX_DISTANCE = 160, -- studs : visible de loin
+	COLLECTOR_AURA_REFRESH = 1, -- secondes entre deux mises à jour (pas de boucle à chaque image)
+	AURA_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds",
+
+	-- Annonces à tout le serveur (Légendaire, Secret, Événement chance)
+	ANNOUNCE_TIME = 4,
+	ANNOUNCE_FADE_TIME = 0.4,
+	ANNOUNCE_SIZE = Vector2.new(640, 50), -- pixels (taille maximale)
+	ANNOUNCE_TOP = 0.17, -- sous la barre du HUD et les bandeaux, en fraction de l'écran
+	ANNOUNCE_LEGENDARY_COLOR = Color3.fromRGB(200, 140, 20),
+	ANNOUNCE_SECRET_COLOR = Color3.fromRGB(150, 60, 200), -- recouvert d'un dégradé arc-en-ciel
+	ANNOUNCE_EVENT_COLOR = Color3.fromRGB(220, 140, 30),
+
 	-- Bandeaux du HUD
 	BANNER_TIME = 2,
 	BANNER_LONG_TIME = 4, -- messages à lire : pelle requise, coffre plein
@@ -146,6 +188,14 @@ local UiConfig = {
 	VOLUME_REVEAL = 0.6,
 	VOLUME_REVEAL_SPECTACULAR = 1,
 	VOLUME_INVENTORY_FULL = 0.6,
+	VOLUME_REVEAL_EPIC = 1, -- Épique : même son, plus fort et plus aigu
+	PITCH_REVEAL_EPIC = 1.25,
+	SOUND_REVEAL_IMPACT = "rbxasset://sounds/snap.wav", -- impact temporaire (Légendaire et Secret)
+	VOLUME_REVEAL_IMPACT = 1,
+	PITCH_REVEAL_IMPACT = 0.45,
+	SOUND_ANNOUNCE = "rbxasset://sounds/electronicpingshort.wav", -- annonce temporaire, distincte du reste
+	VOLUME_ANNOUNCE = 0.7,
+	PITCH_ANNOUNCE = 0.75,
 }
 
 return table.freeze(UiConfig)

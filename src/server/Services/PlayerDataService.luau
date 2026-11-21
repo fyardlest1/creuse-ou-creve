@@ -290,6 +290,15 @@ function PlayerDataService.refreshAttributes(player: Player)
 		end
 	end
 	player:SetAttribute("HasStealableItem", hasStealable)
+	-- Aura de collectionneur : au moins un Secret dans le coffre (visible par tous, de loin).
+	local hasSecret = false
+	for _, item in data.inventory do
+		if item.rarity == "Secret" then
+			hasSecret = true
+			break
+		end
+	end
+	player:SetAttribute("HasSecret", hasSecret)
 	player:SetAttribute("ShowDigHint", not data.digHintDone)
 end
 

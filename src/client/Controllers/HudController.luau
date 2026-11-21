@@ -742,11 +742,6 @@ function HudController.start()
 	for _, name in { "Depth", "InventoryCount", "InventoryLimit", "Coins" } do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
-	Remotes.get(Remotes.Names.LuckEventStarted).OnClientEvent:Connect(function(buyerName: unknown)
-		if typeof(buyerName) == "string" then
-			showBanner(Locale.t("hud.luckEvent", buyerName), BANNER_SUCCESS, UiConfig.BANNER_LONG_TIME)
-		end
-	end)
 	Remotes.get(Remotes.Names.RevengeCompensated).OnClientEvent:Connect(function()
 		showBanner(Locale.t("hud.revengeCompensated"), BANNER_INFO, UiConfig.BANNER_LONG_TIME)
 	end)

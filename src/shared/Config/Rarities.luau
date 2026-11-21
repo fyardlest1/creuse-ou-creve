@@ -1,5 +1,6 @@
 --!strict
 -- Les 6 raretés, de la plus commune à la plus rare. Chances en pourcentage.
+-- isSpectacular : grande révélation et annonce à tout le serveur (Légendaire, Secret).
 
 local Types = require(script.Parent.Parent.Types)
 

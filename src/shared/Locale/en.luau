@@ -55,8 +55,10 @@ return table.freeze({
 	["chest.empty"] = "Your chest is empty. Go dig!",
 	["chest.stolenFrom"] = "Stolen from %s",
 
-	-- Révélation
+	-- Révélation et annonces à tout le serveur
 	["reveal.value"] = "Value: %s",
+	["announce.Legendary"] = "%s found a LEGENDARY: %s!",
+	["announce.Secret"] = "%s found a SECRET: %s!",
 
 	-- Forge
 	["forge.title"] = "Forge",

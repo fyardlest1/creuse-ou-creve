@@ -112,14 +112,18 @@ function LootService.rollItem(layer: number, luckMultiplier: number, isNight: bo
 	local rarityId = LootService.rollRarity(luckMultiplier)
 	local mutationId = LootService.rollMutation(isNight)
 	local item = LootService.pickItem(layer, rarityId)
+	return LootService.makeItem(item, mutationId, layer)
+end
 
+-- Construit l'objet trouvé (sans tirage) : valeur finale, favori automatique et uid.
+function LootService.makeItem(item: Types.ItemDef, mutationId: Types.MutationId?, layer: number): Types.ItemInstance
 	return {
 		uid = HttpService:GenerateGUID(false),
 		itemId = item.id,
-		rarity = rarityId,
+		rarity = item.rarity,
 		mutation = mutationId,
-		value = LootService.computeValue(rarityId, mutationId, layer),
-		favorite = EconomyConfig.AUTO_FAVORITE_RARITIES[rarityId] == true
+		value = LootService.computeValue(item.rarity, mutationId, layer),
+		favorite = EconomyConfig.AUTO_FAVORITE_RARITIES[item.rarity] == true
 			and not (mutationId ~= nil and EconomyConfig.NO_AUTO_FAVORITE_MUTATIONS[mutationId] == true),
 	}
 end
