@@ -2,6 +2,7 @@
 -- Génère le décor interactif : stand du Marchand, stand de la Forge et un coffre par parcelle.
 -- Chaque interaction passe par un ProximityPrompt (la bonne interaction sur mobile).
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -80,6 +81,7 @@ local function createSign(anchor: Attachment, textKey: string)
 	billboard.MaxDistance = WorldConfig.STAND_SIGN_MAX_DISTANCE
 	billboard.Active = false
 	billboard.Adornee = anchor
+	CollectionService:AddTag(billboard, WorldConfig.SIGN_TAG) -- gardé sous le HUD par WorldSignController
 	billboard.Parent = anchor
 
 	local label = Instance.new("TextLabel")

@@ -14,6 +14,7 @@ local Items = require(Shared.Config.Items)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
+local HudLayout = require(script.Parent.Parent.HudLayout)
 
 type Kind = "Legendary" | "Secret" | "event"
 type Announcement = { text: string, kind: Kind }
@@ -27,7 +28,6 @@ local RAINBOW = ColorSequence.new({
 	ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 90, 255)),
 })
 local WHITE = Color3.new(1, 1, 1)
-local MIN_SIZE = Vector2.new(280, 34)
 local MAX_QUEUE = 5 -- au-delà, les plus anciennes sont abandonnées (serveur très actif)
 -- Durée de la révélation spectaculaire (RevealController) : arrêt sur image, apparition, maintien.
 local REVEAL_TOTAL_TIME = UiConfig.REVEAL_FREEZE_TIME
@@ -55,15 +55,15 @@ local function buildUi()
 	banner = Instance.new("Frame")
 	banner.Name = "Banner"
 	banner.AnchorPoint = Vector2.new(0.5, 0)
-	banner.Position = UDim2.fromScale(0.5, UiConfig.ANNOUNCE_TOP)
-	banner.Size = UDim2.fromScale(0.7, 0.07)
 	banner.BackgroundColor3 = UiConfig.ANNOUNCE_LEGENDARY_COLOR
 	banner.Visible = false
 	banner.Parent = gui
-	local limit = Instance.new("UISizeConstraint")
-	limit.MinSize = MIN_SIZE
-	limit.MaxSize = UiConfig.ANNOUNCE_SIZE
-	limit.Parent = banner
+	-- Sous les bandeaux du HUD, dans la même colonne (hors liste des joueurs et flèche).
+	HudLayout.observe(function(layout: HudLayout.Layout)
+		local width = layout.bannerRight - layout.bannerLeft
+		banner.Position = UDim2.fromOffset((layout.bannerLeft + layout.bannerRight) / 2, layout.announceTop)
+		banner.Size = UDim2.fromOffset(math.min(UiConfig.ANNOUNCE_SIZE.X, width), layout.announceHeight)
+	end)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.3, 0)
 	corner.Parent = banner

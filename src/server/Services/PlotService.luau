@@ -1,6 +1,7 @@
 --!strict
 -- Génère les parcelles, les attribue aux joueurs et les remet à neuf.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -8,6 +9,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
+local WorldConfig = require(Shared.Config.WorldConfig)
 local Strata = require(Shared.Config.Strata)
 local Remotes = require(Shared.Remotes)
 local Types = require(Shared.Types)
@@ -166,6 +168,7 @@ local function createPlot(index: number, parent: Instance): PlotState
 	billboard.MaxDistance = PlotConfig.SIGN_MAX_DISTANCE
 	billboard.Active = false
 	billboard.Adornee = signAnchor
+	CollectionService:AddTag(billboard, WorldConfig.SIGN_TAG) -- gardé sous le HUD par WorldSignController
 	billboard.Parent = signAnchor
 
 	local label = Instance.new("TextLabel")

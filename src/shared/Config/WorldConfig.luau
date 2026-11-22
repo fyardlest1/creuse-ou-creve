@@ -22,6 +22,8 @@ local WorldConfig = {
 	STAND_SIGN_WIDTH = 14, -- studs
 	STAND_SIGN_TEXT_HEIGHT = 3.5, -- studs
 	STAND_SIGN_MAX_DISTANCE = 200,
+	-- Tag CollectionService des panneaux du monde (parcelles, stands) : le client les garde sous le HUD.
+	SIGN_TAG = "WorldSign",
 
 	MERCHANT_COLOR = Color3.fromRGB(70, 160, 90),
 	MERCHANT_ROOF_COLOR = Color3.fromRGB(240, 200, 70),

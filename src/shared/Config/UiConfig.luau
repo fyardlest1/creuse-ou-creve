@@ -48,8 +48,8 @@ local UiConfig = {
 	-- Annonces à tout le serveur (Légendaire, Secret, Événement chance)
 	ANNOUNCE_TIME = 4,
 	ANNOUNCE_FADE_TIME = 0.4,
-	ANNOUNCE_SIZE = Vector2.new(640, 50), -- pixels (taille maximale)
-	ANNOUNCE_TOP = 0.17, -- sous la barre du HUD et les bandeaux, en fraction de l'écran
+	ANNOUNCE_SIZE = Vector2.new(640, 50), -- pixels (taille maximale), placée par HudLayout sous les bandeaux
+	ANNOUNCE_HEIGHT_COMPACT = 34, -- pixels, téléphone
 	ANNOUNCE_LEGENDARY_COLOR = Color3.fromRGB(200, 140, 20),
 	ANNOUNCE_SECRET_COLOR = Color3.fromRGB(150, 60, 200), -- recouvert d'un dégradé arc-en-ciel
 	ANNOUNCE_EVENT_COLOR = Color3.fromRGB(220, 140, 30),
@@ -142,7 +142,8 @@ local UiConfig = {
 	RESERVE_ROW_HEIGHT = 76, -- pixels
 	HUD_NOTIFY_DOT_SIZE = 16, -- pixels : pastille rouge sur le bouton Quêtes
 	HUD_COUNT_BADGE_SIZE = 22, -- pixels : nombre de bonus sur le bouton Réserve
-	BOOST_CHIP_SIZE = Vector2.new(86, 28), -- pixels : indicateur de bonus actif, sous le minuteur
+	BOOST_CHIP_WIDTH = 86, -- pixels : indicateur de bonus actif (hauteur : celle des pastilles du HUD)
+	BOOST_CHIP_WIDTH_COMPACT = 78,
 	BOOST_REFRESH_INTERVAL = 0.25, -- secondes entre deux mises à jour des minuteurs de bonus
 
 	-- Vente au Marchand
@@ -152,15 +153,37 @@ local UiConfig = {
 	SELL_COIN_STAGGER = 0.05, -- décalage entre deux pièces
 	SELL_COIN_SIZE = 36, -- pixels
 	SELL_COIN_SPREAD = Vector2.new(80, 40), -- dispersion au départ, pixels
-	SELL_COIN_TARGET = UDim2.new(1, -80, 0, 26), -- centre du compteur de Pièces du HUD
 
 	-- HUD
-	HUD_COINS_SIZE = Vector2.new(150, 40), -- pixels, compteur de Pièces en haut à droite
 	HUD_MARGIN = 12, -- pixels depuis le bord de l'écran
 	HUD_TOP_MARGIN = 6, -- pixels depuis le haut de la zone d'interface
 	HUD_SPACING = 8, -- pixels entre deux éléments empilés du HUD
-	MERCHANT_ARROW_SIZE = 60, -- pixels, sous le compteur de Pièces
-	DAY_NIGHT_TIMER_SIZE = Vector2.new(130, 30), -- pixels, minuteur en haut à gauche
+	HUD_SIDE_BUTTONS_Y = 0.45, -- hauteur des boutons latéraux (Coffre, Boutique...), en fraction de l'écran
+	-- Haut de l'écran (HudLayout) : minuteur, profondeur, couche, coffre et Pièces, rangés depuis la gauche,
+	-- avec passage à la ligne avant la zone de la liste des joueurs de Roblox (en haut à droite).
+	HUD_PILL_HEIGHT = 36, -- pixels
+	HUD_PILL_HEIGHT_COMPACT = 28, -- pixels, téléphone
+	HUD_SPACING_COMPACT = 6, -- pixels
+	HUD_PILL_WIDTHS = table.freeze({ timer = 130, depth = 150, stratum = 100, chest = 130, coins = 150 }),
+	HUD_PILL_WIDTHS_COMPACT = table.freeze({ timer = 104, depth = 96, stratum = 66, chest = 92, coins = 104 }),
+	-- Largeur laissée libre en haut à droite pour la liste des joueurs : fixe sur grand écran, part de
+	-- l'écran sur téléphone (la liste y prend plus de place en proportion).
+	PLAYER_LIST_RESERVED_WIDTH = 300, -- pixels
+	PLAYER_LIST_RESERVED_SCALE_COMPACT = 0.4, -- fraction de la largeur de l'écran
+	PLAYER_LIST_RESERVED_MIN_COMPACT = 240, -- pixels
+	BANNER_HEIGHT = 40, -- pixels, bandeaux d'information du HUD
+	BANNER_HEIGHT_COMPACT = 28,
+	BANNER_MAX_WIDTH = 620, -- pixels
+	MERCHANT_ARROW_SIZE = 60, -- pixels, disque de la flèche
+	MERCHANT_ARROW_SIZE_COMPACT = 46,
+	MERCHANT_ARROW_WIDTH = 150, -- pixels, largeur du bloc flèche + légende
+	MERCHANT_ARROW_WIDTH_COMPACT = 110,
+	MERCHANT_ARROW_CAPTION_HEIGHT = 20, -- pixels
+	-- Panneaux du monde (parcelles, stands) : jamais par-dessus le HUD, texte plafonné à l'écran.
+	WORLD_SIGN_MAX_TEXT = 40, -- pixels
+	WORLD_SIGN_MAX_TEXT_COMPACT = 22, -- pixels, téléphone
+	WORLD_SIGN_HUD_GAP = 4, -- pixels entre le bas du HUD et le haut d'un panneau
+	WORLD_SIGN_MAX_SHIFT = 3, -- au-delà de ce décalage (en hauteurs de texte), le panneau est masqué
 
 	-- Vol (la nuit)
 	STEAL_REFRESH_INTERVAL = 0.25, -- secondes entre deux mises à jour des prompts de coffre

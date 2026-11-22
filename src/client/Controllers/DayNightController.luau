@@ -17,6 +17,7 @@ local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local HudController = require(script.Parent.HudController)
+local HudLayout = require(script.Parent.Parent.HudLayout)
 
 local DAY_TIMER_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local NIGHT_TIMER_BACKGROUND = Color3.fromRGB(170, 40, 40)
@@ -81,12 +82,9 @@ local function buildTimer()
 	gui.ResetOnSpawn = false
 	gui.DisplayOrder = 5
 
-	-- En haut à gauche, dans l'espace laissé libre par la barre du haut.
-	local size = UiConfig.DAY_NIGHT_TIMER_SIZE
+	-- Première pastille du haut, à gauche (HudLayout).
 	timerPill = Instance.new("Frame")
 	timerPill.Name = "Timer"
-	timerPill.Position = UDim2.fromOffset(UiConfig.HUD_MARGIN, UiConfig.HUD_TOP_MARGIN)
-	timerPill.Size = UDim2.fromOffset(size.X, size.Y)
 	timerPill.BackgroundColor3 = DAY_TIMER_BACKGROUND
 	timerPill.BackgroundTransparency = 0.15
 	timerPill.Parent = gui
@@ -110,6 +108,9 @@ local function buildTimer()
 	timerLabel.TextColor3 = WHITE
 	timerLabel.Parent = timerPill
 
+	HudLayout.observe(function(layout: HudLayout.Layout)
+		HudLayout.place(timerPill, layout.pills.timer)
+	end)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 

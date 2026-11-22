@@ -1,6 +1,7 @@
 --!strict
--- HUD : barre du haut (profondeur, couche, coffre), Pièces en haut à droite, bouton Coffre,
--- bandeaux d'information et flèche vers le Marchand quand le coffre est plein.
+-- HUD : pastilles du haut (profondeur, couche, coffre, Pièces), bouton Coffre, bandeaux d'information
+-- et flèche vers le Marchand quand le coffre est plein. Le haut de l'écran est placé par HudLayout, qui
+-- laisse libre la zone de la liste des joueurs de Roblox (en haut à droite).
 -- L'état de départ vient des attributs du joueur, écrits par le serveur.
 
 local Players = game:GetService("Players")
@@ -24,6 +25,7 @@ local ChestController = require(script.Parent.ChestController)
 local ShopController = require(script.Parent.ShopController)
 local RetentionController = require(script.Parent.RetentionController)
 local UiKit = require(script.Parent.Parent.UiKit)
+local HudLayout = require(script.Parent.Parent.HudLayout)
 
 local PILL_BACKGROUND = Color3.fromRGB(28, 26, 34)
 local PILL_FULL_BACKGROUND = Color3.fromRGB(170, 40, 40)
@@ -67,7 +69,10 @@ local HudController = {}
 local depthLabel: TextLabel
 local stratumLabel: TextLabel
 local chestLabel: TextLabel
+local depthPill: Frame
+local stratumPill: Frame
 local chestPill: Frame
+local coinsPill: Frame
 local coinsLabel: TextLabel
 local banner: TextLabel
 local arrowFrame: Frame
@@ -78,6 +83,9 @@ local merchantPosition: Vector3? = nil
 -- Cible prioritaire de la flèche (ex. son coffre attaqué), avec sa légende. Sinon : le Marchand.
 local arrowOverride: { position: Vector3, caption: string, reachDistance: number }? = nil
 local arrowCaption: TextLabel
+local currentLayout: HudLayout.Layout
+-- Boutons latéraux, avec leur décalage vertical propre (le bouton Creusage auto est sous le Coffre).
+local sideButtons: { [GuiObject]: number } = {}
 local protectionPill: Frame
 local autoDigButton: TextButton
 local autoDigToggle: RemoteEvent
@@ -95,11 +103,9 @@ local function addCorner(parent: GuiObject, radius: number)
 	corner.Parent = parent
 end
 
-local function createPill(name: string, order: number, widthScale: number, parent: Instance): (Frame, TextLabel)
+local function createPill(name: string, parent: Instance): (Frame, TextLabel)
 	local pill = Instance.new("Frame")
 	pill.Name = name
-	pill.LayoutOrder = order
-	pill.Size = UDim2.fromScale(widthScale, 1)
 	pill.BackgroundColor3 = PILL_BACKGROUND
 	pill.BackgroundTransparency = 0.15
 	pill.Parent = parent
@@ -128,42 +134,17 @@ local function createPill(name: string, order: number, widthScale: number, paren
 	return pill, label
 end
 
-local function buildTopBar(gui: ScreenGui)
-	local bar = Instance.new("Frame")
-	bar.Name = "TopBar"
-	bar.AnchorPoint = Vector2.new(0.5, 0)
-	bar.Position = UDim2.new(0.5, 0, 0, UiConfig.HUD_TOP_MARGIN)
-	-- Centrée, et assez étroite pour laisser la place du compteur de Pièces de chaque côté.
-	local reserved = 2 * (UiConfig.HUD_COINS_SIZE.X + 2 * UiConfig.HUD_MARGIN)
-	bar.Size = UDim2.new(1, -reserved, 0.065, 0)
-	bar.BackgroundTransparency = 1
-	bar.Parent = gui
-
-	local barLimit = Instance.new("UISizeConstraint")
-	barLimit.MinSize = Vector2.new(300, 30)
-	barLimit.MaxSize = Vector2.new(560, 46)
-	barLimit.Parent = bar
-
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0.02, 0)
-	layout.Parent = bar
-
-	local _depthPill, depth = createPill("Depth", 1, 0.38, bar)
-	local _stratumPill, stratum = createPill("Stratum", 2, 0.24, bar)
-	local pill, chest = createPill("Chest", 3, 0.34, bar)
-	depthLabel, stratumLabel, chestLabel, chestPill = depth, stratum, chest, pill
+-- Pastilles du haut, placées par applyLayout.
+local function buildTopPills(gui: ScreenGui)
+	depthPill, depthLabel = createPill("Depth", gui)
+	stratumPill, stratumLabel = createPill("Stratum", gui)
+	chestPill, chestLabel = createPill("Chest", gui)
 end
 
 local function buildCoins(gui: ScreenGui)
-	local size = UiConfig.HUD_COINS_SIZE
 	local pill = Instance.new("Frame")
 	pill.Name = "Coins"
-	pill.AnchorPoint = Vector2.new(1, 0)
-	pill.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, 0, UiConfig.HUD_TOP_MARGIN)
-	pill.Size = UDim2.fromOffset(size.X, size.Y)
+	coinsPill = pill
 	pill.BackgroundColor3 = PILL_BACKGROUND
 	pill.BackgroundTransparency = 0.15
 	pill.Parent = gui
@@ -211,8 +192,6 @@ local function buildBanner(gui: ScreenGui)
 	banner = Instance.new("TextLabel")
 	banner.Name = "Banner"
 	banner.AnchorPoint = Vector2.new(0.5, 0)
-	banner.Position = UDim2.new(0.5, 0, 0.1, 6)
-	banner.Size = UDim2.fromScale(0.6, 0.06)
 	banner.BackgroundColor3 = BANNER_ALERT
 	banner.Font = Enum.Font.FredokaOne
 	banner.TextScaled = true
@@ -220,11 +199,6 @@ local function buildBanner(gui: ScreenGui)
 	banner.Visible = false
 	banner.Parent = gui
 	addCorner(banner, 0.3)
-
-	local bannerLimit = Instance.new("UISizeConstraint")
-	bannerLimit.MinSize = Vector2.new(280, 28)
-	bannerLimit.MaxSize = Vector2.new(620, 44)
-	bannerLimit.Parent = banner
 
 	local bannerPadding = Instance.new("UIPadding")
 	bannerPadding.PaddingTop = UDim.new(0.15, 0)
@@ -236,18 +210,10 @@ end
 
 -- Flèche qui tourne pour indiquer la direction du Marchand (affichée quand le coffre est plein).
 local function buildMerchantArrow(gui: ScreenGui)
-	local size = UiConfig.MERCHANT_ARROW_SIZE
 	arrowFrame = Instance.new("Frame")
 	arrowFrame.Name = "MerchantArrow"
-	-- En haut à droite, sous le compteur de Pièces : au centre, elle cacherait l'avatar sur téléphone.
-	arrowFrame.AnchorPoint = Vector2.new(1, 0)
-	arrowFrame.Position = UDim2.new(
-		1,
-		-UiConfig.HUD_MARGIN,
-		0,
-		UiConfig.HUD_TOP_MARGIN + UiConfig.HUD_COINS_SIZE.Y + UiConfig.HUD_SPACING
-	)
-	arrowFrame.Size = UDim2.fromOffset(UiConfig.HUD_COINS_SIZE.X, size + 20)
+	-- En haut, au bord droit de la zone libre (applyLayout) : au centre, elle cacherait l'avatar sur
+	-- téléphone, et plus à droite la liste des joueurs la couvrirait.
 	arrowFrame.BackgroundTransparency = 1
 	arrowFrame.Visible = false
 	arrowFrame.Parent = gui
@@ -257,7 +223,6 @@ local function buildMerchantArrow(gui: ScreenGui)
 	arrowDial.Name = "Arrow"
 	arrowDial.AnchorPoint = Vector2.new(0.5, 0)
 	arrowDial.Position = UDim2.fromScale(0.5, 0)
-	arrowDial.Size = UDim2.fromOffset(size, size)
 	arrowDial.BackgroundColor3 = ARROW_BACKGROUND
 	arrowDial.BackgroundTransparency = 0.25
 	arrowDial.Parent = arrowFrame
@@ -287,7 +252,7 @@ local function buildMerchantArrow(gui: ScreenGui)
 	caption.Name = "Caption"
 	caption.AnchorPoint = Vector2.new(0.5, 1)
 	caption.Position = UDim2.fromScale(0.5, 1)
-	caption.Size = UDim2.new(1, 0, 0, 20)
+	caption.Size = UDim2.new(1, 0, 0, UiConfig.MERCHANT_ARROW_CAPTION_HEIGHT)
 	caption.BackgroundColor3 = ARROW_BACKGROUND
 	caption.BackgroundTransparency = 0.25
 	addCorner(caption, 0.5)
@@ -300,14 +265,10 @@ local function buildMerchantArrow(gui: ScreenGui)
 	caption.Parent = arrowFrame
 end
 
--- Rappel de la protection débutant, sous le minuteur jour/nuit (en haut à gauche).
+-- Rappel de la protection débutant, sur la ligne d'état sous les pastilles du haut, à gauche.
 local function buildProtection(gui: ScreenGui)
-	local size = UiConfig.DAY_NIGHT_TIMER_SIZE
 	protectionPill = Instance.new("Frame")
 	protectionPill.Name = "Protection"
-	protectionPill.Position =
-		UDim2.fromOffset(UiConfig.HUD_MARGIN, UiConfig.HUD_TOP_MARGIN + size.Y + UiConfig.HUD_SPACING)
-	protectionPill.Size = UDim2.fromOffset(size.X, size.Y)
 	protectionPill.BackgroundColor3 = PROTECTED_COLOR
 	protectionPill.BackgroundTransparency = 0.15
 	protectionPill.Visible = false
@@ -345,7 +306,7 @@ local function buildShopButton(gui: ScreenGui)
 	local button = Instance.new("TextButton")
 	button.Name = "ShopButton"
 	button.AnchorPoint = Vector2.new(1, 0.5)
-	button.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, 0.45, 0)
+	button.Position = UDim2.new(1, -UiConfig.HUD_MARGIN, UiConfig.HUD_SIDE_BUTTONS_Y, 0)
 	button.Size = UDim2.fromOffset(size, size)
 	button.BackgroundColor3 = SHOP_BUTTON_COLOR
 	button.Font = Enum.Font.FredokaOne
@@ -369,7 +330,8 @@ local function buildAutoDigButton(gui: ScreenGui)
 	autoDigButton = Instance.new("TextButton")
 	autoDigButton.Name = "AutoDigButton"
 	autoDigButton.AnchorPoint = Vector2.new(0, 0)
-	autoDigButton.Position = UDim2.new(0, UiConfig.HUD_MARGIN, 0.45, size / 2 + UiConfig.HUD_SPACING)
+	autoDigButton.Position =
+		UDim2.new(0, UiConfig.HUD_MARGIN, UiConfig.HUD_SIDE_BUTTONS_Y, size / 2 + UiConfig.HUD_SPACING)
 	autoDigButton.Size = UDim2.fromOffset(size, size)
 	autoDigButton.BackgroundColor3 = AUTO_DIG_OFF_COLOR
 	autoDigButton.Font = Enum.Font.FredokaOne
@@ -411,7 +373,7 @@ local function buildChestButton(gui: ScreenGui)
 	local chestButton = Instance.new("TextButton")
 	chestButton.Name = "ChestButton"
 	chestButton.AnchorPoint = Vector2.new(0, 0.5)
-	chestButton.Position = UDim2.new(0, UiConfig.HUD_MARGIN, 0.45, 0)
+	chestButton.Position = UDim2.new(0, UiConfig.HUD_MARGIN, UiConfig.HUD_SIDE_BUTTONS_Y, 0)
 	chestButton.Size = UDim2.fromOffset(UiConfig.HUD_CHEST_BUTTON_SIZE, UiConfig.HUD_CHEST_BUTTON_SIZE)
 	chestButton.BackgroundColor3 = CHEST_BUTTON_COLOR
 	chestButton.Font = Enum.Font.FredokaOne
@@ -464,7 +426,7 @@ local function buildRetentionButtons(gui: ScreenGui)
 		Locale.t("hud.quests"),
 		QUESTS_BUTTON_COLOR,
 		Vector2.new(0, 0.5),
-		UDim2.new(0, UiConfig.HUD_MARGIN + step, 0.45, 0)
+		UDim2.new(0, UiConfig.HUD_MARGIN + step, UiConfig.HUD_SIDE_BUTTONS_Y, 0)
 	)
 	quests.Activated:Connect(RetentionController.toggleQuests)
 	-- Pastille rouge : récompense du jour à récupérer
@@ -484,7 +446,7 @@ local function buildRetentionButtons(gui: ScreenGui)
 		Locale.t("hud.index"),
 		INDEX_BUTTON_COLOR,
 		Vector2.new(0, 0.5),
-		UDim2.new(0, UiConfig.HUD_MARGIN + 2 * step, 0.45, 0)
+		UDim2.new(0, UiConfig.HUD_MARGIN + 2 * step, UiConfig.HUD_SIDE_BUTTONS_Y, 0)
 	)
 	index.Activated:Connect(RetentionController.toggleIndex)
 
@@ -494,7 +456,12 @@ local function buildRetentionButtons(gui: ScreenGui)
 		Locale.t("hud.reserve"),
 		RESERVE_BUTTON_COLOR,
 		Vector2.new(1, 0.5),
-		UDim2.new(1, -(UiConfig.HUD_MARGIN + UiConfig.HUD_SHOP_BUTTON_SIZE + UiConfig.HUD_SPACING), 0.45, 0)
+		UDim2.new(
+			1,
+			-(UiConfig.HUD_MARGIN + UiConfig.HUD_SHOP_BUTTON_SIZE + UiConfig.HUD_SPACING),
+			UiConfig.HUD_SIDE_BUTTONS_Y,
+			0
+		)
 	)
 	reserve.Activated:Connect(RetentionController.toggleReserve)
 	-- Nombre de bonus en réserve
@@ -512,12 +479,11 @@ local function buildRetentionButtons(gui: ScreenGui)
 	addCorner(reserveCount, 0.5)
 end
 
--- Indicateurs des bonus actifs (potion, événement, bouclier), sous le minuteur jour/nuit.
+-- Indicateurs des bonus actifs (potion, événement, bouclier), sur la ligne d'état, après la protection.
 local function chip(name: string, color: Color3, order: number): TextLabel
 	local label = Instance.new("TextLabel")
 	label.Name = name
 	label.LayoutOrder = order
-	label.Size = UDim2.fromOffset(UiConfig.BOOST_CHIP_SIZE.X, UiConfig.BOOST_CHIP_SIZE.Y)
 	label.BackgroundColor3 = color
 	label.Font = Enum.Font.FredokaOne
 	label.TextScaled = true
@@ -538,12 +504,11 @@ local function buildBoostChips(gui: ScreenGui)
 	boostChips = Instance.new("Frame")
 	boostChips.Name = "BoostChips"
 	boostChips.BackgroundTransparency = 1
-	boostChips.Size = UDim2.fromOffset(3 * (UiConfig.BOOST_CHIP_SIZE.X + 4), UiConfig.BOOST_CHIP_SIZE.Y)
 	boostChips.Parent = gui
 	local layout = Instance.new("UIListLayout")
+	layout.Name = "Layout"
 	layout.FillDirection = Enum.FillDirection.Horizontal
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 4)
 	layout.Parent = boostChips
 	potionChip = chip("Potion", POTION_CHIP_COLOR, 1)
 	eventChip = chip("Event", EVENT_CHIP_COLOR, 2)
@@ -567,13 +532,48 @@ local function updateBoostChips()
 	local shieldActive = player:GetAttribute("ShieldTonight") == true
 	shieldChip.Visible = shieldActive or player:GetAttribute("ShieldPlanned") == true
 	shieldChip.Text = Locale.t(if shieldActive then "hud.shieldActive" else "hud.shieldReady")
-	-- Sous le minuteur, et sous la protection débutant quand elle est affichée.
-	local timer = UiConfig.DAY_NIGHT_TIMER_SIZE
-	local top = UiConfig.HUD_TOP_MARGIN + timer.Y + UiConfig.HUD_SPACING
+	-- Sur la ligne d'état, après la protection débutant quand elle est affichée.
+	local layout = currentLayout
+	local left = layout.margin
 	if protectionPill.Visible then
-		top += timer.Y + UiConfig.HUD_SPACING
+		left += layout.pills.timer.size.X + layout.spacing
 	end
-	boostChips.Position = UDim2.fromOffset(UiConfig.HUD_MARGIN, top)
+	boostChips.Position = UDim2.fromOffset(left, layout.statusTop)
+	HudLayout.setStatusRowVisible(
+		protectionPill.Visible or potionChip.Visible or eventChip.Visible or shieldChip.Visible
+	)
+end
+
+-- Place le haut de l'écran selon la disposition (au démarrage et à chaque changement de taille d'écran).
+local function applyLayout(layout: HudLayout.Layout)
+	currentLayout = layout
+	HudLayout.place(depthPill, layout.pills.depth)
+	HudLayout.place(stratumPill, layout.pills.stratum)
+	HudLayout.place(chestPill, layout.pills.chest)
+	HudLayout.place(coinsPill, layout.pills.coins)
+
+	local status = { position = Vector2.new(layout.margin, layout.statusTop), size = layout.pills.timer.size }
+	HudLayout.place(protectionPill, status)
+	local chipSize = UDim2.fromOffset(layout.chipWidth, layout.pillHeight)
+	for _, label in { potionChip, eventChip, shieldChip } do
+		label.Size = chipSize
+	end
+	local chipsLayout = boostChips:FindFirstChild("Layout") :: UIListLayout
+	chipsLayout.Padding = UDim.new(0, layout.spacing)
+	boostChips.Size = UDim2.fromOffset(3 * (layout.chipWidth + layout.spacing), layout.pillHeight)
+	updateBoostChips()
+
+	for button, offsetY in sideButtons do
+		button.Position = UDim2.new(button.Position.X, UDim.new(0, layout.sideButtonsCenterY + offsetY))
+	end
+
+	HudLayout.place(arrowFrame, layout.arrow)
+	arrowDial.Size = UDim2.fromOffset(layout.arrowDialSize, layout.arrowDialSize)
+
+	-- Bandeaux centrés sur la zone libre (ni sous la liste des joueurs, ni sur la flèche).
+	local bannerWidth = layout.bannerRight - layout.bannerLeft
+	banner.Position = UDim2.fromOffset((layout.bannerLeft + layout.bannerRight) / 2, layout.bannerTop)
+	banner.Size = UDim2.fromOffset(math.min(UiConfig.BANNER_MAX_WIDTH, bannerWidth), layout.bannerHeight)
 end
 
 local function readNumberAttributeEarly(name: string): number
@@ -593,7 +593,7 @@ local function buildUi()
 	gui.Name = "HudGui"
 	gui.ResetOnSpawn = false
 	gui.DisplayOrder = 5
-	buildTopBar(gui)
+	buildTopPills(gui)
 	buildCoins(gui)
 	buildBanner(gui)
 	buildMerchantArrow(gui)
@@ -603,6 +603,11 @@ local function buildUi()
 	buildShopButton(gui)
 	buildRetentionButtons(gui)
 	buildBoostChips(gui)
+	for _, name in { "ChestButton", "AutoDigButton", "QuestsButton", "IndexButton", "ShopButton", "ReserveButton" } do
+		local button = gui:FindFirstChild(name) :: GuiObject
+		sideButtons[button] = button.Position.Y.Offset
+	end
+	HudLayout.observe(applyLayout)
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 

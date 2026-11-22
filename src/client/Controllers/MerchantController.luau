@@ -15,6 +15,7 @@ local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local ChestController = require(script.Parent.ChestController)
+local HudLayout = require(script.Parent.Parent.HudLayout)
 
 local COIN_COLOR = Color3.fromRGB(255, 200, 40)
 local COIN_STROKE_COLOR = Color3.fromRGB(180, 120, 20)
@@ -100,7 +101,7 @@ local function playCoinAnimation()
 			local tween = TweenService:Create(
 				coin,
 				TweenInfo.new(UiConfig.SELL_COIN_FLIGHT_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-				{ Position = UiConfig.SELL_COIN_TARGET, BackgroundTransparency = 0.3 }
+				{ Position = HudLayout.coinsCenter(), BackgroundTransparency = 0.3 }
 			)
 			tween.Completed:Connect(function()
 				coin:Destroy()
