@@ -27,7 +27,12 @@ Pour la colonne « Usage dans le jeu » : le réglage dans `src/shared/Config/` 
 
 | Asset | Source | Auteur | Licence | Fichier | Date d'obtention | Crédit | Usage dans le jeu |
 | ----- | ------ | ------ | ------- | ------- | ---------------- | ------ | ----------------- |
-|       |        |        |         |         |                  |        |                   |
+| Kenney Game Assets All-in-1 3.4.0 (pack complet, source) | Kenney.nl (achat) | Kenney Vleugels | CC0 1.0 (un `License.txt` par sous-pack) | `kenney/` | à compléter (reçu PDF dans `kenney/`) | Non exigé ; « Kenney (www.kenney.nl) » dans les crédits du jeu | Aucun pour l'instant. Chaque fichier utilisé aura sa propre ligne ci-dessous. |
+
+Notes sur le pack Kenney :
+
+- Le dossier contient aussi l'installateur `Kenney Game Assets All-in-1 3.4.0.exe` : il n'est pas un asset du jeu, et on ne le lance pas depuis les outils du projet.
+- Musique « Mission Plausible » (`Audio/Music Loops/Loops/`) : son titre parodie une licence connue. Elle est écartée par précaution (règle de la section 2).
 
 ## Sons temporaires (pas à enregistrer)
 
