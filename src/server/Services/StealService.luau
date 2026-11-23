@@ -16,12 +16,12 @@ local StealConfig = require(Shared.Config.StealConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local Items = require(Shared.Config.Items)
 local Remotes = require(Shared.Remotes)
+local Lockpick = require(Shared.Lockpick)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local DayNightService = require(script.Parent.DayNightService)
 local ProtectionService = require(script.Parent.ProtectionService)
 local WorldService = require(script.Parent.WorldService)
 local WorldConfig = require(Shared.Config.WorldConfig)
-local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local PurchaseService = require(script.Parent.PurchaseService)
 local BoostService = require(script.Parent.BoostService)
 local GameEvents = require(script.Parent.Parent.GameEvents)
@@ -42,7 +42,7 @@ export type Reason =
 	| "banned"
 	| "too_far"
 	| "nothing_to_steal"
-	| "hold_too_short"
+	| "too_early"
 	| "busy"
 
 -- Ce qu'il faut savoir d'une tentative pour décider. Rempli par le service (ou par les tests).
@@ -58,7 +58,7 @@ export type AttemptContext = {
 	thiefInventoryCount: number,
 	thiefInventoryLimit: number,
 	victimInventory: { Types.ItemInstance },
-	pickDuration: number, -- 5 s, ou 8 s si la victime a le Garde du corps
+	minPickSeconds: number, -- 4 s, ou 6,5 s si la victime a le Garde du corps
 }
 
 local StealService = {}
@@ -178,14 +178,15 @@ function NightState.checkStart(self: NightState, context: AttemptContext): (bool
 	return true, nil
 end
 
--- Peut-on voler maintenant ? Toutes les règles, plus 5 secondes réellement maintenues (horloge serveur).
-function NightState.checkFinish(self: NightState, context: AttemptContext, heldSeconds: number): (boolean, Reason?)
+-- Peut-on voler maintenant ? Toutes les règles, plus la durée minimale réelle du crochetage, mesurée
+-- par l'horloge du serveur depuis le début (le client n'envoie que « réussi »).
+function NightState.checkFinish(self: NightState, context: AttemptContext, elapsedSeconds: number): (boolean, Reason?)
 	local ok, reason = self:checkStart(context)
 	if not ok then
 		return false, reason
 	end
-	if heldSeconds < context.pickDuration - StealConfig.PICK_TIME_TOLERANCE then
-		return false, "hold_too_short"
+	if elapsedSeconds < context.minPickSeconds then
+		return false, "too_early"
 	end
 	return true, nil
 end
@@ -231,6 +232,7 @@ local night = NightState.new()
 local activePicks: { [Player]: ActivePick } = {}
 local lastThiefByVictim: { [number]: number } = {} -- mémoire serveur seulement (Revanche, semaine 4)
 local lastEjectTime: { [Player]: number } = {}
+local lastResultTime: { [Player]: number } = {} -- dernier message du mini-jeu (anti-spam)
 local stunToken: { [Player]: number } = {}
 local rng = Random.new()
 local remotes: {
@@ -239,6 +241,7 @@ local remotes: {
 	stealSucceeded: RemoteEvent,
 	ejected: RemoteEvent,
 	revengeCompensated: RemoteEvent,
+	lockpickStarted: RemoteEvent,
 }
 
 local function log(message: string)
@@ -308,26 +311,13 @@ local function buildContext(thief: Player, victim: Player): AttemptContext?
 		thiefInventoryCount = #thiefData.inventory,
 		thiefInventoryLimit = PlayerDataService.getInventoryLimit(thief),
 		victimInventory = victimData.inventory,
-		pickDuration = StealService.getPickDuration(victim),
+		minPickSeconds = StealService.getPickSettings(victim).minSeconds,
 	}
 end
 
--- Durée du crochetage du coffre de cette victime : 8 s avec le Garde du corps, sinon 5 s.
-function StealService.getPickDuration(victim: Player): number
-	return if PurchaseService.ownsPass(victim, "Bodyguard")
-		then MonetizationConfig.BODYGUARD_PICK_DURATION
-		else StealConfig.PICK_DURATION
-end
-
--- Le prompt "Crocheter" de chaque coffre affiche la durée de son propriétaire.
-local function refreshPickDurations()
-	for _, entry in WorldService.getPickPrompts() do
-		local ownerId = entry.plot:GetAttribute("OwnerUserId")
-		local owner = if typeof(ownerId) == "number" and ownerId ~= 0 then Players:GetPlayerByUserId(ownerId) else nil
-		entry.prompt.HoldDuration = if owner ~= nil
-			then StealService.getPickDuration(owner)
-			else StealConfig.PICK_DURATION
-	end
+-- Réglages du mini-jeu sur le coffre de cette victime : plus dur avec le Garde du corps.
+function StealService.getPickSettings(victim: Player): Lockpick.Settings
+	return Lockpick.settings(PurchaseService.ownsPass(victim, "Bodyguard"))
 end
 
 -- Raison pour laquelle ce voleur ne peut pas viser ce coffre maintenant (nil si possible).
@@ -340,7 +330,7 @@ function StealService.getBlockReason(thief: Player, victim: Player): Reason?
 	return if ok then nil else reason
 end
 
--- Le voleur commence à maintenir "Crocheter" sur le coffre de la victime.
+-- Le voleur touche "Crocheter" sur le coffre de la victime : le mini-jeu s'ouvre chez lui.
 function StealService.beginPick(thief: Player, victim: Player): boolean
 	if activePicks[thief] ~= nil then
 		reject(thief, "crochetage déjà en cours")
@@ -362,13 +352,14 @@ function StealService.beginPick(thief: Player, victim: Player): boolean
 	if thiefData ~= nil then
 		thiefData.stats.stealsAttempted += 1
 	end
+	remotes.lockpickStarted:FireClient(thief, StealService.getPickSettings(victim), victim.Name)
 	remotes.stealStarted:FireClient(victim, thief.Name, thief.UserId)
 	logEvent(thief, StealConfig.ANALYTICS_EVENTS.Attempt)
 	log(string.format("%s commence à crocheter le coffre de %s", thief.Name, victim.Name))
 	return true
 end
 
--- Annule le crochetage en cours d'un voleur (relâché, éjecté, trop loin, jour, départ).
+-- Annule le crochetage en cours d'un voleur (abandon, trop tôt, trop long, éjecté, trop loin, jour, départ).
 function StealService.cancelPick(thief: Player, reason: string)
 	local pick = activePicks[thief]
 	if pick == nil then
@@ -388,7 +379,7 @@ function StealService.cancelPick(thief: Player, reason: string)
 	log(string.format("Crochetage de %s annulé (%s)", thief.Name, reason))
 end
 
--- Le prompt est arrivé au bout : on revalide tout, puis transfert atomique.
+-- Le client annonce « réussi » : on revalide tout (dont la durée réelle), puis transfert atomique.
 function StealService.finishPick(thief: Player, victim: Player): Types.ItemInstance?
 	local pick = activePicks[thief]
 	if pick == nil or pick.victim ~= victim then
@@ -398,11 +389,13 @@ function StealService.finishPick(thief: Player, victim: Player): Types.ItemInsta
 	activePicks[thief] = nil
 	setBeingPicked(victim)
 	local context = buildContext(thief, victim)
-	local held = os.clock() - pick.startedAt
-	local ok, reason = if context ~= nil then night:checkFinish(context, held) else false, "victim_offline"
+	local elapsed = os.clock() - pick.startedAt
+	local ok, reason = if context ~= nil then night:checkFinish(context, elapsed) else false, "victim_offline"
 	if not ok then
-		reject(thief, (reason or "?") .. string.format(" (maintenu %.2f s)", held))
-		StealService.cancelPick(thief, "relâché")
+		reject(thief, (reason or "?") .. string.format(" (après %.2f s)", elapsed))
+		-- Remis en place un instant pour que cancelPick prévienne la victime et le voleur.
+		activePicks[thief] = pick
+		StealService.cancelPick(thief, if reason == "too_early" then "trop tôt" else "refusé")
 		return nil
 	end
 
@@ -591,6 +584,7 @@ function StealService.init()
 		stealSucceeded = Remotes.get(Remotes.Names.StealSucceeded),
 		ejected = Remotes.get(Remotes.Names.Ejected),
 		revengeCompensated = Remotes.get(Remotes.Names.RevengeCompensated),
+		lockpickStarted = Remotes.get(Remotes.Names.LockpickStarted),
 	}
 end
 
@@ -619,7 +613,7 @@ function StealService.start()
 			end
 			return Players:GetPlayerByUserId(ownerId)
 		end
-		prompt.PromptButtonHoldBegan:Connect(function(thief: Player)
+		prompt.Triggered:Connect(function(thief: Player)
 			local victim = getOwner()
 			if victim == nil then
 				reject(thief, "parcelle libre")
@@ -627,26 +621,34 @@ function StealService.start()
 			end
 			StealService.beginPick(thief, victim)
 		end)
-		prompt.Triggered:Connect(function(thief: Player)
-			local victim = getOwner()
-			if victim ~= nil then
-				StealService.finishPick(thief, victim)
-			end
-		end)
-		-- Relâché avant la fin. À la fin d'un maintien, HoldEnded peut arriver avant Triggered :
-		-- on laisse une courte marge à Triggered avant d'annuler.
-		prompt.PromptButtonHoldEnded:Connect(function(thief: Player)
-			local pick = activePicks[thief]
-			if pick == nil then
-				return
-			end
-			task.delay(StealConfig.RELEASE_GRACE, function()
-				if activePicks[thief] == pick then
-					StealService.cancelPick(thief, "relâché")
-				end
-			end)
-		end)
 	end
+
+	-- Mini-jeu : le client n'envoie qu'une intention, « réussi » ou « abandon ». Type, cadence et
+	-- crochetage en cours vérifiés ici ; durée, distance et règles du vol dans finishPick.
+	Remotes.get(Remotes.Names.LockpickResult).OnServerEvent:Connect(function(thief: Player, result: unknown)
+		if result ~= "success" and result ~= "abort" then
+			reject(thief, "message de crochetage invalide")
+			return
+		end
+		local now = os.clock()
+		if now - (lastResultTime[thief] or -math.huge) < StealConfig.PICK_RESULT_COOLDOWN then
+			reject(thief, "messages de crochetage trop rapprochés")
+			return
+		end
+		lastResultTime[thief] = now
+		local pick = activePicks[thief]
+		if pick == nil then
+			reject(thief, "aucun crochetage en cours")
+			-- Le mini-jeu du client est peut-être resté ouvert (annulation perdue) : on le ferme.
+			remotes.stealCancelled:FireClient(thief, "refusé", "")
+			return
+		end
+		if result == "abort" then
+			StealService.cancelPick(thief, "abandon")
+		else
+			StealService.finishPick(thief, pick.victim)
+		end
+	end)
 
 	PlayerDataService.onLoaded(function(player: Player)
 		publishNightAttributes(player)
@@ -682,19 +684,14 @@ function StealService.start()
 		return true
 	end)
 
-	-- Garde du corps : prompt à 8 s et garde posté près du coffre.
+	-- Garde du corps : garde posté près du coffre (le mini-jeu est plus dur, voir getPickSettings).
 	PurchaseService.onPassOwned(function(player: Player, key)
 		if key == "Bodyguard" then
 			WorldService.setBodyguard(player, true)
-			refreshPickDurations()
 		end
 	end)
-	-- Les parcelles changent de propriétaire à l'arrivée et au départ des joueurs.
-	for _, entry in WorldService.getPickPrompts() do
-		entry.plot:GetAttributeChangedSignal("OwnerUserId"):Connect(refreshPickDurations)
-	end
 
-	-- Le voleur s'éloigne du coffre pendant le maintien : annulé.
+	-- Le voleur s'éloigne du coffre pendant le crochetage, ou le laisse traîner : annulé.
 	local sinceCheck = 0
 	RunService.Heartbeat:Connect(function(deltaTime)
 		sinceCheck += deltaTime
@@ -703,6 +700,10 @@ function StealService.start()
 		end
 		sinceCheck = 0
 		for thief, pick in activePicks do
+			if os.clock() - pick.startedAt > StealConfig.PICK_MAX_SECONDS then
+				StealService.cancelPick(thief, "trop long")
+				continue
+			end
 			local chest = WorldService.getChest(pick.victim)
 			local body = if chest ~= nil then chest.PrimaryPart else nil
 			local position = getCharacterPosition(thief)
@@ -719,6 +720,7 @@ function StealService.start()
 	-- Un joueur part en plein crochetage (voleur ou victime) : on annule, rien n'est transféré.
 	Players.PlayerRemoving:Connect(function(player)
 		lastEjectTime[player] = nil
+		lastResultTime[player] = nil
 		stunToken[player] = nil
 		StealService.cancelPick(player, "départ")
 		for thief, pick in activePicks do

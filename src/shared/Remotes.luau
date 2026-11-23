@@ -39,6 +39,8 @@ local Names = table.freeze({
 	RetentionState = "RetentionState", -- serveur -> client : quotidien, quêtes, Index, titre
 	RetentionNotice = "RetentionNotice", -- serveur -> client : LocText (quête réussie, palier d'Index...)
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
+	LockpickStarted = "LockpickStarted", -- serveur -> voleur : Lockpick.Settings, victimName (ouvre le mini-jeu)
+	LockpickResult = "LockpickResult", -- client -> serveur : "success" | "abort" (intention seulement)
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

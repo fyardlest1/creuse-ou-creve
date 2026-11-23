@@ -20,10 +20,14 @@ local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local HudController = require(script.Parent.HudController)
+local LockpickController = require(script.Parent.LockpickController)
 
 -- Codes d'annulation envoyés par le serveur (StealService) -> clé de traduction affichée au voleur.
 local CANCEL_REASON_KEYS: { [string]: string } = {
-	["relâché"] = "steal.cancel.released",
+	["abandon"] = "steal.cancel.abort",
+	["trop tôt"] = "steal.cancel.tooEarly",
+	["trop long"] = "steal.cancel.timeout",
+	["refusé"] = "steal.cancel.refused",
 	["éjecté"] = "steal.cancel.ejected",
 	["trop loin"] = "steal.cancel.tooFar",
 	["jour"] = "steal.cancel.day",
@@ -196,7 +200,11 @@ local function refreshChests()
 		end
 		local blockText = if night and owner ~= nil and not own then getBlockText(owner) else nil
 		if view.pick ~= nil then
-			view.pick.Enabled = night and owner ~= nil and not own and blockText == nil
+			view.pick.Enabled = night
+				and owner ~= nil
+				and not own
+				and blockText == nil
+				and not LockpickController.isOpen()
 		end
 		view.labelGui.Enabled = blockText ~= nil
 		if blockText ~= nil then

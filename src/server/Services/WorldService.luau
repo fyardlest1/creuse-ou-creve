@@ -197,10 +197,9 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 
 	createPrompt(body, "world.chest", "world.openChest", WorldConfig.INTERACTIONS.Chest)
 
-	-- Second prompt, distinct : "Crocheter" (maintien de 5 s). Le client ne l'affiche que sur les coffres
-	-- des autres, la nuit ; le serveur revalide tout (StealService).
+	-- Second prompt, distinct : "Crocheter" (un toucher ouvre le mini-jeu). Le client ne l'affiche que sur
+	-- les coffres des autres, la nuit ; le serveur revalide tout (StealService).
 	local pick = createPrompt(body, "world.chest", "world.pick", WorldConfig.INTERACTIONS.Pick)
-	pick.HoldDuration = StealConfig.PICK_DURATION
 	pick.MaxActivationDistance = StealConfig.PICK_MAX_DISTANCE
 	pick.UIOffset = WorldConfig.PICK_PROMPT_OFFSET
 	table.insert(pickPrompts, { plot = plotModel, prompt = pick })

@@ -4,12 +4,17 @@
 local StudioTestMode = require(script.Parent.StudioTestMode)
 
 local StealConfig = {
-	-- Crochetage
-	PICK_DURATION = 5, -- secondes de maintien du prompt "Crocheter"
-	PICK_TIME_TOLERANCE = 0.25, -- secondes : marge de décalage réseau entre début et fin du maintien
+	-- Crochetage : mini-jeu (plan semaine 5, section 6). Le serveur vérifie la durée réelle, pas le jeu.
+	PICK_MIN_SECONDS = 4, -- durée minimale réelle (horloge serveur) entre le début et « réussi »
+	PICK_MAX_SECONDS = 45, -- au-delà, le crochetage est abandonné (le coffre ne reste pas « crocheté »)
+	PICK_HITS_REQUIRED = 3, -- touches réussies de suite
+	PICK_ZONE_WIDTH = 0.22, -- largeur de la zone verte, en fraction de la barre
+	PICK_ZONE_EDGE_MARGIN = 0.05, -- la zone ne touche jamais les bords de la barre
+	PICK_CURSOR_TRAVEL_TIME = 0.9, -- secondes pour que le curseur traverse la barre (un aller)
+	PICK_CLIENT_MARGIN = 0.15, -- secondes que le client ajoute à la durée minimale avant d'envoyer « réussi »
+	PICK_RESULT_COOLDOWN = 0.3, -- secondes minimum entre deux messages du mini-jeu (anti-spam)
 	PICK_MAX_DISTANCE = 10, -- studs entre le voleur et le coffre
-	PICK_DISTANCE_CHECK_INTERVAL = 0.25, -- secondes entre deux vérifications de distance pendant le maintien
-	RELEASE_GRACE = 0.25, -- secondes laissées à Triggered après un relâchement, avant d'annuler
+	PICK_DISTANCE_CHECK_INTERVAL = 0.25, -- secondes entre deux vérifications de distance pendant le crochetage
 
 	-- Garde-fous (plan semaine 3, section 3)
 	MAX_LOSSES_PER_NIGHT = 1, -- objets perdus au maximum par une victime, par nuit

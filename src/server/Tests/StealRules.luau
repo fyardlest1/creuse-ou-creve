@@ -11,6 +11,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local StealConfig = require(Shared.Config.StealConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
+local MonetizationConfig = require(Shared.Config.MonetizationConfig)
 local StealService = require(script.Parent.Parent.Services.StealService)
 local ProtectionService = require(script.Parent.Parent.Services.ProtectionService)
 
@@ -73,7 +74,7 @@ local function context(overrides: { [string]: any }?): StealService.AttemptConte
 		thiefInventoryCount = 0,
 		thiefInventoryLimit = PlayerConfig.INVENTORY_LIMIT,
 		victimInventory = inventory(3, "Common"),
-		pickDuration = StealConfig.PICK_DURATION,
+		minPickSeconds = StealConfig.PICK_MIN_SECONDS,
 	}
 	for key, value in overrides or {} do
 		base[key] = value
@@ -202,7 +203,7 @@ local function testShield()
 		context({ victimShielded = true }),
 		"victim_shielded"
 	)
-	local ok = state:checkFinish(context({ victimShielded = true }), StealConfig.PICK_DURATION)
+	local ok = state:checkFinish(context({ victimShielded = true }), StealConfig.PICK_MIN_SECONDS + 1)
 	check("Bouclier activé pendant le crochetage : refusé à la fin", not ok)
 end
 
@@ -280,18 +281,21 @@ local function testOtherValidations()
 	state:reset()
 	expectReason("au lever du jour, le bannissement est levé", state, context(), nil)
 
+	-- Durée minimale réelle du mini-jeu (semaine 5) : 4 s, 6,5 s avec le Garde du corps.
+	local minimum = StealConfig.PICK_MIN_SECONDS
+	local guardMinimum = MonetizationConfig.BODYGUARD_PICK_MIN_SECONDS
 	local shortOk, shortReason = state:checkFinish(context(), 2)
-	check("maintenu 2 s : refusé", not shortOk and shortReason == "hold_too_short", tostring(shortReason))
-	local tooShortOk = state:checkFinish(context(), StealConfig.PICK_DURATION - StealConfig.PICK_TIME_TOLERANCE - 0.01)
-	check("maintenu juste sous la marge : refusé", not tooShortOk)
-	local fullOk = state:checkFinish(context(), StealConfig.PICK_DURATION)
-	check("maintenu 5 s : autorisé", fullOk)
-	local guardShort = state:checkFinish(context({ pickDuration = 8 }), 6)
-	check("Garde du corps : maintenu 6 s sur 8 : refusé", not guardShort)
-	local guardFull = state:checkFinish(context({ pickDuration = 8 }), 8)
-	check("Garde du corps : maintenu 8 s : autorisé", guardFull)
-	local dayOk, dayReason = state:checkFinish(context({ isNight = false }), StealConfig.PICK_DURATION)
-	check("5 s maintenues mais le jour s'est levé : refusé", not dayOk and dayReason == "day")
+	check("« réussi » après 2 s : refusé", not shortOk and shortReason == "too_early", tostring(shortReason))
+	local tooShortOk = state:checkFinish(context(), minimum - 0.01)
+	check("« réussi » juste avant 4 s : refusé", not tooShortOk)
+	local fullOk = state:checkFinish(context(), minimum)
+	check("« réussi » à 4 s : autorisé", fullOk)
+	local guardShort = state:checkFinish(context({ minPickSeconds = guardMinimum }), 6)
+	check("Garde du corps : « réussi » après 6 s : refusé", not guardShort)
+	local guardFull = state:checkFinish(context({ minPickSeconds = guardMinimum }), guardMinimum)
+	check("Garde du corps : « réussi » à 6,5 s : autorisé", guardFull)
+	local dayOk, dayReason = state:checkFinish(context({ isNight = false }), minimum + 1)
+	check("mini-jeu réussi mais le jour s'est levé : refusé", not dayOk and dayReason == "day")
 end
 
 function StealRules.run(): (string, number, number)
