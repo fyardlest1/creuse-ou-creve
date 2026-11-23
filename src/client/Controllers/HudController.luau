@@ -4,6 +4,7 @@
 -- laisse libre la zone de la liste des joueurs de Roblox (en haut à droite).
 -- L'état de départ vient des attributs du joueur, écrits par le serveur.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -728,6 +729,7 @@ local function findMerchantPosition(): Vector3?
 		if
 			descendant:IsA("ProximityPrompt")
 			and descendant:GetAttribute(WorldConfig.INTERACTION_ATTRIBUTE) == WorldConfig.INTERACTIONS.Merchant
+			and not CollectionService:HasTag(descendant, WorldConfig.VIP_ONLY_TAG) -- pas le Marchand VIP
 		then
 			local anchor = descendant.Parent
 			if anchor ~= nil and anchor:IsA("Attachment") then

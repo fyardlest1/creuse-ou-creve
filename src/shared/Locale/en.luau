@@ -195,6 +195,27 @@ return table.freeze({
 
 	-- VIP
 	["vip.tag"] = "VIP",
+	["world.vipLounge"] = "👑 VIP Lounge",
+	["world.vipMerchant"] = "💰 VIP Merchant",
+
+	-- Thieves' Den (cosmetics)
+	["world.thiefShop"] = "🎭 Thieves' Den",
+	["world.openThiefShop"] = "Browse cosmetics",
+	["cosmetic.title"] = "Thieves' Den",
+	["cosmetic.points"] = "Thief Points: %s",
+	["cosmetic.hint"] = "Just for looks, worn at night. Each successful steal earns %d Thief Point.",
+	["cosmetic.slot.mask"] = "Mask",
+	["cosmetic.slot.bag"] = "Backpack",
+	["cosmetic.price"] = "%d Points",
+	["cosmetic.buy"] = "Buy",
+	["cosmetic.missing"] = "%d more needed",
+	["cosmetic.wear"] = "Wear",
+	["cosmetic.remove"] = "Take off",
+	["cosmetic.burglar_mask"] = "Burglar Mask",
+	["cosmetic.shadow_hood"] = "Shadow Hood",
+	["cosmetic.venetian_mask"] = "Venetian Mask",
+	["cosmetic.loot_sack"] = "Loot Sack",
+	["cosmetic.lockpick_satchel"] = "Lockpicker's Satchel",
 
 	-- Messages d'expulsion (données)
 	["kick.loadFailed"] = "Couldn't load your data. Come back in a moment!",

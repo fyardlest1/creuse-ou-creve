@@ -1,8 +1,10 @@
 --!strict
--- Génère le décor interactif : stand du Marchand, stand de la Forge et un coffre par parcelle.
+-- Génère le décor interactif : stand du Marchand, stand de la Forge, salon VIP, Repaire des Voleurs
+-- et un coffre par parcelle.
 -- Chaque interaction passe par un ProximityPrompt (la bonne interaction sur mobile).
 
 local CollectionService = game:GetService("CollectionService")
+local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -41,6 +43,11 @@ local lanterns: { { glass: BasePart, light: PointLight } } = {}
 
 local merchantPosition: Vector3
 local forgePosition: Vector3
+local vipMerchantPosition: Vector3
+local thiefShopPosition: Vector3
+local vipLoungeBox: CFrame -- centre de l'intérieur du salon VIP (taille : getVipLoungeBox)
+local vipLoungeExit: Vector3 -- devant la porte, dehors
+local vipDoor: BasePart
 
 local function createPart(name: string, size: Vector3, cframe: CFrame, color: Color3, material: Enum.Material): Part
 	local part = Instance.new("Part")
@@ -256,6 +263,123 @@ local function createChest(plotModel: Model, center: Vector3, outward: number)
 	model.Parent = plotModel
 end
 
+-- Salon VIP : sol à tapis rouge, trois murs pleins, un mur avec une porte dorée (franchissable par
+-- les seuls VIP, voir VipLoungeService), piliers dorés éclairés et Marchand VIP à l'intérieur.
+local function createVipLounge(center: Vector3, parent: Instance)
+	local model = Instance.new("Model")
+	model.Name = "VipLounge"
+	local inner = WorldConfig.VIP_LOUNGE_SIZE
+	local wall = WorldConfig.VIP_WALL_THICKNESS
+	local floorHeight = WorldConfig.VIP_FLOOR_HEIGHT
+	local halfX, halfZ = inner.X / 2, inner.Z / 2
+
+	local floor = createPart(
+		"Carpet",
+		Vector3.new(inner.X + 2 * wall, floorHeight, inner.Z + 2 * wall),
+		CFrame.new(center + Vector3.new(0, floorHeight / 2, 0)),
+		WorldConfig.VIP_CARPET_COLOR,
+		Enum.Material.Fabric
+	)
+	floor.Parent = model
+	model.PrimaryPart = floor
+
+	local wallY = floorHeight + inner.Y / 2
+	local function addWall(name: string, size: Vector3, offset: Vector3)
+		local part =
+			createPart(name, size, CFrame.new(center + offset), WorldConfig.VIP_WALL_COLOR, Enum.Material.SmoothPlastic)
+		part.Parent = model
+	end
+	-- Murs du fond (-X) et des côtés (±Z), pleins.
+	addWall("WallBack", Vector3.new(wall, inner.Y, inner.Z + 2 * wall), Vector3.new(-halfX - wall / 2, wallY, 0))
+	for _, side in { -1, 1 } do
+		addWall("WallSide", Vector3.new(inner.X, inner.Y, wall), Vector3.new(0, wallY, side * (halfZ + wall / 2)))
+	end
+	-- Mur de façade (+X) : deux pans de chaque côté de la porte.
+	local doorWidth = WorldConfig.VIP_DOOR_WIDTH
+	local panelWidth = (inner.Z + 2 * wall - doorWidth) / 2
+	for _, side in { -1, 1 } do
+		addWall(
+			"WallFront",
+			Vector3.new(wall, inner.Y, panelWidth),
+			Vector3.new(halfX + wall / 2, wallY, side * (doorWidth / 2 + panelWidth / 2))
+		)
+	end
+	local door = createPart(
+		"VipDoor",
+		Vector3.new(wall, inner.Y, doorWidth),
+		CFrame.new(center + Vector3.new(halfX + wall / 2, wallY, 0)),
+		WorldConfig.VIP_TRIM_COLOR,
+		Enum.Material.ForceField
+	)
+	door.Transparency = WorldConfig.VIP_DOOR_TRANSPARENCY
+	-- Groupes de collision : la porte ne bloque pas les personnages VIP (VipLoungeService les y range).
+	for _, group in { WorldConfig.VIP_DOOR_COLLISION_GROUP, WorldConfig.VIP_MEMBER_COLLISION_GROUP } do
+		if not PhysicsService:IsCollisionGroupRegistered(group) then
+			PhysicsService:RegisterCollisionGroup(group)
+		end
+	end
+	PhysicsService:CollisionGroupSetCollidable(
+		WorldConfig.VIP_DOOR_COLLISION_GROUP,
+		WorldConfig.VIP_MEMBER_COLLISION_GROUP,
+		false
+	)
+	door.CollisionGroup = WorldConfig.VIP_DOOR_COLLISION_GROUP
+	door.Parent = model
+	vipDoor = door
+
+	-- Piliers dorés aux coins de la façade, avec une lumière chaude.
+	local pillarSize = WorldConfig.VIP_PILLAR_SIZE
+	for _, side in { -1, 1 } do
+		local pillar = createPart(
+			"Pillar",
+			pillarSize,
+			CFrame.new(
+				center + Vector3.new(halfX + wall / 2, floorHeight + pillarSize.Y / 2, side * (halfZ + wall / 2))
+			),
+			WorldConfig.VIP_TRIM_COLOR,
+			Enum.Material.Metal
+		)
+		local light = Instance.new("PointLight")
+		light.Range = WorldConfig.VIP_LIGHT_RANGE
+		light.Brightness = WorldConfig.VIP_LIGHT_BRIGHTNESS
+		light.Color = WorldConfig.VIP_TRIM_COLOR
+		light.Parent = pillar
+		pillar.Parent = model
+	end
+
+	-- Panneau au-dessus de la porte, lisible depuis le Marchand.
+	local signAnchor = Instance.new("Attachment")
+	signAnchor.Name = "SignAnchor"
+	signAnchor.Parent = floor
+	signAnchor.WorldPosition = center + Vector3.new(halfX + wall, WorldConfig.VIP_SIGN_HEIGHT, 0)
+	createSign(signAnchor, "world.vipLounge")
+
+	-- Marchand VIP, au fond, tourné vers la porte. Son prompt est réservé aux VIP.
+	local stand = createStand(
+		{
+			name = "VipMerchant",
+			title = "world.vipMerchant",
+			action = "world.sell",
+			interaction = WorldConfig.INTERACTIONS.Merchant,
+			color = WorldConfig.VIP_MERCHANT_COLOR,
+			roofColor = WorldConfig.VIP_MERCHANT_ROOF_COLOR,
+		},
+		center + WorldConfig.VIP_MERCHANT_OFFSET + Vector3.new(0, floorHeight, 0),
+		center + Vector3.new(inner.X, 0, 0),
+		model
+	)
+	local prompt = stand:FindFirstChildWhichIsA("ProximityPrompt", true)
+	if prompt ~= nil then
+		prompt.MaxActivationDistance = WorldConfig.VIP_PROMPT_MAX_DISTANCE
+		CollectionService:AddTag(prompt, WorldConfig.VIP_ONLY_TAG)
+	end
+	vipMerchantPosition = (stand:FindFirstChild("Counter") :: BasePart).Position
+
+	vipLoungeBox = CFrame.new(center + Vector3.new(0, floorHeight + inner.Y / 2, 0))
+	vipLoungeExit = center + Vector3.new(halfX + wall + WorldConfig.VIP_EVICT_DISTANCE, PlotConfig.SPAWN_HEIGHT, 0)
+	model.Parent = parent
+end
+
 local function setLanterns(on: boolean)
 	for _, lantern in lanterns do
 		lantern.light.Enabled = on
@@ -267,6 +391,29 @@ end
 -- Position du comptoir du Marchand, pour la validation de distance côté serveur.
 function WorldService.getMerchantPosition(): Vector3
 	return merchantPosition
+end
+
+-- Comptoir du Marchand VIP (vente réservée aux VIP, même règle de distance).
+function WorldService.getVipMerchantPosition(): Vector3
+	return vipMerchantPosition
+end
+
+-- Comptoir du Repaire des Voleurs (achat de cosmétiques).
+function WorldService.getThiefShopPosition(): Vector3
+	return thiefShopPosition
+end
+
+-- Intérieur du salon VIP (centre et taille), point de sortie devant la porte, et la porte.
+function WorldService.getVipLoungeBox(): (CFrame, Vector3)
+	return vipLoungeBox, WorldConfig.VIP_LOUNGE_SIZE
+end
+
+function WorldService.getVipLoungeExit(): Vector3
+	return vipLoungeExit
+end
+
+function WorldService.getVipDoor(): BasePart
+	return vipDoor
 end
 
 -- Position du comptoir de la Forge, pour la validation de distance côté serveur.
@@ -387,15 +534,27 @@ function WorldService.init()
 		roofColor = WorldConfig.FORGE_ROOF_COLOR,
 	}, origin + WorldConfig.FORGE_OFFSET, origin, folder)
 
+	local thiefShop = createStand({
+		name = "ThiefShop",
+		title = "world.thiefShop",
+		action = "world.openThiefShop",
+		interaction = WorldConfig.INTERACTIONS.ThiefShop,
+		color = WorldConfig.THIEF_SHOP_COLOR,
+		roofColor = WorldConfig.THIEF_SHOP_ROOF_COLOR,
+	}, origin + WorldConfig.THIEF_SHOP_OFFSET, origin, folder)
+
+	createVipLounge(origin + WorldConfig.VIP_LOUNGE_OFFSET, folder)
+
 	merchantPosition = (merchant:FindFirstChild("Counter") :: BasePart).Position
 	forgePosition = (forge:FindFirstChild("Counter") :: BasePart).Position
+	thiefShopPosition = (thiefShop:FindFirstChild("Counter") :: BasePart).Position
 	folder.Parent = Workspace
 
 	-- PlotService.init() a déjà généré les parcelles.
 	for _, layout in PlotService.getPlotLayouts() do
 		createChest(layout.model, layout.center, layout.outward)
 	end
-	print("[WorldService] Marchand, Forge et coffres générés")
+	print("[WorldService] Marchand, Forge, salon VIP, Repaire des Voleurs et coffres générés")
 end
 
 function WorldService.start()

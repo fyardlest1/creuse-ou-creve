@@ -51,6 +51,7 @@ local TEMPLATE: Types.PlayerData = {
 	funnelSteps = {},
 	processedPurchases = {},
 	settings = { musicMuted = false, effectsMuted = false },
+	cosmetics = { owned = {} },
 }
 
 local PlayerDataService = {}
@@ -144,6 +145,12 @@ local function migrateV4ToV5(data: any)
 	data.version = 5
 end
 
+-- Version 5 -> 6 : cosmétiques de voleur (aucun possédé ; les Points de Voleur déjà gagnés restent).
+local function migrateV5ToV6(data: any)
+	data.cosmetics = data.cosmetics or { owned = {} }
+	data.version = 6
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -160,6 +167,9 @@ function PlayerDataService.migrate(data: any): number
 	end
 	if fromVersion < 5 then
 		migrateV4ToV5(data)
+	end
+	if fromVersion < 6 then
+		migrateV5ToV6(data)
 	end
 	return fromVersion
 end
@@ -313,6 +323,11 @@ function PlayerDataService.refreshAttributes(player: Player)
 	-- Menu Son : appliqué par AudioKit chez ce joueur.
 	player:SetAttribute("MusicMuted", data.settings.musicMuted)
 	player:SetAttribute("EffectsMuted", data.settings.effectsMuted)
+	-- Repaire des Voleurs : solde, cosmétiques possédés (liste "a,b") et portés ("" = rien).
+	player:SetAttribute("ThiefPoints", data.thiefPoints)
+	player:SetAttribute("OwnedCosmetics", table.concat(data.cosmetics.owned, ","))
+	player:SetAttribute("EquippedMask", data.cosmetics.mask or "")
+	player:SetAttribute("EquippedBag", data.cosmetics.bag or "")
 end
 
 -- Appelle le callback pour chaque joueur dont le profil est chargé (y compris ceux déjà chargés).

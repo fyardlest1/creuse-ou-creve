@@ -107,6 +107,13 @@ Les deux événements sont annoncés à tout le serveur 10 secondes avant leur d
 
 **Cosmétiques de voleur :** les Points de Voleur de la semaine 3 deviennent dépensables dans une petite boutique de cosmétiques : 3 masques et 2 sacs à dos, purement visuels, portés la nuit. Prix en Points de Voleur, jamais en Robux. Aucun avantage de jeu.
 
+**Choix faits pendant l'implémentation (23 novembre 2026, à valider par Yardley) :**
+
+- **Salon VIP** derrière le Marchand, sur la place centrale : murs violets, tapis rouge, piliers dorés, porte dorée que seuls les VIP traversent (groupes de collision). Le serveur replace devant la porte tout joueur non VIP trouvé dedans, et revalide chaque vente au Marchand VIP (pass VIP requis, même distance, mêmes prix).
+- **Repaire des Voleurs** : un stand derrière la Forge, symétrique du salon, plutôt qu'un bouton de plus dans le HUD (déjà chargé sur téléphone).
+- **Cosmétiques et prix** (1 vol réussi = 1 Point) : Masque de Cambrioleur (3), Cagoule de l'Ombre (5), Masque Vénitien (10), Sac de Butin (4), Sacoche de Crocheteur (8). Faits en Parts, sans asset externe. Un achat est porté tout de suite ; un masque et un sac au plus ; visibles par tous, la nuit seulement.
+- **Écartés pour la règle de la section 2** : masque de renard (masques des personnages de Demon Slayer), masque de raton laveur (Sly Cooper, voleur raton laveur), masque noir avec chapeau et cape (Zorro), masque blanc moustachu (V pour Vendetta, La Casa de Papel).
+
 ## 10. Codes promo
 
 - Une case "Codes" dans les réglages. Chaque code donne une récompense une seule fois par joueur (enregistré dans le profil).

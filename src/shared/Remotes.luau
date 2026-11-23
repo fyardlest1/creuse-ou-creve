@@ -43,6 +43,8 @@ local Names = table.freeze({
 	LockpickResult = "LockpickResult", -- client -> serveur : "success" | "abort" (intention seulement)
 	WorldEventWarning = "WorldEventWarning", -- serveur -> tous : kind ("meteor" | "bloodNight"), startsAt (GetServerTimeNow)
 	SetAudioSetting = "SetAudioSetting", -- client -> serveur : kind ("music" | "effects"), muted (booléen)
+	BuyCosmetic = "BuyCosmetic", -- client -> serveur : cosmeticId (Repaire des Voleurs)
+	EquipCosmetic = "EquipCosmetic", -- client -> serveur : slot ("mask" | "bag"), cosmeticId ("" = retirer)
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

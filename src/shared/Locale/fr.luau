@@ -195,6 +195,27 @@ return table.freeze({
 
 	-- VIP
 	["vip.tag"] = "VIP",
+	["world.vipLounge"] = "👑 Salon VIP",
+	["world.vipMerchant"] = "💰 Marchand VIP",
+
+	-- Repaire des Voleurs (cosmétiques)
+	["world.thiefShop"] = "🎭 Repaire des Voleurs",
+	["world.openThiefShop"] = "Voir les cosmétiques",
+	["cosmetic.title"] = "Repaire des Voleurs",
+	["cosmetic.points"] = "Points de Voleur : %s",
+	["cosmetic.hint"] = "Purement visuels, portés la nuit. Chaque vol réussi rapporte %d Point de Voleur.",
+	["cosmetic.slot.mask"] = "Masque",
+	["cosmetic.slot.bag"] = "Sac à dos",
+	["cosmetic.price"] = "%d Points",
+	["cosmetic.buy"] = "Acheter",
+	["cosmetic.missing"] = "Il manque %d",
+	["cosmetic.wear"] = "Porter",
+	["cosmetic.remove"] = "Retirer",
+	["cosmetic.burglar_mask"] = "Masque de Cambrioleur",
+	["cosmetic.shadow_hood"] = "Cagoule de l'Ombre",
+	["cosmetic.venetian_mask"] = "Masque Vénitien",
+	["cosmetic.loot_sack"] = "Sac de Butin",
+	["cosmetic.lockpick_satchel"] = "Sacoche de Crocheteur",
 
 	-- Messages d'expulsion (données)
 	["kick.loadFailed"] = "Impossible de charger tes données. Reviens dans un instant !",

@@ -173,6 +173,19 @@ function EconomyService.trySpend(player: Player, amount: number, reason: Types.E
 	return true
 end
 
+-- Vente possible près du Marchand, ou près du Marchand VIP pour un VIP seulement (mêmes prix).
+function EconomyService.isNearMerchant(
+	position: Vector3,
+	merchantPosition: Vector3,
+	vipMerchantPosition: Vector3,
+	isVip: boolean
+): boolean
+	if (position - merchantPosition).Magnitude <= EconomyConfig.MERCHANT_MAX_DISTANCE then
+		return true
+	end
+	return isVip and (position - vipMerchantPosition).Magnitude <= EconomyConfig.MERCHANT_MAX_DISTANCE
+end
+
 -- Vend des objets du coffre. Les objets sont retirés et les Pièces créditées dans la même opération,
 -- sans yield entre les deux : un objet ne peut jamais être vendu deux fois.
 -- Les favoris ne sont jamais vendus : refusés à l'unité, épargnés par « Tout vendre ».
@@ -192,7 +205,12 @@ local function onSellRequest(player: Player, payload: unknown)
 	local position = getCharacterPosition(player)
 	if
 		position == nil
-		or (position - WorldService.getMerchantPosition()).Magnitude > EconomyConfig.MERCHANT_MAX_DISTANCE
+		or not EconomyService.isNearMerchant(
+			position,
+			WorldService.getMerchantPosition(),
+			WorldService.getVipMerchantPosition(),
+			PurchaseService.ownsPass(player, "VIP")
+		)
 	then
 		reject(player, "trop loin du Marchand")
 		return

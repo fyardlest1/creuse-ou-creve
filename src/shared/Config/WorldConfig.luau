@@ -9,7 +9,43 @@ local WorldConfig = {
 		Forge = "Forge",
 		Chest = "Chest",
 		Pick = "Pick", -- crocheter le coffre d'un autre joueur (la nuit)
+		ThiefShop = "ThiefShop", -- boutique de cosmétiques de voleur (Points de Voleur)
 	}),
+	-- Tag CollectionService des prompts réservés aux VIP (le client les masque aux autres joueurs).
+	VIP_ONLY_TAG = "VipOnly",
+
+	-- Salon VIP (plan semaine 5, section 9), derrière le Marchand, sur la place centrale.
+	-- Taille intérieure : X (profondeur), hauteur des murs, Z (largeur). La porte est sur le mur côté
+	-- Marchand (+X). Rangées de parcelles à 14 studs de l'axe : le salon en laisse 6 de chaque côté.
+	VIP_LOUNGE_OFFSET = Vector3.new(-32, 0, 0),
+	VIP_LOUNGE_SIZE = Vector3.new(16, 10, 14),
+	VIP_WALL_THICKNESS = 1,
+	VIP_DOOR_WIDTH = 6,
+	VIP_FLOOR_HEIGHT = 0.4,
+	VIP_WALL_COLOR = Color3.fromRGB(55, 35, 85), -- violet profond
+	VIP_TRIM_COLOR = Color3.fromRGB(255, 200, 40), -- doré (même couleur que l'étiquette VIP)
+	VIP_CARPET_COLOR = Color3.fromRGB(150, 30, 45), -- tapis rouge
+	VIP_DOOR_TRANSPARENCY = 0.45,
+	VIP_PILLAR_SIZE = Vector3.new(1.6, 11, 1.6),
+	VIP_LIGHT_RANGE = 14,
+	VIP_LIGHT_BRIGHTNESS = 1.5,
+	VIP_SIGN_HEIGHT = 17.5, -- studs : au-dessus du panneau du Marchand VIP, pour ne pas le chevaucher
+	-- Marchand VIP : même vente, mêmes prix (le +10 % VIP s'applique déjà partout).
+	VIP_MERCHANT_OFFSET = Vector3.new(-4, 0, 0), -- depuis le centre du salon
+	VIP_MERCHANT_COLOR = Color3.fromRGB(200, 160, 40),
+	VIP_MERCHANT_ROOF_COLOR = Color3.fromRGB(120, 40, 140),
+	VIP_PROMPT_MAX_DISTANCE = 8, -- plus court que les autres : pas de prompt à travers le mur
+	-- Porte : les personnages VIP ne la heurtent pas (groupes de collision).
+	VIP_DOOR_COLLISION_GROUP = "VipDoor",
+	VIP_MEMBER_COLLISION_GROUP = "VipMember",
+	-- Garde-fou côté serveur : un joueur non VIP trouvé dans le salon est replacé devant la porte.
+	VIP_EVICT_CHECK_INTERVAL = 1, -- secondes
+	VIP_EVICT_DISTANCE = 4, -- studs devant la porte
+
+	-- Repaire des Voleurs : boutique de cosmétiques, derrière la Forge (symétrique du salon VIP).
+	THIEF_SHOP_OFFSET = Vector3.new(30, 0, 0),
+	THIEF_SHOP_COLOR = Color3.fromRGB(70, 45, 95),
+	THIEF_SHOP_ROOF_COLOR = Color3.fromRGB(35, 35, 42),
 
 	-- Stands, placés sur la place centrale (décalage depuis PlotConfig.PLOT_ORIGIN), tournés vers le centre
 	MERCHANT_OFFSET = Vector3.new(-14, 0, 0),

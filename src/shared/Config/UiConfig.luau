@@ -225,6 +225,16 @@ local UiConfig = {
 	SOUND_SETTINGS_SIZE = Vector2.new(420, 230), -- pixels, taille maximale de la fenêtre
 	SOUND_SETTINGS_SCALE = Vector2.new(0.6, 0.62), -- fraction de l'écran
 	SOUND_SETTINGS_ROW_HEIGHT = 52, -- pixels : interrupteurs (au moins TOUCH_TARGET_MIN)
+
+	-- Repaire des Voleurs (cosmétiques)
+	COSMETIC_PANEL_MAX_SIZE = Vector2.new(640, 440), -- pixels
+	COSMETIC_INFO_HEIGHT = 30, -- pixels par ligne d'information (solde, explication)
+	COSMETIC_ROW_HEIGHT = 64, -- pixels : bouton de 44 + marges
+	COSMETIC_ROW_PADDING = 6, -- pixels
+	COSMETIC_BUTTON_WIDTH = 0.26, -- fraction de la ligne
+	COSMETIC_POINTS_COLOR = Color3.fromRGB(190, 140, 255), -- violet des Points de Voleur
+	COSMETIC_WORN_COLOR = Color3.fromRGB(70, 120, 200), -- bouton « Retirer »
+	COSMETIC_CLOSE_CHECK_INTERVAL = 0.5, -- secondes : la fenêtre se ferme si on s'éloigne
 }
 
 return table.freeze(UiConfig)

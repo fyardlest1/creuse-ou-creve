@@ -93,6 +93,8 @@ export type PlayerStats = {
 export type Boosts = { luckPotion: number, shield: number }
 -- Réglages du joueur (menu Son), enregistrés avec ses données.
 export type PlayerSettings = { musicMuted: boolean, effectsMuted: boolean }
+-- Cosmétiques de voleur possédés et portés (ids de Config/Cosmetics, nil = rien dans l'emplacement).
+export type CosmeticState = { owned: { string }, mask: string?, bag: string? }
 
 -- Effets actifs : fin de la potion (os.time()), numéro de la nuit protégée par un Bouclier.
 export type Effects = { luckUntil: number, shieldNightId: number }
@@ -110,7 +112,7 @@ export type DailyState = { lastClaimDay: number, calendarDay: number, firstSeenD
 
 export type QuestState = { id: string, target: number, progress: number, claimed: boolean, reward: number }
 
--- Version 4. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
+-- Version 6. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
 export type PlayerData = {
 	version: number,
 	coins: number,
@@ -121,7 +123,7 @@ export type PlayerData = {
 	stats: PlayerStats,
 	digHintDone: boolean, -- l'indice "Clique sur une case pour creuser" ne s'affiche plus
 	playTime: number, -- secondes de jeu cumulées, pour la protection débutant
-	thiefPoints: number, -- Points de Voleur (comptés, pas encore dépensables)
+	thiefPoints: number, -- Points de Voleur, dépensés en cosmétiques au Repaire des Voleurs
 	boosts: Boosts,
 	effects: Effects,
 	daily: DailyState,
@@ -132,6 +134,7 @@ export type PlayerData = {
 	funnelSteps: { [string]: boolean }, -- étapes de l'entonnoir déjà journalisées
 	processedPurchases: { string }, -- 100 derniers PurchaseId traités (idempotence)
 	settings: PlayerSettings,
+	cosmetics: CosmeticState,
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).
