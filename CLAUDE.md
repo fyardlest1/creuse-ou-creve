@@ -33,6 +33,7 @@ Nommage Rojo : `.server.luau` = Script, `.client.luau` = LocalScript, `.luau` = 
 6. **Mobile en priorité** : toute interaction doit marcher au toucher, et l'interface doit rester lisible sur un écran de téléphone.
 7. **Assets externes** : seulement Kenney.nl et Quaternius (CC0) et Fab (licence Standard). Aucun asset externe n'entre dans le jeu sans sa ligne dans `docs/LICENCES.md` (source, licence, fichier, usage). Les packs bruts restent dans `C:\dev\creuse-ou-creve-assets`, jamais dans le dépôt.
 8. **Aucun modèle ne doit contenir de script.** Avant d'intégrer un modèle, vérifier qu'il n'a aucun descendant `Script`, `LocalScript` ou `ModuleScript` ; s'il en a, le refuser (ne pas se contenter de supprimer les scripts sans le signaler).
+9. **Assets Fab (licence Standard)** : les modèles Fab importés sur Roblox ne sont jamais rendus publics ni mis en vente dans le Creator Store. La place n'est jamais rendue copiable. On n'en fait jamais d'objet d'avatar à vendre. On ne les intègre à aucun outil de construction partagé (kit, modèle ou plugin publié, place modèle). Détail et articles du contrat dans `docs/LICENCES.md`.
 
 ## Conventions
 

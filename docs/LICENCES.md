@@ -10,7 +10,7 @@ Seulement ces trois sources (décision du 23 novembre 2026). Tout le reste est r
 | ------ | ------- | ----------------- | ------ | -------------------------------- |
 | [Kenney.nl](https://kenney.nl) | CC0 1.0 (domaine public) | Tout usage, commercial compris, modification et envoi sur Roblox | Non exigé (on le crédite quand même dans le jeu) | Télécharger depuis kenney.nl, pas depuis un site de reprise. Garder le `License.txt` du pack. |
 | [Quaternius](https://quaternius.com) | CC0 1.0 (domaine public) | Tout usage, commercial compris, modification et envoi sur Roblox | Non exigé (on le crédite quand même dans le jeu) | Télécharger depuis quaternius.com (ou sa page officielle). Garder le fichier de licence du pack. |
-| [Fab](https://www.fab.com) | Licence Standard de Fab | Usage dans un jeu, commercial compris, selon les conditions de la licence | Selon la page de l'asset | **Refuser les assets marqués « UE-Only »** (réservés à Unreal Engine). Vérifier sur la page que la licence est bien la Standard, et garder une copie de la page et du reçu. Le jeu ne doit jamais permettre de récupérer l'asset brut. |
+| [Fab](https://www.fab.com) | Licence Standard de Fab | Usage dans un jeu, commercial compris, selon les conditions de la licence | Selon la page de l'asset | **Refuser les assets marqués « UE-Only »** (réservés à Unreal Engine). Vérifier sur la page que la licence est bien la Standard, et garder une copie de la page et du reçu. Le jeu ne doit jamais permettre de récupérer l'asset brut. Voir les **obligations Fab** plus bas. |
 
 ## Règles
 
@@ -20,6 +20,28 @@ Seulement ces trois sources (décision du 23 novembre 2026). Tout le reste est r
 4. **Preuve de licence** : on garde le fichier de licence du pack (Kenney, Quaternius) ou une copie de la page et du reçu (Fab), à côté du pack brut.
 5. **Propriété intellectuelle** : la règle de la section 2 du plan de la semaine 5 s'applique aussi aux assets. Rien qui rappelle une licence existante (personnage, objet, logo, musique connue).
 6. **Remplacement ou retrait** : on garde la ligne, et on note dans « Usage dans le jeu » que l'asset a été retiré, avec la date.
+
+## Obligations de la licence Fab Standard
+
+Texte de référence : le contrat de licence Fab (« Fab End User License Agreement », version du 1er octobre 2024), copié dans `fab.com-purchase.txt` à côté du pack. Ces obligations valent pour **chaque** asset Fab, tant qu'il est dans le jeu.
+
+**Ce que la licence autorise :**
+
+- **Palier Personal** (article 2a) : réservé à qui, entreprises liées comprises, n'a pas dépassé 100 000 $ US de revenus bruts dans le contenu numérique sur les 12 derniers mois. Au-delà, les **nouveaux** achats doivent se faire au palier Professional.
+- **Mettre l'asset dans un jeu distribué au public** (article 4c), à condition que les joueurs ne puissent s'en servir que dans le jeu.
+- **Le partager en privé avec les collaborateurs du projet** (article 5a), Claude Code compris. Un collaborateur ne le redistribue pas et l'efface quand il n'en a plus besoin. Un asset marqué « NoAI » sur sa fiche est refusé.
+
+**Les quatre interdits sur Roblox :**
+
+1. **Ne jamais rendre public les modèles Fab importés sur Roblox, ni les mettre en vente dans le Creator Store.** Les meshes, textures et modèles envoyés restent privés. On ne coche jamais « Distribuer sur le Creator Store ». *Articles 4c et 6(ii).*
+2. **Ne jamais rendre la place copiable.** Le réglage « Autoriser la copie » de la place reste désactivé, pour toujours. *Article 4c : empêcher les joueurs d'extraire l'asset.*
+3. **Ne jamais en faire un objet d'avatar à vendre** (accessoire, outil de l'avatar, UGC dans la boutique Roblox). L'asset reste une partie du jeu, pas un produit vendu seul. *Article 6(ii).*
+4. **Ne jamais l'intégrer à un outil de construction partagé** : kit, modèle ou plugin publié, place modèle, éditeur de niveaux qui permet d'exporter. Personne d'autre ne doit pouvoir s'en servir dans ses propres créations. *Article 6(iii).*
+
+Autres limites :
+
+- Pas de combinaison avec du contenu sous licence GPL, LGPL ou CC BY-SA (article 6a). Le CC0 de Kenney et de Quaternius est compatible.
+- Ne pas retirer de mentions de propriété présentes dans l'asset (article 6(vi)).
 
 Pour la colonne « Usage dans le jeu » : le réglage dans `src/shared/Config/` (par exemple `UiConfig.SOUND_SELL`) ou l'endroit de la carte, puis l'identifiant Roblox une fois l'asset envoyé (`rbxassetid://…`).
 
@@ -50,6 +72,7 @@ Pour la colonne « Usage dans le jeu » : le réglage dans `src/shared/Config/` 
 | CoC_blood_night | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Impact Sounds/Audio/impactBell_heavy_000.ogg` | voir le pack | Non exigé | Arrivée de la Nuit de sang (cloche grave) — `AudioConfig.BLOOD_NIGHT`, `rbxassetid://77927147262256` |
 | CoC_music_day | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Music Loops/Loops/Flowing Rocks.ogg` | voir le pack | Non exigé | Musique de fond le jour — `AudioConfig.MUSIC_DAY`, `rbxassetid://75054087770832` |
 | CoC_night_ambience | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Music Loops/Retro/Retro Mystic.ogg` | voir le pack | Non exigé | Musique de nuit — `AudioConfig.MUSIC_NIGHT`, `rbxassetid://113958371532738` |
+| Stylized Miner Hand Tools Kit (pack, source) | Fab (achat) | à compléter (vendeur indiqué sur la fiche Fab) | Fab Standard, palier Personal ; fiche : « Allows usage with AI : Yes » | `C:\Dev\FAB\` (à déplacer dans `fab/stylized_miner_hand_tools_kit/`) : `.fbx`, `.blend`, `.obj` + 14 textures | à compléter (reçu à garder à côté du pack) | à vérifier sur la fiche Fab | **Pas encore intégré.** Prévu pour les pelles 3D (tâche 9). Soumis aux obligations Fab ci-dessus. |
 
 Notes sur le pack Kenney :
 
