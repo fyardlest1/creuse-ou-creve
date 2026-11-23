@@ -23,7 +23,7 @@ Seulement ces trois sources (décision du 23 novembre 2026). Tout le reste est r
 
 ## Obligations de la licence Fab Standard
 
-Texte de référence : le contrat de licence Fab (« Fab End User License Agreement », version du 1er octobre 2024), copié dans `fab.com-purchase.txt` à côté du pack. Ces obligations valent pour **chaque** asset Fab, tant qu'il est dans le jeu.
+Texte de référence : le contrat de licence Fab (« Fab End User License Agreement », version du 1er octobre 2024), copié dans `fab/preuves/fab.com-purchase.txt`. Ces obligations valent pour **chaque** asset Fab, tant qu'il est dans le jeu.
 
 **Ce que la licence autorise :**
 
@@ -72,7 +72,7 @@ Pour la colonne « Usage dans le jeu » : le réglage dans `src/shared/Config/` 
 | CoC_blood_night | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Impact Sounds/Audio/impactBell_heavy_000.ogg` | voir le pack | Non exigé | Arrivée de la Nuit de sang (cloche grave) — `AudioConfig.BLOOD_NIGHT`, `rbxassetid://77927147262256` |
 | CoC_music_day | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Music Loops/Loops/Flowing Rocks.ogg` | voir le pack | Non exigé | Musique de fond le jour — `AudioConfig.MUSIC_DAY`, `rbxassetid://75054087770832` |
 | CoC_night_ambience | Kenney.nl (pack All-in-1) | Kenney Vleugels | CC0 1.0 | `kenney/Audio/Music Loops/Retro/Retro Mystic.ogg` | voir le pack | Non exigé | Musique de nuit — `AudioConfig.MUSIC_NIGHT`, `rbxassetid://113958371532738` |
-| Stylized Miner Hand Tools Kit (pack, source) | Fab (achat) | à compléter (vendeur indiqué sur la fiche Fab) | Fab Standard, palier Personal ; fiche : « Allows usage with AI : Yes » | `C:\Dev\FAB\` (à déplacer dans `fab/stylized_miner_hand_tools_kit/`) : `.fbx`, `.blend`, `.obj` + 14 textures | à compléter (reçu à garder à côté du pack) | à vérifier sur la fiche Fab | **Pas encore intégré.** Prévu pour les pelles 3D (tâche 9). Soumis aux obligations Fab ci-dessus. |
+| Stylized Miner Hand Tools Kit (pack, source) | Fab (achat) | Iana Makarova | Fab Standard, palier Personal ; fiche : « Allows usage with AI : Yes » | `fab/stylized_miner_hand_tools_kit/` : `.fbx`, `.blend`, `.obj` + 14 textures. Preuves (contrat, reçu, capture de la fiche) dans `fab/preuves/` | 23 novembre 2026 | Non exigé (licence Standard) | **Pas encore intégré.** Prévu pour les pelles 3D (tâche 9). Soumis aux obligations Fab ci-dessus. Une texture vient de Pixabay (`grunge-2710970_1280 copy.jpg`) : acceptée, car jamais distribuée seule (décision du 23 novembre 2026). |
 
 Notes sur le pack Kenney :
 
