@@ -17,6 +17,7 @@ local orderedControllers: { [number]: { name: string, module: Controller } } = {
 		name = "AnnouncementController",
 		module = require(Controllers:WaitForChild("AnnouncementController")) :: any,
 	},
+	{ name = "WorldEventController", module = require(Controllers:WaitForChild("WorldEventController")) :: any },
 	{ name = "AuraController", module = require(Controllers:WaitForChild("AuraController")) :: any },
 	{ name = "WorldSignController", module = require(Controllers:WaitForChild("WorldSignController")) :: any },
 	{ name = "ShovelController", module = require(Controllers:WaitForChild("ShovelController")) :: any },

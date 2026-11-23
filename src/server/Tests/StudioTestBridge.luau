@@ -7,6 +7,8 @@
 --         Invoke("Test", "teleport", player, position)
 --         Invoke("Test", "giveFoundItem", player, "celestial_dragon_egg") -- vraie trouvaille, sans tirage
 --         Invoke("Test", "removeItem", player, uid) -- la retire après le test
+--         Invoke("Test", "startMeteorShower") -- pluie de météorites dans 10 s (annonce comprise)
+--         Invoke("Test", "forceBloodNight") -- Nuit de sang dans 10 s (annonce comprise)
 
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -40,6 +42,15 @@ function StudioTestBridge.install(services: { [string]: any })
 		{}
 
 	local testHelpers = {
+		startMeteorShower = function()
+			services.MeteorService.startSoon()
+		end,
+		forceBloodNight = function()
+			-- Le jour se termine dans WARNING_SECONDS, puis Nuit de sang annoncée : comme en jeu.
+			local EventConfig = require(Shared.Config.EventConfig)
+			services.DayNightService.forcePhase("Day", EventConfig.WARNING_SECONDS)
+			services.DayNightService.setNextNightBlood(true)
+		end,
 		getData = function(player: Player): any
 			return PlayerDataService.getData(player)
 		end,

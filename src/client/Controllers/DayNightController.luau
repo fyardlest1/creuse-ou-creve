@@ -13,6 +13,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DayNightConfig = require(Shared.Config.DayNightConfig)
+local EventConfig = require(Shared.Config.EventConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
@@ -33,6 +34,7 @@ local bell: Sound
 local nightAmbience: Sound?
 local lightingTween: Tween? = nil
 local clockTween: Tween? = nil
+local bloodTint: ColorCorrectionEffect -- teinte rouge pendant une Nuit de sang (blanche sinon)
 -- L'heure est animée sur cette valeur (qui peut dépasser 24), puis recopiée modulo 24 :
 -- Lighting.ClockTime ne reboucle pas une valeur interpolée au-delà de 24.
 local clockDriver: NumberValue
@@ -49,7 +51,19 @@ end
 
 -- Éclairage de la phase, en transition douce (ou tout de suite à l'arrivée du joueur).
 local function applyLighting(phase: string, instant: boolean)
-	local target = table.clone(if phase == "Night" then DayNightConfig.NIGHT_LIGHTING else DayNightConfig.DAY_LIGHTING)
+	-- Nuit de sang : ciel rouge sombre, toujours lisible, et légère teinte rouge de l'image.
+	local blood = phase == "Night" and ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_BLOOD_NIGHT) == true
+	local source = if blood
+		then EventConfig.BLOOD_NIGHT_LIGHTING
+		elseif phase == "Night" then DayNightConfig.NIGHT_LIGHTING
+		else DayNightConfig.DAY_LIGHTING
+	local target = table.clone(source)
+	local tintGoal = if blood then EventConfig.BLOOD_NIGHT_TINT else Color3.new(1, 1, 1)
+	if instant then
+		bloodTint.TintColor = tintGoal
+	else
+		TweenService:Create(bloodTint, TweenInfo.new(DayNightConfig.TRANSITION_TIME), { TintColor = tintGoal }):Play()
+	end
 	local clock = target.ClockTime :: number
 	target.ClockTime = nil
 	if lightingTween ~= nil then
@@ -143,6 +157,10 @@ end
 
 function DayNightController.init()
 	buildTimer()
+	bloodTint = Instance.new("ColorCorrectionEffect")
+	bloodTint.Name = "BloodNightTint"
+	bloodTint.TintColor = Color3.new(1, 1, 1)
+	bloodTint.Parent = Lighting
 	clockDriver = Instance.new("NumberValue")
 	clockDriver.Name = "ClockDriver"
 	clockDriver.Value = Lighting.ClockTime
@@ -174,6 +192,10 @@ function DayNightController.start()
 		(nightAmbience :: Sound):Play()
 	end
 	Remotes.get(Remotes.Names.PhaseChanged).OnClientEvent:Connect(onPhaseChanged)
+	-- L'attribut de la Nuit de sang peut arriver juste après PhaseChanged : on réapplique.
+	ReplicatedStorage:GetAttributeChangedSignal(EventConfig.ATTRIBUTE_BLOOD_NIGHT):Connect(function()
+		applyLighting(getPhase(), false)
+	end)
 	RunService.RenderStepped:Connect(updateTimer)
 end
 

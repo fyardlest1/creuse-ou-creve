@@ -56,6 +56,8 @@ local UiConfig = {
 	ANNOUNCE_LEGENDARY_COLOR = Color3.fromRGB(200, 140, 20),
 	ANNOUNCE_SECRET_COLOR = Color3.fromRGB(150, 60, 200), -- recouvert d'un dégradé arc-en-ciel
 	ANNOUNCE_EVENT_COLOR = Color3.fromRGB(220, 140, 30),
+	ANNOUNCE_METEOR_COLOR = Color3.fromRGB(215, 90, 30),
+	ANNOUNCE_BLOOD_NIGHT_COLOR = Color3.fromRGB(150, 25, 35),
 
 	-- Bandeaux du HUD
 	BANNER_TIME = 2,
@@ -153,6 +155,8 @@ local UiConfig = {
 	HUD_COUNT_BADGE_SIZE = 22, -- pixels : nombre de bonus sur le bouton Réserve
 	BOOST_CHIP_WIDTH = 86, -- pixels : indicateur de bonus actif (hauteur : celle des pastilles du HUD)
 	BOOST_CHIP_WIDTH_COMPACT = 78,
+	WORLD_EVENT_CHIP_WIDTH = 140, -- pixels : météorites et Nuit de sang (texte plus long)
+	WORLD_EVENT_CHIP_WIDTH_COMPACT = 112,
 	BOOST_REFRESH_INTERVAL = 0.25, -- secondes entre deux mises à jour des minuteurs de bonus
 
 	-- Vente au Marchand

@@ -30,6 +30,11 @@ return table.freeze({
 	["hud.stratumBlocked"] = "You need the %s to dig into %s",
 	["hud.shovelEquipped"] = "%s equipped!",
 	["hud.merchantArrow"] = "Merchant",
+	["hud.meteorSoon"] = "☄ in %d s",
+	["hud.bloodSoon"] = "🩸 in %d s",
+	["hud.bloodActive"] = "🩸 Blood Night",
+	["announce.meteor"] = "Meteor shower in %d s! Rare and better x%d",
+	["announce.bloodNight"] = "Blood Night in %d s! Cursed items x%d",
 	["hud.luckEvent"] = "2x luck, courtesy of %s!",
 	["hud.revengeCompensated"] = "Your Revenge was no longer possible: a Luck Potion is waiting in your stash",
 

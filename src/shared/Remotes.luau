@@ -41,6 +41,7 @@ local Names = table.freeze({
 	LuckEventStarted = "LuckEventStarted", -- serveur -> tous : buyerName, endsAt (os.time)
 	LockpickStarted = "LockpickStarted", -- serveur -> voleur : Lockpick.Settings, victimName (ouvre le mini-jeu)
 	LockpickResult = "LockpickResult", -- client -> serveur : "success" | "abort" (intention seulement)
+	WorldEventWarning = "WorldEventWarning", -- serveur -> tous : kind ("meteor" | "bloodNight"), startsAt (GetServerTimeNow)
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

@@ -17,6 +17,7 @@ local ShopService = require(script.Parent.ShopService)
 local DayNightService = require(script.Parent.DayNightService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local LootService = require(script.Parent.LootService)
+local MeteorService = require(script.Parent.MeteorService)
 
 export type BoostKind = "luckPotion" | "shield"
 
@@ -66,6 +67,7 @@ function BoostService.getLuckMultiplier(player: Player): number
 		potion = BoostService.isPotionActive(player),
 		serverEvent = BoostService.isServerEventActive(),
 		groupMember = groupMembers[player] == true,
+		meteorShower = MeteorService.isActive(),
 	})
 end
 

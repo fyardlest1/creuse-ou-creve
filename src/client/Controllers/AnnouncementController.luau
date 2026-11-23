@@ -17,7 +17,7 @@ local Locale = require(Shared.Locale)
 local HudLayout = require(script.Parent.Parent.HudLayout)
 local RevealGate = require(script.Parent.Parent.RevealGate)
 
-type Kind = "Legendary" | "Secret" | "event"
+export type Kind = "Legendary" | "Secret" | "event" | "meteor" | "bloodNight"
 type Announcement = { text: string, kind: Kind }
 
 local RAINBOW = ColorSequence.new({
@@ -96,6 +96,10 @@ local function colorFor(kind: Kind): Color3
 		return UiConfig.ANNOUNCE_SECRET_COLOR
 	elseif kind == "event" then
 		return UiConfig.ANNOUNCE_EVENT_COLOR
+	elseif kind == "meteor" then
+		return UiConfig.ANNOUNCE_METEOR_COLOR
+	elseif kind == "bloodNight" then
+		return UiConfig.ANNOUNCE_BLOOD_NIGHT_COLOR
 	end
 	return UiConfig.ANNOUNCE_LEGENDARY_COLOR
 end
@@ -143,7 +147,8 @@ local function pump()
 	end)
 end
 
-local function announce(text: string, kind: Kind)
+-- Ajoute une annonce à la file (aussi utilisé par WorldEventController pour les événements de serveur).
+function AnnouncementController.announce(text: string, kind: Kind)
 	table.insert(queue, { text = text, kind = kind })
 	while #queue > MAX_QUEUE do
 		table.remove(queue, 1)
@@ -171,12 +176,15 @@ function AnnouncementController.start()
 				return
 			end
 			-- Chez le joueur qui a trouvé l'objet, sa carte arrive juste avant : l'annonce l'attend (RevealGate).
-			announce(Locale.t("announce." .. rarity, finderName, Locale.item(itemId)), rarity :: Kind)
+			AnnouncementController.announce(
+				Locale.t("announce." .. rarity, finderName, Locale.item(itemId)),
+				rarity :: Kind
+			)
 		end)
 	-- Événement chance (semaine 4), harmonisé avec les annonces de trouvailles.
 	Remotes.get(Remotes.Names.LuckEventStarted).OnClientEvent:Connect(function(buyerName: unknown)
 		if typeof(buyerName) == "string" then
-			announce(Locale.t("hud.luckEvent", buyerName), "event")
+			AnnouncementController.announce(Locale.t("hud.luckEvent", buyerName), "event")
 		end
 	end)
 	-- Dégradé arc-en-ciel qui défile, seulement pendant une annonce Secret.

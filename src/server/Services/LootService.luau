@@ -12,6 +12,7 @@ local Items = require(Shared.Config.Items)
 local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local MonetizationConfig = require(Shared.Config.MonetizationConfig)
+local EventConfig = require(Shared.Config.EventConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ShopService = require(script.Parent.ShopService)
 local DayNightService = require(script.Parent.DayNightService)
@@ -28,10 +29,12 @@ export type LuckParts = {
 	potion: boolean, -- Potion de chance active
 	serverEvent: boolean, -- Événement chance du serveur actif
 	groupMember: boolean, -- membre du groupe Konbit Games (si le groupe est configuré)
+	meteorShower: boolean?, -- pluie de météorites en cours (semaine 5)
 }
 
 -- LA formule de la chance (plan semaine 4, section 4). Seul endroit où elle existe.
 --   (1 + bonus de la pelle) x (2 si Chance x2) x (3 si potion) x (2 si événement) x (1,05 si groupe)
+--   x (2 pendant une pluie de météorites)
 -- plafonné à x10 pour protéger la valeur des Secrets.
 function LootService.computeLuckMultiplier(parts: LuckParts): number
 	local multiplier = 1 + math.max(parts.shovelBonus, 0) / PERCENT
@@ -46,6 +49,9 @@ function LootService.computeLuckMultiplier(parts: LuckParts): number
 	end
 	if parts.groupMember and MonetizationConfig.GROUP_ID ~= 0 then
 		multiplier *= MonetizationConfig.GROUP_MULTIPLIER
+	end
+	if parts.meteorShower == true then
+		multiplier *= EventConfig.METEOR_LUCK_MULTIPLIER
 	end
 	return math.min(multiplier, MonetizationConfig.LUCK_CAP)
 end
@@ -73,12 +79,14 @@ function LootService.rollRarity(luckMultiplier: number): Types.RarityId
 end
 
 -- Tire au plus une mutation. Chaque mutation a sa propre chance en %, cumulées sur un seul tirage.
--- Les mutations de nuit (Maudit) ne sont possibles que si isNight est vrai.
-function LootService.rollMutation(isNight: boolean?): Types.MutationId?
+-- Les mutations de nuit (Maudit) ne sont possibles que si isNight est vrai ; pendant une Nuit de sang,
+-- leur chance est multipliée par EventConfig.BLOOD_NIGHT_CURSED_MULTIPLIER.
+function LootService.rollMutation(isNight: boolean?, bloodNight: boolean?): Types.MutationId?
+	local nightFactor = if bloodNight == true then EventConfig.BLOOD_NIGHT_CURSED_MULTIPLIER else 1
 	local roll = rng:NextNumber(0, PERCENT)
 	for _, mutation in Mutations.list do
 		if not mutation.nightOnly or isNight == true then
-			roll -= mutation.chance
+			roll -= if mutation.nightOnly then mutation.chance * nightFactor else mutation.chance
 			if roll < 0 then
 				return mutation.id
 			end
@@ -108,9 +116,14 @@ end
 -- Tirage complet, sans joueur : rareté, mutation, objet de la couche, valeur finale et uid.
 -- Les Légendaires et Secrets sont mis en favori automatiquement, sauf s'ils sont Maudits :
 -- le joueur doit choisir lui-même entre vendre vite un objet Maudit et le défendre.
-function LootService.rollItem(layer: number, luckMultiplier: number, isNight: boolean?): Types.ItemInstance
+function LootService.rollItem(
+	layer: number,
+	luckMultiplier: number,
+	isNight: boolean?,
+	bloodNight: boolean?
+): Types.ItemInstance
 	local rarityId = LootService.rollRarity(luckMultiplier)
-	local mutationId = LootService.rollMutation(isNight)
+	local mutationId = LootService.rollMutation(isNight, bloodNight)
 	local item = LootService.pickItem(layer, rarityId)
 	return LootService.makeItem(item, mutationId, layer)
 end
@@ -129,11 +142,11 @@ function LootService.makeItem(item: Types.ItemDef, mutationId: Types.MutationId?
 end
 
 -- Tirage pour un joueur : sa couche et son multiplicateur de chance (calculé par BoostService
--- avec computeLuckMultiplier), la nuit pour la mutation Maudite.
+-- avec computeLuckMultiplier), la nuit (et la Nuit de sang) pour la mutation Maudite.
 function LootService.roll(player: Player, luckMultiplier: number): Types.ItemInstance
 	local data = PlayerDataService.getData(player)
 	local layer = Strata.fromDepth(if data ~= nil then data.depth else 0).layer
-	return LootService.rollItem(layer, luckMultiplier, DayNightService.isNight())
+	return LootService.rollItem(layer, luckMultiplier, DayNightService.isNight(), DayNightService.isBloodNight())
 end
 
 -- Vérification : fait `count` tirages de rareté et retourne la répartition en %.

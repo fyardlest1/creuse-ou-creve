@@ -19,6 +19,7 @@ local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
+local EventConfig = require(Shared.Config.EventConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local ChestController = require(script.Parent.ChestController)
@@ -51,6 +52,9 @@ local EVENT_CHIP_COLOR = Color3.fromRGB(220, 140, 30)
 local SHIELD_CHIP_COLOR = Color3.fromRGB(60, 110, 200)
 local TEXT_POTION_CHIP = "🍀 %s" -- symbole + minuteur, identique dans toutes les langues
 local TEXT_EVENT_CHIP = "⚡ %s"
+local METEOR_CHIP_COLOR = Color3.fromRGB(215, 90, 30)
+local BLOOD_CHIP_COLOR = Color3.fromRGB(150, 25, 35)
+local TEXT_METEOR_CHIP = "☄ %s"
 
 local COIN_COLOR = Color3.fromRGB(255, 200, 40)
 local COIN_STROKE_COLOR = Color3.fromRGB(180, 120, 20)
@@ -96,6 +100,8 @@ local boostChips: Frame
 local potionChip: TextLabel
 local eventChip: TextLabel
 local shieldChip: TextLabel
+local meteorChip: TextLabel -- pluie de météorites : compte à rebours, puis temps restant
+local bloodChip: TextLabel -- Nuit de sang : compte à rebours, puis pendant la nuit
 
 local function addCorner(parent: GuiObject, radius: number)
 	local corner = Instance.new("UICorner")
@@ -510,6 +516,8 @@ local function buildBoostChips(gui: ScreenGui)
 	layout.FillDirection = Enum.FillDirection.Horizontal
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = boostChips
+	meteorChip = chip("Meteor", METEOR_CHIP_COLOR, -2)
+	bloodChip = chip("BloodNight", BLOOD_CHIP_COLOR, -1)
 	potionChip = chip("Potion", POTION_CHIP_COLOR, 1)
 	eventChip = chip("Event", EVENT_CHIP_COLOR, 2)
 	shieldChip = chip("Shield", SHIELD_CHIP_COLOR, 3)
@@ -529,6 +537,27 @@ local function updateBoostChips()
 	if eventLeft > 0 then
 		eventChip.Text = string.format(TEXT_EVENT_CHIP, UiKit.formatDuration(eventLeft))
 	end
+	-- Événements de serveur : compte à rebours de WARNING_SECONDS, puis l'événement lui-même.
+	local meteorStartsAt = ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_METEOR_STARTS_AT)
+	local meteorEndsAt = ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_METEOR_ENDS_AT)
+	local meteorSoon = typeof(meteorStartsAt) == "number" and meteorStartsAt > now
+	local meteorLeft = if typeof(meteorEndsAt) == "number" and not meteorSoon then meteorEndsAt - now else 0
+	meteorChip.Visible = meteorSoon or meteorLeft > 0
+	if meteorSoon then
+		meteorChip.Text = Locale.t("hud.meteorSoon", math.ceil((meteorStartsAt :: number) - now))
+	elseif meteorLeft > 0 then
+		meteorChip.Text = string.format(TEXT_METEOR_CHIP, UiKit.formatDuration(meteorLeft))
+	end
+	local bloodStartsAt = ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_BLOOD_NIGHT_STARTS_AT)
+	local bloodSoon = typeof(bloodStartsAt) == "number" and bloodStartsAt > now
+	local bloodNow = ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_BLOOD_NIGHT) == true
+	bloodChip.Visible = bloodSoon or bloodNow
+	if bloodSoon then
+		bloodChip.Text = Locale.t("hud.bloodSoon", math.ceil((bloodStartsAt :: number) - now))
+	elseif bloodNow then
+		bloodChip.Text = Locale.t("hud.bloodActive")
+	end
+
 	local shieldActive = player:GetAttribute("ShieldTonight") == true
 	shieldChip.Visible = shieldActive or player:GetAttribute("ShieldPlanned") == true
 	shieldChip.Text = Locale.t(if shieldActive then "hud.shieldActive" else "hud.shieldReady")
@@ -540,7 +569,12 @@ local function updateBoostChips()
 	end
 	boostChips.Position = UDim2.fromOffset(left, layout.statusTop)
 	HudLayout.setStatusRowVisible(
-		protectionPill.Visible or potionChip.Visible or eventChip.Visible or shieldChip.Visible
+		protectionPill.Visible
+			or potionChip.Visible
+			or eventChip.Visible
+			or shieldChip.Visible
+			or meteorChip.Visible
+			or bloodChip.Visible
 	)
 end
 
@@ -558,9 +592,16 @@ local function applyLayout(layout: HudLayout.Layout)
 	for _, label in { potionChip, eventChip, shieldChip } do
 		label.Size = chipSize
 	end
+	local eventWidth = if layout.compact
+		then UiConfig.WORLD_EVENT_CHIP_WIDTH_COMPACT
+		else UiConfig.WORLD_EVENT_CHIP_WIDTH
+	for _, label in { meteorChip, bloodChip } do
+		label.Size = UDim2.fromOffset(eventWidth, layout.pillHeight)
+	end
 	local chipsLayout = boostChips:FindFirstChild("Layout") :: UIListLayout
 	chipsLayout.Padding = UDim.new(0, layout.spacing)
-	boostChips.Size = UDim2.fromOffset(3 * (layout.chipWidth + layout.spacing), layout.pillHeight)
+	boostChips.Size =
+		UDim2.fromOffset(3 * (layout.chipWidth + layout.spacing) + 2 * (eventWidth + layout.spacing), layout.pillHeight)
 	updateBoostChips()
 
 	for button, offsetY in sideButtons do

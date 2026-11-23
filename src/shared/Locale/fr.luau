@@ -31,6 +31,11 @@ return table.freeze({
 	["hud.shovelEquipped"] = "%s équipée !",
 	["hud.merchantArrow"] = "Marchand",
 	["hud.luckEvent"] = "Chance x2 offerte par %s !",
+	["hud.meteorSoon"] = "☄ dans %d s",
+	["hud.bloodSoon"] = "🩸 dans %d s",
+	["hud.bloodActive"] = "🩸 Nuit de sang",
+	["announce.meteor"] = "Pluie de météorites dans %d s ! Rare et mieux x%d",
+	["announce.bloodNight"] = "Nuit de sang dans %d s ! Objets Maudits x%d",
 	["hud.revengeCompensated"] = "Ta Revanche n'était plus possible : une Potion de chance t'attend dans ta réserve",
 
 	-- Classement (liste des joueurs)
