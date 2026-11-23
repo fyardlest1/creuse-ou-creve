@@ -71,6 +71,11 @@ local UiConfig = {
 	SWING_RAISE_TIME = 0.06,
 	SWING_STRIKE_TIME = 0.06, -- l'impact (particules, son) arrive à la fin de la frappe
 	SWING_RECOVER_TIME = 0.1,
+	-- Animation de creusage publiée par le propriétaire du jeu (plan semaine 5, section 5). Vide, ou
+	-- animation qui ne charge pas : le geste procédural ci-dessus sert de repli.
+	DIG_ANIMATION_ID = "", -- "rbxassetid://<nombre>"
+	DIG_ANIMATION_IMPACT_TIME = 0.14, -- secondes : la lame touche la case (particules, son)
+	DIG_ANIMATION_LOAD_TIMEOUT = 3, -- secondes pour charger l'animation avant de passer au repli
 
 	-- Prise en main du creusage
 	DIG_HOLD_MARGIN = 0.03, -- secondes ajoutées à DIG_COOLDOWN entre deux coups enchaînés (appui maintenu)

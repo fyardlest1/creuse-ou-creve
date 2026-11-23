@@ -77,6 +77,12 @@ L'Index de collection les intègre automatiquement. Vérifier que la probabilit�
 - Remplacer les pelles en Parts par de vrais modèles 3D (bois, fer, acier), légers (moins de 2 000 triangles chacun), créés ou importés par Yardley, ou générés dans Studio. Garder les Parts actuelles comme solution de repli si un modèle manque.
 - Remplacer le geste procédural par une vraie animation de creusage faite dans l'Animation Editor de Studio. L'animation doit être publiée par le **même propriétaire que le jeu** (le compte de Yardley maintenant, le groupe après le transfert de la semaine 6), sinon elle ne se jouera pas. Garder le geste procédural en repli si l'animation ne charge pas.
 
+**Choix faits pendant l'implémentation (23 novembre 2026) :**
+
+- Pelles du kit Fab « Stylized Miner Hand Tools » : petite pelle → bois, pelle ronde → fer, pelle carrée → acier, pelle en cœur gardée pour le diamant. Chacune fait environ 1 100 triangles. Le kit n'a pas de textures liées au modèle : le jeu colore le manche et la lame avec les matériaux Roblox de `Shovels.appearance`, ce qui garde aussi la lame de la pelle en bois en bois.
+- Les modèles importés vont dans `ServerStorage.ShovelModels` (`CoC_Shovel_Wood`, `_Iron`, `_Steel`). Modèle absent ou contenant un script : la pelle en Parts reste.
+- Animation de creusage construite dans Studio (mannequin `CoC_DigRig`, sauvegarde `CoC_Dig` dans `ServerStorage.RBX_ANIMSAVES`), 0,32 s, impact à 0,14 s. Identifiant à renseigner dans `UiConfig.DIG_ANIMATION_ID` après publication ; vide ou impossible à charger : geste procédural.
+
 ## 6. Mini-jeu de crochetage
 
 Remplace le simple maintien de 5 s :

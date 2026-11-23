@@ -1,9 +1,12 @@
 --!strict
--- Pelle visible dans la main droite du personnage : un modèle en Parts (manche et lame), soudé à la
--- main, créé par le serveur pour que tous les joueurs le voient. Pas de Tool (pas de barre
--- d'inventaire sur mobile, pas de pelle rangée par erreur). Remplacée tout de suite à l'achat.
+-- Pelle visible dans la main droite du personnage, soudée à la main, créée par le serveur pour que
+-- tous les joueurs la voient. Pas de Tool (pas de barre d'inventaire sur mobile, pas de pelle rangée
+-- par erreur). Remplacée tout de suite à l'achat.
+-- Pelle 3D si son modèle importé existe dans ServerStorage.ShovelModels (et ne contient aucun
+-- script, règle 8), sinon le modèle en Parts (manche et lame) sert de repli.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
@@ -75,6 +78,80 @@ local function buildShovel(shovel: Types.ShovelDef, hand: BasePart): Model
 	return model
 end
 
+-- Modèles 3D déjà refusés (avertissement une seule fois).
+local refusedTemplates: { [Instance]: boolean } = {}
+
+-- Modèle 3D importé de cette pelle, ou nil (repli en Parts). Un modèle qui contient un script est
+-- refusé et signalé (règle 8 de CLAUDE.md), un modèle sans MeshPart aussi.
+local function findMeshTemplate(shovel: Types.ShovelDef): Model?
+	local folder = ServerStorage:FindFirstChild(Shovels.MODEL.MESH_FOLDER)
+	local template = if folder ~= nil then folder:FindFirstChild(Shovels.MODEL.MESH_PREFIX .. shovel.id) else nil
+	if template == nil or not template:IsA("Model") or refusedTemplates[template] then
+		return nil
+	end
+	local meshCount = 0
+	for _, descendant in template:GetDescendants() do
+		if descendant:IsA("LuaSourceContainer") then
+			refusedTemplates[template] = true
+			warn("[ShovelVisualService] Modèle refusé (contient un script) : " .. template:GetFullName())
+			return nil
+		end
+		if descendant:IsA("MeshPart") then
+			meshCount += 1
+		end
+	end
+	if meshCount == 0 then
+		refusedTemplates[template] = true
+		warn("[ShovelVisualService] Modèle refusé (aucune MeshPart) : " .. template:GetFullName())
+		return nil
+	end
+	return template
+end
+
+-- Pelle 3D : copie du modèle importé, colorée selon la pelle, mise à l'échelle et soudée à la main.
+local function buildMeshShovel(shovel: Types.ShovelDef, hand: BasePart, template: Model): Model
+	local look = shovel.appearance
+	local model = template:Clone()
+	model.Name = Shovels.MODEL.MODEL_NAME
+	model:SetAttribute("ShovelId", shovel.id)
+	model:SetAttribute("Mesh", true)
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("SurfaceAppearance") or descendant:IsA("Decal") or descendant:IsA("Texture") then
+			descendant:Destroy() -- le jeu colore lui-même (une seule apparence par pelle)
+		elseif descendant:IsA("BasePart") then
+			local isHandle = string.find(string.lower(descendant.Name), "handle", 1, true) ~= nil
+			descendant.Anchored = false
+			descendant.Massless = true
+			descendant.CanCollide = false
+			descendant.CanQuery = false
+			descendant.CanTouch = false
+			descendant.Color = if isHandle then look.handleColor else look.bladeColor
+			descendant.Material = if isHandle then look.handleMaterial else look.bladeMaterial
+			descendant.Reflectance = if isHandle then 0 else look.bladeReflectance
+			if descendant:IsA("MeshPart") then
+				descendant.TextureID = ""
+			end
+		end
+	end
+	-- Axes du monde autour du centre : le modèle importé est debout, lame en bas.
+	local center, size = model:GetBoundingBox()
+	model.WorldPivot = CFrame.new(center.Position)
+	local length = math.max(size.X, size.Y, size.Z)
+	if length > 0 then
+		model:ScaleTo(model:GetScale() * Shovels.MODEL.MESH_LENGTH / length)
+	end
+	model:PivotTo(hand.CFrame * Shovels.MODEL.MESH_GRIP * Shovels.MODEL.MESH_ROTATION)
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			local joint = Instance.new("WeldConstraint")
+			joint.Part0 = hand
+			joint.Part1 = descendant
+			joint.Parent = descendant
+		end
+	end
+	return model
+end
+
 local function getEquippedShovel(player: Player): Types.ShovelDef
 	local data = PlayerDataService.getData(player)
 	local shovel = if data ~= nil then Shovels.byId[data.equippedShovel] else nil
@@ -95,7 +172,10 @@ function ShovelVisualService.refresh(player: Player)
 	if existing ~= nil then
 		existing:Destroy()
 	end
-	buildShovel(getEquippedShovel(player), hand).Parent = character
+	local shovel = getEquippedShovel(player)
+	local template = findMeshTemplate(shovel)
+	local model = if template ~= nil then buildMeshShovel(shovel, hand, template) else buildShovel(shovel, hand)
+	model.Parent = character
 end
 
 -- L'apparence de l'avatar est appliquée après CharacterAdded et remplace les parties du corps,

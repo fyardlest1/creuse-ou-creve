@@ -62,6 +62,18 @@ local MODEL = table.freeze({
 	-- Position du centre du manche par rapport à la main : la main tient le tiers arrière.
 	GRIP = CFrame.new(0, -0.15, -1.1) * CFrame.Angles(math.rad(-20), 0, 0),
 	BLADE_TILT = math.rad(-15), -- la lame plonge un peu vers le sol
+
+	-- Pelles 3D (plan semaine 5, section 5) : modèles importés par Yardley dans
+	-- ServerStorage.ShovelModels, nommés MESH_PREFIX .. id ("CoC_Shovel_Wood"), avec deux MeshParts
+	-- « Handle » (manche) et « Blade » (lame et ferrures). Le jeu les colore avec `appearance`.
+	-- Modèle absent ou refusé : les Parts ci-dessus servent de repli.
+	MESH_FOLDER = "ShovelModels",
+	MESH_PREFIX = "CoC_Shovel_",
+	MESH_LENGTH = 5, -- studs, du haut du manche au bout de la lame (comme la version en Parts)
+	-- Centre du modèle par rapport à la main : même prise que la version en Parts.
+	MESH_GRIP = CFrame.new(0, -0.15, -1.6) * CFrame.Angles(math.rad(-20), 0, 0),
+	-- Le modèle importé est debout (lame en bas, -Y) : on le couche vers l'avant (-Z), lame à plat.
+	MESH_ROTATION = CFrame.Angles(math.rad(90), 0, 0),
 })
 
 local byId: { [string]: Types.ShovelDef } = {}
