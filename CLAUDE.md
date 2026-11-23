@@ -49,3 +49,4 @@ Nommage Rojo : `.server.luau` = Script, `.client.luau` = LocalScript, `.luau` = 
 2. Implémenter une tâche à la fois, dans l'ordre du plan.
 3. Après chaque tâche : vérifier que Rojo synchronise, lancer un playtest par MCP, lire l'Output, corriger les erreurs.
 4. Commit Git par tâche terminée, message en français et clair (`Ajout du DigService avec validation serveur`).
+5. **Ne jamais pousser (`git push`) soi-même** : c'est Yardley qui pousse. Claude Code commite seulement, et signale les commits en attente.

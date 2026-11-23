@@ -43,6 +43,7 @@ local EconomyConfig = {
 	SIM_TARGET_STEEL_MIN_SECONDS = 480,
 	SIM_TARGET_STEEL_MAX_SECONDS = 900,
 	SIM_TARGET_ROCK_SECONDS = 1800,
+	SIM_TARGET_STEEL_B_MIN_SECONDS = 300, -- variante B : acier pas avant 5 min en moyenne
 }
 
 return table.freeze(EconomyConfig)
