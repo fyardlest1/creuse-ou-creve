@@ -10,6 +10,7 @@ local Controllers = script.Parent:WaitForChild("Controllers")
 
 local orderedControllers: { [number]: { name: string, module: Controller } } = {
 	{ name = "LocaleController", module = require(Controllers:WaitForChild("LocaleController")) :: any },
+	{ name = "PromoCodeController", module = require(Controllers:WaitForChild("PromoCodeController")) :: any },
 	{
 		name = "SoundSettingsController",
 		module = require(Controllers:WaitForChild("SoundSettingsController")) :: any,

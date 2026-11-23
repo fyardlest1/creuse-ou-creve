@@ -46,6 +46,8 @@ local Names = table.freeze({
 	BuyCosmetic = "BuyCosmetic", -- client -> serveur : cosmeticId (Repaire des Voleurs)
 	EquipCosmetic = "EquipCosmetic", -- client -> serveur : slot ("mask" | "bag"), cosmeticId ("" = retirer)
 	ThiefPointHint = "ThiefPointHint", -- serveur -> voleur : position du Repaire des Voleurs (1er point, une fois)
+	RedeemCode = "RedeemCode", -- client -> serveur : texte saisi (code promo)
+	CodeResult = "CodeResult", -- serveur -> client : statut ("ok" | "invalid" | "unknown" | "used" | "expired"), récompense
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

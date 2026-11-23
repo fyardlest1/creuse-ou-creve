@@ -115,7 +115,7 @@ end
 local function testFirstPointHint()
 	local data: any = { version = 6, inventory = {}, thiefPoints = 3, settings = {}, cosmetics = { owned = {} } }
 	PlayerDataService.migrate(data)
-	check("migration v6 -> v7", data.version == 7 and PlayerConfig.DATA_VERSION == 7)
+	check("migration v6 -> v7 (puis version courante)", data.version == PlayerConfig.DATA_VERSION)
 	check("migration : message pas encore montré", data.thiefPointHintDone == false)
 	local done: any = { version = 6, inventory = {}, thiefPointHintDone = true }
 	PlayerDataService.migrate(done)

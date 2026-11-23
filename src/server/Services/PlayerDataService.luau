@@ -53,6 +53,7 @@ local TEMPLATE: Types.PlayerData = {
 	settings = { musicMuted = false, effectsMuted = false },
 	cosmetics = { owned = {} },
 	thiefPointHintDone = false,
+	redeemedCodes = {},
 }
 
 local PlayerDataService = {}
@@ -159,6 +160,12 @@ local function migrateV6ToV7(data: any)
 	data.version = 7
 end
 
+-- Version 7 -> 8 : codes promo utilisés (aucun).
+local function migrateV7ToV8(data: any)
+	data.redeemedCodes = data.redeemedCodes or {}
+	data.version = 8
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -181,6 +188,9 @@ function PlayerDataService.migrate(data: any): number
 	end
 	if fromVersion < 7 then
 		migrateV6ToV7(data)
+	end
+	if fromVersion < 8 then
+		migrateV7ToV8(data)
 	end
 	return fromVersion
 end

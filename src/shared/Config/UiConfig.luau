@@ -222,9 +222,13 @@ local UiConfig = {
 	STUN_VEIL_TRANSPARENCY = 0.75,
 
 	-- Menu Son (les sons eux-mêmes sont dans AudioConfig)
-	SOUND_SETTINGS_SIZE = Vector2.new(420, 230), -- pixels, taille maximale de la fenêtre
-	SOUND_SETTINGS_SCALE = Vector2.new(0.6, 0.62), -- fraction de l'écran
-	SOUND_SETTINGS_ROW_HEIGHT = 52, -- pixels : interrupteurs (au moins TOUCH_TARGET_MIN)
+	SOUND_SETTINGS_SIZE = Vector2.new(440, 380), -- pixels, taille maximale de la fenêtre Réglages
+	SOUND_SETTINGS_SCALE = Vector2.new(0.62, 0.86), -- fraction de l'écran (la liste défile si besoin)
+	SOUND_SETTINGS_ROW_HEIGHT = 48, -- pixels : interrupteurs et case du code (au moins TOUCH_TARGET_MIN)
+	-- Case « Codes » des Réglages
+	CODE_TITLE_HEIGHT = 22, -- pixels
+	CODE_RESULT_HEIGHT = 22, -- pixels
+	CODE_BUTTON_WIDTH = 0.32, -- fraction de la ligne pour le bouton Valider
 
 	-- Repaire des Voleurs (cosmétiques)
 	COSMETIC_PANEL_MAX_SIZE = Vector2.new(640, 440), -- pixels
