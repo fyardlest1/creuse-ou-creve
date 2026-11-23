@@ -18,6 +18,8 @@ local EconomyConfig = require(Shared.Config.EconomyConfig)
 local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local EventConfig = require(Shared.Config.EventConfig)
 local Remotes = require(Shared.Remotes)
@@ -25,6 +27,7 @@ local Locale = require(Shared.Locale)
 local ChestController = require(script.Parent.ChestController)
 local ShopController = require(script.Parent.ShopController)
 local RetentionController = require(script.Parent.RetentionController)
+local SoundSettingsController = require(script.Parent.SoundSettingsController)
 local UiKit = require(script.Parent.Parent.UiKit)
 local HudLayout = require(script.Parent.Parent.HudLayout)
 
@@ -46,6 +49,7 @@ local AUTO_DIG_PAUSED_COLOR = Color3.fromRGB(200, 120, 40)
 local QUESTS_BUTTON_COLOR = Color3.fromRGB(60, 120, 200)
 local INDEX_BUTTON_COLOR = Color3.fromRGB(120, 80, 190)
 local RESERVE_BUTTON_COLOR = Color3.fromRGB(50, 150, 130)
+local SOUND_BUTTON_COLOR = Color3.fromRGB(90, 95, 120)
 local NOTIFY_DOT_COLOR = Color3.fromRGB(230, 50, 50)
 local POTION_CHIP_COLOR = Color3.fromRGB(60, 150, 70)
 local EVENT_CHIP_COLOR = Color3.fromRGB(220, 140, 30)
@@ -470,6 +474,22 @@ local function buildRetentionButtons(gui: ScreenGui)
 		)
 	)
 	reserve.Activated:Connect(RetentionController.toggleReserve)
+
+	-- Menu Son (musique, effets sonores), à gauche de la Réserve : loin du bouton de saut sur mobile.
+	local soundButton = sideButton(
+		gui,
+		"SoundButton",
+		Locale.t("hud.sound"),
+		SOUND_BUTTON_COLOR,
+		Vector2.new(1, 0.5),
+		UDim2.new(
+			1,
+			-(UiConfig.HUD_MARGIN + UiConfig.HUD_SHOP_BUTTON_SIZE + UiConfig.HUD_SPACING + step),
+			UiConfig.HUD_SIDE_BUTTONS_Y,
+			0
+		)
+	)
+	soundButton.Activated:Connect(SoundSettingsController.toggle)
 	-- Nombre de bonus en réserve
 	reserveCount = Instance.new("TextLabel")
 	reserveCount.Name = "Count"
@@ -644,7 +664,9 @@ local function buildUi()
 	buildShopButton(gui)
 	buildRetentionButtons(gui)
 	buildBoostChips(gui)
-	for _, name in { "ChestButton", "AutoDigButton", "QuestsButton", "IndexButton", "ShopButton", "ReserveButton" } do
+	for _, name in
+		{ "ChestButton", "AutoDigButton", "QuestsButton", "IndexButton", "ShopButton", "ReserveButton", "SoundButton" }
+	do
 		local button = gui:FindFirstChild(name) :: GuiObject
 		sideButtons[button] = button.Position.Y.Offset
 	end
@@ -776,11 +798,7 @@ end
 function HudController.init()
 	autoDigToggle = Remotes.get(Remotes.Names.AutoDigToggle)
 	buildUi()
-	fullSound = Instance.new("Sound")
-	fullSound.Name = "InventoryFull"
-	fullSound.SoundId = UiConfig.SOUND_INVENTORY_FULL
-	fullSound.Volume = UiConfig.VOLUME_INVENTORY_FULL
-	fullSound.Parent = SoundService
+	fullSound = AudioKit.create("InventoryFull", AudioConfig.INVENTORY_FULL)
 	refresh()
 end
 

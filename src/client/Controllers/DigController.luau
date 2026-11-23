@@ -18,6 +18,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local PlotConfig = require(Shared.Config.PlotConfig)
 local PlayerConfig = require(Shared.Config.PlayerConfig)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local Remotes = require(Shared.Remotes)
 local ShovelController = require(script.Parent.ShovelController)
 
@@ -40,7 +42,8 @@ local myPlot: Model? = nil
 local plotOrigin: CFrame? = nil
 local lastRequestTime = -math.huge
 local restCFrames: { [BasePart]: CFrame } = {}
-local hitSound: Sound
+local hitSounds: { Sound } = {} -- variantes du coup de pelle, jouées au hasard
+local soundRng = Random.new()
 local highlight: SelectionBox
 -- Appui en cours (souris ou doigt) et position du curseur, en coordonnées d'écran (hors barre Roblox).
 local holdInput: InputObject? = nil
@@ -198,7 +201,7 @@ local function tryDig(screenPosition: Vector2, isRepeat: boolean)
 			shakeCell(target)
 			emitDirt(target, UiConfig.DIRT_PARTICLES_PER_HIT)
 		end
-		hitSound:Play()
+		hitSounds[soundRng:NextInteger(1, #hitSounds)]:Play()
 	end)
 end
 
@@ -270,11 +273,9 @@ function DigController.init()
 	cellHit = Remotes.get(Remotes.Names.CellHit)
 	plotAssigned = Remotes.get(Remotes.Names.PlotAssigned)
 
-	hitSound = Instance.new("Sound")
-	hitSound.Name = "DigHit"
-	hitSound.SoundId = UiConfig.SOUND_DIG_HIT
-	hitSound.Volume = UiConfig.VOLUME_DIG_HIT
-	hitSound.Parent = SoundService
+	for index, def in AudioConfig.DIG_HITS do
+		table.insert(hitSounds, AudioKit.create("DigHit" .. index, def))
+	end
 
 	-- Sous la caméra : visible uniquement par ce joueur.
 	highlight = Instance.new("SelectionBox")

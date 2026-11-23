@@ -35,15 +35,7 @@ local DayNightConfig = {
 	LANTERN_COLOR_OFF = Color3.fromRGB(90, 80, 60),
 	LANTERN_LIGHT_RANGE = 16,
 	LANTERN_LIGHT_BRIGHTNESS = 2,
-
-	-- Sons (intégrés à Roblox, à remplacer par de vrais assets plus tard)
-	SOUND_PHASE_BELL = "rbxasset://sounds/electronicpingshort.wav",
-	VOLUME_PHASE_BELL = 0.8,
-	PITCH_PHASE_BELL = 0.6,
-	-- Ambiance nocturne discrète : aucun son intégré ne convient, à renseigner avec un asset
-	-- ("rbxassetid://..."). Vide = pas d'ambiance.
-	SOUND_NIGHT_AMBIENCE = "",
-	VOLUME_NIGHT_AMBIENCE = 0.25,
+	-- Les sons (cloche, musiques de jour et de nuit) sont dans AudioConfig.
 }
 
 return table.freeze(DayNightConfig)

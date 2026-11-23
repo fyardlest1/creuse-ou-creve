@@ -10,7 +10,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -19,6 +18,8 @@ local Types = require(Shared.Types)
 local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local ItemIcon = require(script.Parent.Parent.ItemIcon)
@@ -99,16 +100,6 @@ local function createLabel(name: string, position: UDim2, size: UDim2, parent: I
 	label.TextStrokeTransparency = 0.5
 	label.Parent = parent
 	return label
-end
-
-local function createSound(name: string, soundId: string, volume: number, pitch: number?): Sound
-	local sound = Instance.new("Sound")
-	sound.Name = name
-	sound.SoundId = soundId
-	sound.Volume = volume
-	sound.PlaybackSpeed = pitch or 1
-	sound.Parent = SoundService
-	return sound
 end
 
 -- Même mise en page que la carte (centrée, proportions et tailles limites), pour le halo.
@@ -495,16 +486,10 @@ end
 
 function RevealController.init()
 	ui = buildUi()
-	revealSound = createSound("Reveal", UiConfig.SOUND_REVEAL, UiConfig.VOLUME_REVEAL)
-	epicSound =
-		createSound("RevealEpic", UiConfig.SOUND_REVEAL, UiConfig.VOLUME_REVEAL_EPIC, UiConfig.PITCH_REVEAL_EPIC)
-	impactSound = createSound(
-		"RevealImpact",
-		UiConfig.SOUND_REVEAL_IMPACT,
-		UiConfig.VOLUME_REVEAL_IMPACT,
-		UiConfig.PITCH_REVEAL_IMPACT
-	)
-	victorySound = createSound("RevealVictory", UiConfig.SOUND_REVEAL_SPECTACULAR, UiConfig.VOLUME_REVEAL_SPECTACULAR)
+	revealSound = AudioKit.create("Reveal", AudioConfig.REVEAL)
+	epicSound = AudioKit.create("RevealEpic", AudioConfig.REVEAL_EPIC)
+	impactSound = AudioKit.create("RevealImpact", AudioConfig.REVEAL_IMPACT)
+	victorySound = AudioKit.create("RevealVictory", AudioConfig.REVEAL_SECRET_VICTORY)
 end
 
 function RevealController.start()

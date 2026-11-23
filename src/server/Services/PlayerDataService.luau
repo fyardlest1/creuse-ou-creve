@@ -50,6 +50,7 @@ local TEMPLATE: Types.PlayerData = {
 	title = nil,
 	funnelSteps = {},
 	processedPurchases = {},
+	settings = { musicMuted = false, effectsMuted = false },
 }
 
 local PlayerDataService = {}
@@ -137,6 +138,12 @@ local function migrateV3ToV4(data: any)
 	data.version = 4
 end
 
+-- Version 4 -> 5 : réglages du joueur (musique et effets sonores, rien de coupé par défaut).
+local function migrateV4ToV5(data: any)
+	data.settings = data.settings or { musicMuted = false, effectsMuted = false }
+	data.version = 5
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -150,6 +157,9 @@ function PlayerDataService.migrate(data: any): number
 	end
 	if fromVersion < 4 then
 		migrateV3ToV4(data)
+	end
+	if fromVersion < 5 then
+		migrateV4ToV5(data)
 	end
 	return fromVersion
 end
@@ -300,6 +310,9 @@ function PlayerDataService.refreshAttributes(player: Player)
 	end
 	player:SetAttribute("HasSecret", hasSecret)
 	player:SetAttribute("ShowDigHint", not data.digHintDone)
+	-- Menu Son : appliqué par AudioKit chez ce joueur.
+	player:SetAttribute("MusicMuted", data.settings.musicMuted)
+	player:SetAttribute("EffectsMuted", data.settings.effectsMuted)
 end
 
 -- Appelle le callback pour chaque joueur dont le profil est chargé (y compris ceux déjà chargés).

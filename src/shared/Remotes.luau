@@ -42,6 +42,7 @@ local Names = table.freeze({
 	LockpickStarted = "LockpickStarted", -- serveur -> voleur : Lockpick.Settings, victimName (ouvre le mini-jeu)
 	LockpickResult = "LockpickResult", -- client -> serveur : "success" | "abort" (intention seulement)
 	WorldEventWarning = "WorldEventWarning", -- serveur -> tous : kind ("meteor" | "bloodNight"), startsAt (GetServerTimeNow)
+	SetAudioSetting = "SetAudioSetting", -- client -> serveur : kind ("music" | "effects"), muted (booléen)
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

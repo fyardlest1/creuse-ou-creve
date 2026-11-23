@@ -217,36 +217,14 @@ local UiConfig = {
 	LOCKPICK_ABORT_WIDTH = 130, -- pixels (hauteur : TOUCH_TARGET_MIN)
 	LOCKPICK_VEIL_TRANSPARENCY = 0.6, -- voile sombre derrière le panneau (tout l'écran se touche)
 	LOCKPICK_FEEDBACK_TIME = 0.25, -- secondes du flash vert ou rouge de la barre
-	SOUND_LOCKPICK_HIT = "rbxasset://sounds/snap.wav", -- temporaire (tâche 6)
-	SOUND_LOCKPICK_MISS = "rbxasset://sounds/button.wav", -- temporaire (tâche 6)
-	VOLUME_LOCKPICK = 0.5,
 	STEAL_CARD_TIME = 3, -- secondes d'affichage de la carte "Tu as volé" / "On t'a volé"
 	STUN_VEIL_COLOR = Color3.fromRGB(120, 120, 255), -- voile pendant l'étourdissement
 	STUN_VEIL_TRANSPARENCY = 0.75,
 
-	-- Sons
-	SOUND_STEAL_ALARM = "rbxasset://sounds/electronicpingshort.wav", -- alarme temporaire
-	VOLUME_STEAL_ALARM = 0.6,
-	PITCH_STEAL_ALARM = 2,
-	SOUND_SELL = "rbxasset://sounds/electronicpingshort.wav", -- son de caisse temporaire
-	PITCH_SELL = 1.6,
-	VOLUME_SELL = 0.7,
-	SOUND_DIG_HIT = "rbxasset://sounds/snap.wav",
-	SOUND_REVEAL = "rbxasset://sounds/electronicpingshort.wav",
-	SOUND_REVEAL_SPECTACULAR = "rbxasset://sounds/victory.wav",
-	SOUND_INVENTORY_FULL = "rbxasset://sounds/button.wav",
-	VOLUME_DIG_HIT = 0.4,
-	VOLUME_REVEAL = 0.6,
-	VOLUME_REVEAL_SPECTACULAR = 1,
-	VOLUME_INVENTORY_FULL = 0.6,
-	VOLUME_REVEAL_EPIC = 1, -- Épique : même son, plus fort et plus aigu
-	PITCH_REVEAL_EPIC = 1.25,
-	SOUND_REVEAL_IMPACT = "rbxasset://sounds/snap.wav", -- impact temporaire (Légendaire et Secret)
-	VOLUME_REVEAL_IMPACT = 1,
-	PITCH_REVEAL_IMPACT = 0.45,
-	SOUND_ANNOUNCE = "rbxasset://sounds/electronicpingshort.wav", -- annonce temporaire, distincte du reste
-	VOLUME_ANNOUNCE = 0.7,
-	PITCH_ANNOUNCE = 0.75,
+	-- Menu Son (les sons eux-mêmes sont dans AudioConfig)
+	SOUND_SETTINGS_SIZE = Vector2.new(420, 230), -- pixels, taille maximale de la fenêtre
+	SOUND_SETTINGS_SCALE = Vector2.new(0.6, 0.62), -- fraction de l'écran
+	SOUND_SETTINGS_ROW_HEIGHT = 52, -- pixels : interrupteurs (au moins TOUCH_TARGET_MIN)
 }
 
 return table.freeze(UiConfig)

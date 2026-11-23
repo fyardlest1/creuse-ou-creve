@@ -17,6 +17,8 @@ local StealConfig = require(Shared.Config.StealConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Rarities = require(Shared.Config.Rarities)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local HudController = require(script.Parent.HudController)
@@ -63,6 +65,8 @@ type ChestView = {
 local chests: { ChestView } = {}
 local bannedOwners: { [number]: boolean } = {} -- coffres dont j'ai été éjecté cette nuit
 local alarm: Sound
+local ejectPunch: Sound
+local ejectWoosh: Sound
 local alertThiefId: number? = nil
 local ejectPrompt: ProximityPrompt? = nil
 local ejectRequest: RemoteEvent
@@ -338,6 +342,12 @@ local function showCard(title: string, itemName: string, rarity: string, subtitl
 	end)
 end
 
+-- Éjection : coup puis souffle, chez le propriétaire qui éjecte et chez le voleur éjecté.
+local function playEject()
+	ejectPunch:Play()
+	ejectWoosh:Play()
+end
+
 local function onStealStarted(thiefName: unknown, thiefUserId: unknown)
 	if typeof(thiefName) ~= "string" then
 		return
@@ -362,6 +372,9 @@ local function onStealCancelled(reason: unknown, otherName: unknown)
 		if thief ~= nil and thief.Name == otherName then
 			-- Je suis la victime : mon coffre est sauf.
 			stopAlert()
+			if reasonText == "éjecté" then
+				playEject()
+			end
 			HudController.showBanner(
 				Locale.t(if reasonText == "éjecté" then "steal.thiefEjected" else "steal.victimSafe"),
 				"success"
@@ -404,6 +417,7 @@ local function onEjected(ownerName: unknown, stunSeconds: unknown)
 	if owner ~= nil and owner:IsA("Player") then
 		bannedOwners[owner.UserId] = true
 	end
+	playEject()
 	HudController.showBanner(Locale.t("steal.ejected", ownerName, stunSeconds), "alert", true)
 	stunGui.Enabled = true
 	task.delay(stunSeconds, function()
@@ -441,13 +455,10 @@ function StealController.init()
 	buildCard()
 	buildStunOverlay()
 	ejectRequest = Remotes.get(Remotes.Names.EjectRequest)
-	alarm = Instance.new("Sound")
-	alarm.Name = "StealAlarm"
-	alarm.SoundId = UiConfig.SOUND_STEAL_ALARM
-	alarm.Volume = UiConfig.VOLUME_STEAL_ALARM
-	alarm.PlaybackSpeed = UiConfig.PITCH_STEAL_ALARM
+	alarm = AudioKit.create("StealAlarm", AudioConfig.STEAL_ALARM)
 	alarm.Looped = true
-	alarm.Parent = SoundService
+	ejectPunch = AudioKit.create("EjectPunch", AudioConfig.EJECT_PUNCH)
+	ejectWoosh = AudioKit.create("EjectWoosh", AudioConfig.EJECT_WOOSH)
 end
 
 function StealController.start()

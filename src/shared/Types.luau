@@ -91,6 +91,8 @@ export type PlayerStats = {
 
 -- Réserve de bonus (gagnés en jouant, activés quand le joueur veut).
 export type Boosts = { luckPotion: number, shield: number }
+-- Réglages du joueur (menu Son), enregistrés avec ses données.
+export type PlayerSettings = { musicMuted: boolean, effectsMuted: boolean }
 
 -- Effets actifs : fin de la potion (os.time()), numéro de la nuit protégée par un Bouclier.
 export type Effects = { luckUntil: number, shieldNightId: number }
@@ -129,6 +131,7 @@ export type PlayerData = {
 	title: string?, -- clé Locale du titre affiché sous le nom ("title.index.Clay")
 	funnelSteps: { [string]: boolean }, -- étapes de l'entonnoir déjà journalisées
 	processedPurchases: { string }, -- 100 derniers PurchaseId traités (idempotence)
+	settings: PlayerSettings,
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).

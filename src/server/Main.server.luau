@@ -24,6 +24,7 @@ local orderedServices: { [number]: { name: string, module: Service } } = {
 	{ name = "LootService", module = require(Services.LootService) :: any },
 	{ name = "DigService", module = require(Services.DigService) :: any },
 	{ name = "AutoDigService", module = require(Services.AutoDigService) :: any },
+	{ name = "SettingsService", module = require(Services.SettingsService) :: any },
 	{ name = "RetentionService", module = require(Services.RetentionService) :: any },
 }
 

@@ -6,16 +6,17 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Items = require(Shared.Config.Items)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local HudLayout = require(script.Parent.Parent.HudLayout)
 local RevealGate = require(script.Parent.Parent.RevealGate)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 
 export type Kind = "Legendary" | "Secret" | "event" | "meteor" | "bloodNight"
 type Announcement = { text: string, kind: Kind }
@@ -158,12 +159,7 @@ end
 
 function AnnouncementController.init()
 	buildUi()
-	sound = Instance.new("Sound")
-	sound.Name = "Announcement"
-	sound.SoundId = UiConfig.SOUND_ANNOUNCE
-	sound.Volume = UiConfig.VOLUME_ANNOUNCE
-	sound.PlaybackSpeed = UiConfig.PITCH_ANNOUNCE
-	sound.Parent = SoundService
+	sound = AudioKit.create("Announcement", AudioConfig.ANNOUNCE)
 end
 
 function AnnouncementController.start()

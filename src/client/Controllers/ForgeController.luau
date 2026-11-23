@@ -14,6 +14,8 @@ local Shovels = require(Shared.Config.Shovels)
 local Strata = require(Shared.Config.Strata)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
@@ -317,11 +319,7 @@ end
 function ForgeController.init()
 	buildUi()
 	buyShovelRemote = Remotes.get(Remotes.Names.BuyShovel)
-	buySound = Instance.new("Sound")
-	buySound.Name = "BuyShovel"
-	buySound.SoundId = UiConfig.SOUND_REVEAL_SPECTACULAR
-	buySound.Volume = UiConfig.VOLUME_REVEAL
-	buySound.Parent = SoundService
+	buySound = AudioKit.create("BuyShovel", AudioConfig.SHOVEL_BUY)
 end
 
 function ForgeController.start()

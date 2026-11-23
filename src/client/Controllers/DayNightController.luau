@@ -7,12 +7,13 @@ local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local DayNightConfig = require(Shared.Config.DayNightConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local EventConfig = require(Shared.Config.EventConfig)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
@@ -31,7 +32,9 @@ local DayNightController = {}
 local timerPill: Frame
 local timerLabel: TextLabel
 local bell: Sound
-local nightAmbience: Sound?
+local bloodBell: Sound
+local dayMusic: Sound
+local nightMusic: Sound
 local lightingTween: Tween? = nil
 local clockTween: Tween? = nil
 local bloodTint: ColorCorrectionEffect -- teinte rouge pendant une Nuit de sang (blanche sinon)
@@ -136,6 +139,26 @@ local function updateTimer()
 	timerPill.BackgroundColor3 = if night then NIGHT_TIMER_BACKGROUND else DAY_TIMER_BACKGROUND
 end
 
+-- Musique de fond : celle de la phase, en fondu (ou tout de suite à l'arrivée du joueur).
+local function playMusic(phase: string, instant: boolean)
+	local playing = if phase == "Night" then nightMusic else dayMusic
+	local stopping = if phase == "Night" then dayMusic else nightMusic
+	local info = TweenInfo.new(if instant then 0 else AudioConfig.MUSIC_FADE_TIME)
+	local fadeOut = TweenService:Create(stopping, info, { Volume = 0 })
+	fadeOut.Completed:Connect(function()
+		if stopping.Volume == 0 then
+			stopping:Stop()
+		end
+	end)
+	fadeOut:Play()
+	if not playing.IsPlaying then
+		playing.Volume = 0
+		playing:Play()
+	end
+	local target = if phase == "Night" then AudioConfig.MUSIC_NIGHT.volume else AudioConfig.MUSIC_DAY.volume
+	TweenService:Create(playing, info, { Volume = target }):Play()
+end
+
 local function onPhaseChanged(phase: unknown)
 	local current = if phase == "Night" then "Night" else "Day"
 	applyLighting(current, false)
@@ -145,14 +168,7 @@ local function onPhaseChanged(phase: unknown)
 	else
 		HudController.showBanner(Locale.t("daynight.daybreak"), "info")
 	end
-	local ambience = nightAmbience
-	if ambience ~= nil then
-		if current == "Night" then
-			ambience:Play()
-		else
-			ambience:Stop()
-		end
-	end
+	playMusic(current, false)
 end
 
 function DayNightController.init()
@@ -167,34 +183,24 @@ function DayNightController.init()
 	clockDriver.Changed:Connect(function(value: number)
 		Lighting.ClockTime = value % 24
 	end)
-	bell = Instance.new("Sound")
-	bell.Name = "PhaseBell"
-	bell.SoundId = DayNightConfig.SOUND_PHASE_BELL
-	bell.Volume = DayNightConfig.VOLUME_PHASE_BELL
-	bell.PlaybackSpeed = DayNightConfig.PITCH_PHASE_BELL
-	bell.Parent = SoundService
-
-	-- Ambiance nocturne discrète : seulement si un son est configuré.
-	if DayNightConfig.SOUND_NIGHT_AMBIENCE ~= "" then
-		local ambience = Instance.new("Sound")
-		ambience.Name = "NightAmbience"
-		ambience.SoundId = DayNightConfig.SOUND_NIGHT_AMBIENCE
-		ambience.Volume = DayNightConfig.VOLUME_NIGHT_AMBIENCE
-		ambience.Looped = true
-		ambience.Parent = SoundService
-		nightAmbience = ambience
-	end
+	bell = AudioKit.create("PhaseBell", AudioConfig.PHASE_BELL)
+	bloodBell = AudioKit.create("BloodNightBell", AudioConfig.BLOOD_NIGHT)
+	dayMusic = AudioKit.create("DayMusic", AudioConfig.MUSIC_DAY, "music")
+	dayMusic.Looped = true
+	nightMusic = AudioKit.create("NightMusic", AudioConfig.MUSIC_NIGHT, "music")
+	nightMusic.Looped = true
 end
 
 function DayNightController.start()
 	applyLighting(getPhase(), true)
-	if getPhase() == "Night" and nightAmbience ~= nil then
-		(nightAmbience :: Sound):Play()
-	end
+	playMusic(getPhase(), true)
 	Remotes.get(Remotes.Names.PhaseChanged).OnClientEvent:Connect(onPhaseChanged)
 	-- L'attribut de la Nuit de sang peut arriver juste après PhaseChanged : on réapplique.
 	ReplicatedStorage:GetAttributeChangedSignal(EventConfig.ATTRIBUTE_BLOOD_NIGHT):Connect(function()
 		applyLighting(getPhase(), false)
+		if ReplicatedStorage:GetAttribute(EventConfig.ATTRIBUTE_BLOOD_NIGHT) == true then
+			bloodBell:Play() -- cloche grave : la Nuit de sang commence
+		end
 	end)
 	RunService.RenderStepped:Connect(updateTimer)
 end

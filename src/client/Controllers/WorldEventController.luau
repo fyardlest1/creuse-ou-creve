@@ -11,9 +11,11 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local EventConfig = require(Shared.Config.EventConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local AnnouncementController = require(script.Parent.AnnouncementController)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 
 local IMPACT_COLOR = Color3.fromRGB(255, 200, 120)
 
@@ -71,6 +73,16 @@ local function impactFlash(position: Vector3)
 	local info = TweenInfo.new(EventConfig.METEOR_IMPACT_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	TweenService:Create(flash, info, { Size = Vector3.one * EventConfig.METEOR_IMPACT_SIZE, Transparency = 1 }):Play()
 	Debris:AddItem(flash, EventConfig.METEOR_IMPACT_TIME)
+
+	-- Son 3D au point d'impact (sur un point d'attache, pour durer plus longtemps que le flash).
+	local anchor = Instance.new("Attachment")
+	anchor.Name = "MeteorImpactSound"
+	anchor.WorldPosition = position
+	anchor.Parent = Workspace.Terrain
+	local sound = AudioKit.create("MeteorImpact", AudioConfig.METEOR_IMPACT, "effects", anchor)
+	sound.RollOffMaxDistance = AudioConfig.METEOR_ROLLOFF_MAX
+	sound:Play()
+	Debris:AddItem(anchor, sound.TimeLength + 1)
 end
 
 local function spawnMeteor()

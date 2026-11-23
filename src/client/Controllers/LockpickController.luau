@@ -10,13 +10,14 @@ local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local StealConfig = require(Shared.Config.StealConfig)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local Lockpick = require(Shared.Lockpick)
@@ -52,6 +53,7 @@ local cursor: Frame
 local pips: { Frame } = {}
 local hitSound: Sound
 local missSound: Sound
+local doneSound: Sound
 local resultRemote: RemoteEvent
 local session: Session? = nil
 local rng = Random.new()
@@ -88,6 +90,7 @@ end
 -- puis envoie « réussi ». Le serveur ferme le mini-jeu en répondant.
 local function finish(current: Session)
 	current.done = true
+	doneSound:Play()
 	hintLabel.Text = Locale.t("lockpick.unlocking")
 	local waitFor = Lockpick.sendDelay(current.settings) - (os.clock() - current.startedAt)
 	task.delay(math.max(0, waitFor), function()
@@ -268,15 +271,6 @@ local function buildUi()
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 
-local function createSound(name: string, soundId: string, volume: number): Sound
-	local sound = Instance.new("Sound")
-	sound.Name = name
-	sound.SoundId = soundId
-	sound.Volume = volume
-	sound.Parent = SoundService
-	return sound
-end
-
 -- Mini-jeu ouvert (StealController masque alors le prompt « Crocheter »).
 function LockpickController.isOpen(): boolean
 	return session ~= nil
@@ -284,8 +278,9 @@ end
 
 function LockpickController.init()
 	buildUi()
-	hitSound = createSound("LockpickHit", UiConfig.SOUND_LOCKPICK_HIT, UiConfig.VOLUME_LOCKPICK)
-	missSound = createSound("LockpickMiss", UiConfig.SOUND_LOCKPICK_MISS, UiConfig.VOLUME_LOCKPICK)
+	hitSound = AudioKit.create("LockpickHit", AudioConfig.LOCKPICK_HIT)
+	missSound = AudioKit.create("LockpickMiss", AudioConfig.LOCKPICK_MISS)
+	doneSound = AudioKit.create("LockpickDone", AudioConfig.LOCKPICK_DONE)
 end
 
 function LockpickController.start()

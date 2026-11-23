@@ -12,6 +12,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local EconomyConfig = require(Shared.Config.EconomyConfig)
 local UiConfig = require(Shared.Config.UiConfig)
+local AudioConfig = require(Shared.Config.AudioConfig)
+local AudioKit = require(script.Parent.Parent.AudioKit)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local ChestController = require(script.Parent.ChestController)
@@ -126,12 +128,7 @@ end
 function MerchantController.init()
 	sellRequestRemote = Remotes.get(Remotes.Names.SellRequest)
 
-	sellSound = Instance.new("Sound")
-	sellSound.Name = "Sell"
-	sellSound.SoundId = UiConfig.SOUND_SELL
-	sellSound.PlaybackSpeed = UiConfig.PITCH_SELL
-	sellSound.Volume = UiConfig.VOLUME_SELL
-	sellSound.Parent = SoundService
+	sellSound = AudioKit.create("Sell", AudioConfig.SELL)
 
 	effectsGui = Instance.new("ScreenGui")
 	effectsGui.Name = "SellEffectsGui"
