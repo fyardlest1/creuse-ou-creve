@@ -112,7 +112,7 @@ export type DailyState = { lastClaimDay: number, calendarDay: number, firstSeenD
 
 export type QuestState = { id: string, target: number, progress: number, claimed: boolean, reward: number }
 
--- Version 6. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
+-- Version 7. La couche n'est pas stockée : elle se déduit toujours de `depth` (Strata.fromDepth).
 export type PlayerData = {
 	version: number,
 	coins: number,
@@ -135,6 +135,7 @@ export type PlayerData = {
 	processedPurchases: { string }, -- 100 derniers PurchaseId traités (idempotence)
 	settings: PlayerSettings,
 	cosmetics: CosmeticState,
+	thiefPointHintDone: boolean, -- message « premier Point de Voleur » déjà montré (une seule fois)
 }
 
 -- Vente : soit une liste d'uids, soit tout le coffre (sauf favoris).

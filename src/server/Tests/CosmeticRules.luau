@@ -105,8 +105,22 @@ end
 local function testMigration()
 	local data: any = { version = 5, inventory = {}, thiefPoints = 7, settings = {} }
 	PlayerDataService.migrate(data)
-	check("migration v5 -> v6", data.version == PlayerConfig.DATA_VERSION and data.version == 6)
+	check(
+		"migration v5 -> v6 (puis version courante)",
+		data.version == PlayerConfig.DATA_VERSION and data.cosmetics ~= nil
+	)
 	check("migration : aucun cosmétique, points gardés", #data.cosmetics.owned == 0 and data.thiefPoints == 7)
+end
+
+local function testFirstPointHint()
+	local data: any = { version = 6, inventory = {}, thiefPoints = 3, settings = {}, cosmetics = { owned = {} } }
+	PlayerDataService.migrate(data)
+	check("migration v6 -> v7", data.version == 7 and PlayerConfig.DATA_VERSION == 7)
+	check("migration : message pas encore montré", data.thiefPointHintDone == false)
+	local done: any = { version = 6, inventory = {}, thiefPointHintDone = true }
+	PlayerDataService.migrate(done)
+	check("migration : message déjà montré, gardé", done.thiefPointHintDone == true)
+	check("délai du message après le bandeau du vol", Cosmetics.HINT_DELAY > 0)
 end
 
 local function testVipLounge()
@@ -151,6 +165,7 @@ function CosmeticRules.run(): (string, number, number)
 	testBuy()
 	testEquip()
 	testMigration()
+	testFirstPointHint()
 	testVipLounge()
 	local report = string.format("[CosmeticRules] %d OK, %d échec(s)\n%s", passed, failed, table.concat(results, "\n"))
 	print(report)

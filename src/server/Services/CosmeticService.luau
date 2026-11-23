@@ -14,10 +14,12 @@ local Remotes = require(Shared.Remotes)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local DayNightService = require(script.Parent.DayNightService)
 local WorldService = require(script.Parent.WorldService)
+local GameEvents = require(script.Parent.Parent.GameEvents)
 
 local CosmeticService = {}
 
 local lastAction: { [Player]: number } = {}
+local thiefPointHintRemote: RemoteEvent
 
 local function log(message: string)
 	print("[CosmeticService] " .. message)
@@ -185,11 +187,32 @@ local function onCharacterAdded(player: Player, character: Model)
 	CosmeticService.refresh(player)
 end
 
-function CosmeticService.init() end
+-- Après un vol réussi : au premier Point de Voleur, message et flèche vers le Repaire, une seule
+-- fois (thiefPointHintDone, enregistré dans le profil dès l'envoi).
+function CosmeticService.onThiefPointEarned(player: Player)
+	local data = PlayerDataService.getData(player)
+	if data == nil or data.thiefPointHintDone or data.thiefPoints <= 0 then
+		return
+	end
+	data.thiefPointHintDone = true
+	task.delay(Cosmetics.HINT_DELAY, function()
+		if player.Parent == Players then
+			thiefPointHintRemote:FireClient(player, WorldService.getThiefShopPosition())
+			log("Message du premier Point de Voleur envoyé à " .. player.Name)
+		end
+	end)
+end
+
+function CosmeticService.init()
+	thiefPointHintRemote = Remotes.get(Remotes.Names.ThiefPointHint)
+end
 
 function CosmeticService.start()
 	Remotes.get(Remotes.Names.BuyCosmetic).OnServerEvent:Connect(onBuy)
 	Remotes.get(Remotes.Names.EquipCosmetic).OnServerEvent:Connect(onEquip)
+	GameEvents.stealSucceeded.connect(function(thief: Player)
+		CosmeticService.onThiefPointEarned(thief)
+	end)
 	PlayerDataService.onLoaded(function(player: Player)
 		player.CharacterAdded:Connect(function(character)
 			onCharacterAdded(player, character)

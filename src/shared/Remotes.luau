@@ -45,6 +45,7 @@ local Names = table.freeze({
 	SetAudioSetting = "SetAudioSetting", -- client -> serveur : kind ("music" | "effects"), muted (booléen)
 	BuyCosmetic = "BuyCosmetic", -- client -> serveur : cosmeticId (Repaire des Voleurs)
 	EquipCosmetic = "EquipCosmetic", -- client -> serveur : slot ("mask" | "bag"), cosmeticId ("" = retirer)
+	ThiefPointHint = "ThiefPointHint", -- serveur -> voleur : position du Repaire des Voleurs (1er point, une fois)
 	ItemAnnounced = "ItemAnnounced", -- serveur -> tous : finderUserId, finderName, itemId, rarity (Légendaire, Secret)
 })
 

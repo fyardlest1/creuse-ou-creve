@@ -202,6 +202,8 @@ return table.freeze({
 	["world.thiefShop"] = "🎭 Repaire des Voleurs",
 	["world.openThiefShop"] = "Voir les cosmétiques",
 	["cosmetic.title"] = "Repaire des Voleurs",
+	["cosmetic.firstPoint"] = "Tu as gagné un Point de Voleur ! Dépense-le au Repaire des Voleurs",
+	["hud.thiefShopArrow"] = "Repaire des Voleurs",
 	["cosmetic.points"] = "Points de Voleur : %s",
 	["cosmetic.hint"] = "Purement visuels, portés la nuit. Chaque vol réussi rapporte %d Point de Voleur.",
 	["cosmetic.slot.mask"] = "Masque",

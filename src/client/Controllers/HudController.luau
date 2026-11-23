@@ -791,6 +791,11 @@ function HudController.setArrowTarget(position: Vector3?, caption: string?, reac
 	arrowOverride = { position = position, caption = caption or "", reachDistance = reachDistance or 0 }
 end
 
+-- Vrai si la flèche vise encore cette position (un autre contrôleur a pu la reprendre).
+function HudController.isArrowTarget(position: Vector3): boolean
+	return arrowOverride ~= nil and arrowOverride.position == position
+end
+
 -- Bandeau d'information, utilisable par les autres contrôleurs (nuit, vol...).
 function HudController.showBanner(text: string, kind: BannerKind, long: boolean?)
 	local color = if kind == "alert" then BANNER_ALERT elseif kind == "success" then BANNER_SUCCESS else BANNER_INFO

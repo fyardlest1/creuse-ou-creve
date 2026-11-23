@@ -223,4 +223,7 @@ return table.freeze({
 	ID_MAX_LENGTH = 40,
 	ACTION_COOLDOWN = 0.3, -- secondes entre deux achats ou changements
 	SHOP_MAX_DISTANCE = 15, -- studs entre le joueur et le Repaire des Voleurs (achat)
+	-- Premier Point de Voleur : message et flèche vers le Repaire, une seule fois par joueur.
+	HINT_DELAY = 4, -- secondes après le vol, pour ne pas couvrir le bandeau « vol réussi »
+	HINT_ARROW_TIME = 120, -- secondes au plus pendant lesquelles la flèche vise le Repaire
 })

@@ -17,6 +17,7 @@ local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local UiKit = require(script.Parent.Parent.UiKit)
+local HudController = require(script.Parent.HudController)
 
 local ATTRIBUTES = { "ThiefPoints", "OwnedCosmetics", "EquippedMask", "EquippedBag" }
 
@@ -194,6 +195,27 @@ function CosmeticShopController.isOpen(): boolean
 	return window ~= nil and window.gui.Enabled
 end
 
+-- Premier Point de Voleur (envoyé une seule fois par le serveur) : message, puis flèche vers le
+-- Repaire jusqu'à ce que le joueur y arrive ou ouvre la boutique, ou au plus HINT_ARROW_TIME.
+local function onThiefPointHint(position: unknown)
+	if typeof(position) ~= "Vector3" then
+		return
+	end
+	HudController.showBanner(Locale.t("cosmetic.firstPoint"), "success", true)
+	HudController.setArrowTarget(position, Locale.t("hud.thiefShopArrow"), Cosmetics.SHOP_MAX_DISTANCE)
+	local deadline = os.clock() + Cosmetics.HINT_ARROW_TIME
+	while HudController.isArrowTarget(position) do
+		local here = getCharacterPosition()
+		local arrived = here ~= nil
+			and ((here - position) * Vector3.new(1, 0, 1)).Magnitude <= Cosmetics.SHOP_MAX_DISTANCE
+		if arrived or CosmeticShopController.isOpen() or os.clock() > deadline then
+			HudController.setArrowTarget(nil)
+			break
+		end
+		task.wait(UiConfig.COSMETIC_CLOSE_CHECK_INTERVAL)
+	end
+end
+
 function CosmeticShopController.init()
 	buyRemote = Remotes.get(Remotes.Names.BuyCosmetic)
 	equipRemote = Remotes.get(Remotes.Names.EquipCosmetic)
@@ -208,6 +230,7 @@ function CosmeticShopController.start()
 	for _, name in ATTRIBUTES do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
+	Remotes.get(Remotes.Names.ThiefPointHint).OnClientEvent:Connect(onThiefPointHint)
 end
 
 return CosmeticShopController

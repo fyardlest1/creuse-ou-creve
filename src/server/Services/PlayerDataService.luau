@@ -52,6 +52,7 @@ local TEMPLATE: Types.PlayerData = {
 	processedPurchases = {},
 	settings = { musicMuted = false, effectsMuted = false },
 	cosmetics = { owned = {} },
+	thiefPointHintDone = false,
 }
 
 local PlayerDataService = {}
@@ -151,6 +152,13 @@ local function migrateV5ToV6(data: any)
 	data.version = 6
 end
 
+-- Version 6 -> 7 : message « premier Point de Voleur » pas encore montré. Les joueurs qui ont déjà des
+-- points le verront à leur prochain vol réussi : le Repaire des Voleurs est nouveau pour eux aussi.
+local function migrateV6ToV7(data: any)
+	data.thiefPointHintDone = data.thiefPointHintDone == true
+	data.version = 7
+end
+
 -- Amène des données de n'importe quelle version à la version courante. Retourne la version d'origine.
 -- Exposée pour pouvoir la tester sur des profils fabriqués.
 function PlayerDataService.migrate(data: any): number
@@ -170,6 +178,9 @@ function PlayerDataService.migrate(data: any): number
 	end
 	if fromVersion < 6 then
 		migrateV5ToV6(data)
+	end
+	if fromVersion < 7 then
+		migrateV6ToV7(data)
 	end
 	return fromVersion
 end

@@ -202,6 +202,8 @@ return table.freeze({
 	["world.thiefShop"] = "🎭 Thieves' Den",
 	["world.openThiefShop"] = "Browse cosmetics",
 	["cosmetic.title"] = "Thieves' Den",
+	["cosmetic.firstPoint"] = "You earned a Thief Point! Spend it at the Thieves' Den",
+	["hud.thiefShopArrow"] = "Thieves' Den",
 	["cosmetic.points"] = "Thief Points: %s",
 	["cosmetic.hint"] = "Just for looks, worn at night. Each successful steal earns %d Thief Point.",
 	["cosmetic.slot.mask"] = "Mask",
