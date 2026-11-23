@@ -31,6 +31,8 @@ Nommage Rojo : `.server.luau` = Script, `.client.luau` = LocalScript, `.luau` = 
 4. **`--!strict` en tête de chaque fichier**, types explicites pour les données et les payloads réseau.
 5. **Aucune valeur magique dans la logique** : probabilités, prix, tailles et délais vont dans `src/shared/Config/`.
 6. **Mobile en priorité** : toute interaction doit marcher au toucher, et l'interface doit rester lisible sur un écran de téléphone.
+7. **Assets externes** : seulement Kenney.nl et Quaternius (CC0) et Fab (licence Standard). Aucun asset externe n'entre dans le jeu sans sa ligne dans `docs/LICENCES.md` (source, licence, fichier, usage). Les packs bruts restent dans `C:\dev\creuse-ou-creve-assets`, jamais dans le dépôt.
+8. **Aucun modèle ne doit contenir de script.** Avant d'intégrer un modèle, vérifier qu'il n'a aucun descendant `Script`, `LocalScript` ou `ModuleScript` ; s'il en a, le refuser (ne pas se contenter de supprimer les scripts sans le signaler).
 
 ## Conventions
 

@@ -97,7 +97,7 @@ Les deux événements sont annoncés à tout le serveur 10 secondes avant leur d
 
 ## 8. Sons et musique
 
-- Uniquement des sons et musiques du Creator Store sous licence Roblox, ou créés par Yardley. Aucun son tiré d'un anime ou d'une chanson connue.
+- Sources autorisées (décision du 23 novembre 2026, remplace « Creator Store ou créés par Yardley ») : Kenney.nl et Quaternius (CC0), et Fab (licence Standard), ou créés par Yardley. Chaque asset externe est noté dans `docs/LICENCES.md` avant d'entrer dans le jeu. Aucun son tiré d'un anime ou d'une chanson connue.
 - À couvrir : coup de pelle (3 variantes pour éviter la répétition), révélation par rareté, vente (caisse), achat de pelle, cloche jour et nuit, ambiance de nuit (reportée de la semaine 3), alarme de vol, éjection, crochetage réussi et raté, météorites, Nuit de sang, musique de fond calme le jour.
 - Un bouton dans les réglages pour couper la musique, et un autre pour couper les effets sonores.
 
