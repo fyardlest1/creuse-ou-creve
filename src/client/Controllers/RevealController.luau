@@ -21,6 +21,8 @@ local Mutations = require(Shared.Config.Mutations)
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
+local ItemIcon = require(script.Parent.Parent.ItemIcon)
+local RevealGate = require(script.Parent.Parent.RevealGate)
 
 local RAINBOW_COLORS = {
 	Color3.fromRGB(255, 70, 70),
@@ -227,15 +229,20 @@ local function buildUi(): CardUi
 	scale.Scale = 0
 	scale.Parent = card
 
-	local rarityLabel = createLabel("Rarity", UDim2.fromScale(0.05, 0.07), UDim2.fromScale(0.9, 0.22), card)
+	-- Icône à gauche (posée à chaque révélation), textes à droite.
+	local textLeft = UiConfig.REVEAL_TEXT_LEFT
+	local textWidth = 0.95 - textLeft
+	local rarityLabel = createLabel("Rarity", UDim2.fromScale(textLeft, 0.07), UDim2.fromScale(textWidth, 0.22), card)
 	local rarityGradient = Instance.new("UIGradient")
 	rarityGradient.Color = RAINBOW
 	rarityGradient.Enabled = false
 	rarityGradient.Parent = rarityLabel
 
-	local nameLabel = createLabel("ItemName", UDim2.fromScale(0.05, 0.31), UDim2.fromScale(0.9, 0.32), card)
-	local mutationLabel = createLabel("Mutation", UDim2.fromScale(0.05, 0.64), UDim2.fromScale(0.9, 0.16), card)
-	local valueLabel = createLabel("Value", UDim2.fromScale(0.05, 0.81), UDim2.fromScale(0.9, 0.13), card)
+	local nameLabel = createLabel("ItemName", UDim2.fromScale(textLeft, 0.31), UDim2.fromScale(textWidth, 0.32), card)
+	nameLabel.TextWrapped = true -- noms longs sur deux lignes plutôt qu'en tout petit
+	local mutationLabel =
+		createLabel("Mutation", UDim2.fromScale(textLeft, 0.64), UDim2.fromScale(textWidth, 0.16), card)
+	local valueLabel = createLabel("Value", UDim2.fromScale(textLeft, 0.81), UDim2.fromScale(textWidth, 0.13), card)
 	valueLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 
 	gui.Parent = player:WaitForChild("PlayerGui")
@@ -331,6 +338,14 @@ local function fillCard(payload: Types.RevealPayload, tier: Tier)
 	ui.rarityLabel.TextColor3 = if rainbow then WHITE else rarity.color
 	ui.rarityGradient.Enabled = rainbow
 	ui.nameLabel.Text = Locale.item(payload.itemId)
+	local oldIcon = ui.card:FindFirstChild("Icon")
+	if oldIcon ~= nil then
+		oldIcon:Destroy()
+	end
+	local icon = ItemIcon.create(payload.itemId, rarity.color, ui.card)
+	icon.AnchorPoint = Vector2.new(0, 0.5)
+	icon.Position = UDim2.fromScale(UiConfig.REVEAL_ICON_LEFT, 0.5)
+	icon.Size = UDim2.fromScale(UiConfig.REVEAL_ICON_HEIGHT, UiConfig.REVEAL_ICON_HEIGHT)
 	ui.stroke.Color = if mutation ~= nil then mutation.color else rarity.color
 	ui.stroke.Thickness = if spectacular then STROKE_THICKNESS_SPECTACULAR else STROKE_THICKNESS
 	ui.strokeGradient.Enabled = rainbow or payload.mutation == "Rainbow"
@@ -395,6 +410,7 @@ local function showReveal(payload: Types.RevealPayload)
 	local holdTime = if spectacular then UiConfig.REVEAL_SPECTACULAR_HOLD_TIME else UiConfig.REVEAL_HOLD_TIME
 	if spectacular then
 		spectacularUntil = now + freeze + UiConfig.REVEAL_APPEAR_TIME + holdTime + UiConfig.REVEAL_FADE_TIME
+		RevealGate.holdUntil(spectacularUntil) -- les annonces serveur attendent la fin de la carte
 	end
 
 	fillCard(payload, tier)

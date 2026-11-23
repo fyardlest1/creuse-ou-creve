@@ -28,6 +28,7 @@ export type ItemDef = {
 	name: string,
 	rarity: RarityId,
 	layer: number,
+	icon: string?, -- image de l'objet, "rbxassetid://<nombre>" ; absente : repli (initiale sur la couleur de rareté)
 }
 
 export type ShovelId = "Wood" | "Iron" | "Steel"

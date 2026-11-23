@@ -9,6 +9,9 @@ local UiConfig = {
 	REVEAL_FADE_TIME = 0.3,
 	REVEAL_SPECTACULAR_SCALE = 1.35, -- carte plus grande pour Légendaire et Secret
 	REVEAL_SPECTACULAR_HOLD_TIME = 2.5,
+	REVEAL_ICON_LEFT = 0.04, -- icône de la carte de révélation : bord gauche, en fraction de la largeur
+	REVEAL_ICON_HEIGHT = 0.74, -- côté de l'icône, en fraction de la hauteur de la carte
+	REVEAL_TEXT_LEFT = 0.38, -- les textes commencent à droite de l'icône (fraction de la largeur)
 	REVEAL_FLASH_TIME = 0.6,
 	RAINBOW_SPIN_SPEED = 180, -- degrés par seconde pour le dégradé arc-en-ciel
 
@@ -97,14 +100,20 @@ local UiConfig = {
 	-- Coffre (grille de cartes)
 	CHEST_PANEL_MAX_SIZE = Vector2.new(760, 560), -- pixels
 	TOUCH_TARGET_MIN = 44, -- pixels : taille minimale d'une zone tactile (recommandation mobile)
-	CHEST_CARD_SIZE = Vector2.new(150, 175), -- pixels
-	CHEST_CARD_SIZE_COMPACT = Vector2.new(140, 165), -- pixels, écrans bas (téléphone en paysage)
+	CHEST_CARD_SIZE = Vector2.new(150, 190), -- pixels
+	CHEST_CARD_SIZE_COMPACT = Vector2.new(140, 180), -- pixels, écrans bas (téléphone en paysage)
+	CHEST_CARD_ICON_SIZE = 52, -- pixels : côté maximal de l'icône, à gauche du nom
+	CHEST_CARD_ICON_GAP = 4, -- pixels entre l'icône et le nom
 	CHEST_CARD_LINE_HEIGHT = 20, -- pixels : rareté, valeur
 	CHEST_CARD_NAME_MAX_TEXT = 20, -- taille de texte maximale du nom, pour des cartes homogènes
 	CHEST_CARD_BADGE_HEIGHT = 16, -- pixels : badge de mutation
 	CHEST_CARD_GAP = 4, -- pixels entre la valeur et le bouton "Vendre"
 	CHEST_CARD_STAR_INSET = 6, -- pixels : l'étoile déborde un peu dans le coin de la carte
 	CHEST_CARD_STAR_PADDING = 7, -- pixels : marge du symbole dans sa zone tactile
+	-- Icônes des objets (repli : carré teinté de la rareté, avec l'initiale du nom)
+	ITEM_ICON_BACKGROUND_TRANSPARENCY = 0.65,
+	ITEM_ICON_CORNER = 0.22, -- arrondi, en fraction du côté
+	ITEM_ICON_LETTER_SCALE = 0.62, -- taille de l'initiale du repli, en fraction du côté
 	COMPACT_SCREEN_HEIGHT = 500, -- pixels : en dessous, interface compacte
 	PANEL_SIZE_SCALE = Vector2.new(0.92, 0.94), -- fenêtres coffre et Forge, fraction de l'écran
 	CHEST_CARD_PADDING = 8,

@@ -30,16 +30,20 @@ Aucun nom, personnage, objet, logo, musique ou visuel reconnaissable d'une licen
 
 **Révélation des objets, selon la rareté :**
 
-| Rareté | Effet |
-|---|---|
-| Commun, Peu commun, Rare | Carte actuelle, inchangée. |
-| Épique | Carte plus grande, halo violet, son plus fort. |
-| Légendaire | Écran qui se fige 0,3 s, lignes de vitesse façon anime, flash doré, gros son d'impact, petite secousse de caméra. |
-| Secret | Tout ce qui précède en arc-en-ciel, plus une aura qui monte autour du personnage pendant 3 s, visible par tous les joueurs proches, et une musique courte de victoire. |
+| Rareté                   | Effet                                                                                                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commun, Peu commun, Rare | Carte actuelle, inchangée.                                                                                                                                             |
+| Épique                   | Carte plus grande, halo violet, son plus fort.                                                                                                                         |
+| Légendaire               | Écran qui se fige 0,3 s, lignes de vitesse façon anime, flash doré, gros son d'impact, petite secousse de caméra.                                                      |
+| Secret                   | Tout ce qui précède en arc-en-ciel, plus une aura qui monte autour du personnage pendant 3 s, visible par tous les joueurs proches, et une musique courte de victoire. |
 
 Les effets doivent rester lisibles en 1 seconde sur un écran de téléphone : c'est ce qui sera filmé.
 
 **Annonces serveur :** Légendaire et Secret sont annoncés à tout le serveur ("Yardley a trouvé un SECRET : Œuf du Dragon Céleste !"), avec un son distinct. Les annonces existantes de la semaine 2 sont harmonisées avec ce style.
+
+**Annonce et carte de révélation (retour du test sur téléphone Android) :** chez le joueur qui trouve un Légendaire ou un Secret, l'annonce serveur ne doit jamais s'afficher en même temps que sa carte de révélation, qui passe devant et coupe le texte. L'annonce attend la fin de la carte (disparition comprise). Si une révélation Légendaire ou Secret commence pendant qu'une annonce est affichée (celle d'un autre joueur), l'annonce se met en pause, puis reprend pour le temps qui lui restait.
+
+**Icônes des objets (décision) :** chaque objet a une icône, affichée sur la carte de révélation et sur les cartes du coffre et du Marchand. Elle se déclare dans le champ `icon` de `Items.luau` (`"rbxassetid://<nombre>"`). Tant qu'une icône manque, ou si l'image ne se charge pas, le jeu affiche un repli propre : un carré arrondi à la couleur de la rareté, avec l'initiale du nom de l'objet dans la langue du joueur. Les icônes des Légendaires et des Secrets sont créées en premier. Elles respectent la règle de la section 2 : aucune ne doit rappeler un objet ou un personnage d'une licence existante.
 
 **Aura de collectionneur :** tant qu'un joueur a au moins un Secret dans son coffre, une aura arc-en-ciel discrète l'entoure en permanence. C'est un statut visible de loin, et une cible évidente la nuit. Elle disparaît si le Secret est vendu.
 
@@ -47,18 +51,26 @@ Les effets doivent rester lisibles en 1 seconde sur un écran de téléphone : c
 
 À ajouter dans `Items.luau`, avec la même structure que les objets existants :
 
-| Objet | Rareté | Couche |
-|---|---|---|
-| Bandeau de Ninja Rouillé | Commun | Terre |
-| Boussole du Capitaine Perdu | Peu commun | Terre |
-| Carte au Trésor Déchirée | Rare | Argile |
-| Katana Fantôme | Épique | Argile |
-| Masque d'Oni Fendu | Épique | Roche |
-| Ancre du Navire Englouti | Légendaire | Roche |
-| Orbe d'Énergie Céleste | Légendaire | Roche |
-| Œuf du Dragon Céleste | Secret | Roche |
+| Objet                       | Anglais                | Rareté     | Couche |
+| --------------------------- | ---------------------- | ---------- | ------ |
+| Masque de Ninja Rouillé     | Rusty Ninja Mask       | Commun     | Terre  |
+| Boussole du Capitaine Perdu | Lost Captain's Compass | Peu commun | Terre  |
+| Carte de Pirate Délavée     | Faded Pirate Map       | Rare       | Argile |
+| Katana Fantôme              | Ghost Katana           | Épique     | Argile |
+| Masque d'Oni Fendu          | Cracked Oni Mask       | Épique     | Roche  |
+| Ancre du Navire Englouti    | Sunken Ship's Anchor   | Légendaire | Roche  |
+| Perle Céleste               | Celestial Pearl        | Légendaire | Roche  |
+| Œuf du Dragon Céleste       | Celestial Dragon Egg   | Secret     | Roche  |
 
 L'Index de collection les intègre automatiquement. Vérifier que la probabilité de chaque rareté ne change pas : on ajoute des objets dans chaque rareté, on ne change pas les poids.
+
+**Décisions prises pendant l'implémentation (Yardley, 21 novembre 2026) :**
+
+- **Carte de Pirate Délavée** remplace « Carte au Trésor Déchirée » : cet objet existait déjà (Rare, Roche). Le déplacer dans l'Argile aurait laissé la Roche avec un seul Rare, alors que chaque couche doit en avoir au moins 2.
+- **Masque de Ninja Rouillé** remplace « Bandeau de Ninja Rouillé » (règle de la section 2) : le bandeau frontal à plaque de métal est le signe le plus reconnaissable de Naruto.
+- **Perle Céleste** remplace « Orbe d'Énergie Céleste » (section 2) : un orbe d'énergie à côté d'un œuf de dragon pouvait rappeler Dragon Ball. La perle tenue par un dragon vient du folklore asiatique, pas d'une œuvre précise.
+- **Renommage d'un objet existant :** « Crochet du Capitaine » (Épique, Roche) devient **Crochet de Pirate** (EN : Pirate's Hook), car il évoquait directement le Capitaine Crochet de Peter Pan, dont le visuel appartient à Disney. Seul le nom affiché change : l'identifiant `captain_hook` reste le même, donc les coffres des joueurs ne bougent pas.
+- Les visuels de ces objets (icônes, miniatures) ne doivent pas non plus rappeler une œuvre : pas de plaque gravée sur le masque de ninja, pas de boules à étoiles près de la perle.
 
 ## 5. Pelles et creusage
 

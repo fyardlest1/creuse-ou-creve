@@ -18,6 +18,7 @@ local UiConfig = require(Shared.Config.UiConfig)
 local WorldConfig = require(Shared.Config.WorldConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
+local ItemIcon = require(script.Parent.Parent.ItemIcon)
 
 export type ChestMode = "view" | "sell"
 export type SellCallbacks = {
@@ -198,12 +199,24 @@ local function createCard(item: Types.ItemInstance, order: number): Frame
 		addCorner(badge, 0.5)
 	end
 
-	-- Le nom commence sous l'étoile, pour ne jamais la chevaucher.
+	-- Le nom commence sous l'étoile, pour ne jamais la chevaucher ; l'icône est à sa gauche, centrée
+	-- dans la même zone.
 	local nameTop = touch - UiConfig.CHEST_CARD_STAR_INSET
-	local nameLabel = createLabel("ItemName", if itemDef ~= nil then Locale.item(item.itemId) else item.itemId, card)
-	nameLabel.Position = UDim2.fromOffset(0, nameTop)
 	local stolenReserved = if item.stolenFrom ~= nil then line else 0
-	nameLabel.Size = UDim2.new(1, 0, 1, -(nameTop + line + stolenReserved + bottomReserved + 2))
+	local belowName = line + stolenReserved + bottomReserved + 2
+	local iconSize = UiConfig.CHEST_CARD_ICON_SIZE
+	local icon = ItemIcon.create(item.itemId, rarityColor, card)
+	icon.AnchorPoint = Vector2.new(0, 0.5)
+	icon.Position = UDim2.new(0, 0, 0.5, (nameTop - belowName) / 2)
+	icon.Size = UDim2.new(0, iconSize, 1, -(nameTop + belowName))
+	local iconLimit = Instance.new("UISizeConstraint")
+	iconLimit.MaxSize = Vector2.new(iconSize, iconSize)
+	iconLimit.Parent = icon
+
+	local nameLeft = iconSize + UiConfig.CHEST_CARD_ICON_GAP
+	local nameLabel = createLabel("ItemName", if itemDef ~= nil then Locale.item(item.itemId) else item.itemId, card)
+	nameLabel.Position = UDim2.fromOffset(nameLeft, nameTop)
+	nameLabel.Size = UDim2.new(1, -nameLeft, 1, -(nameTop + belowName))
 	nameLabel.TextWrapped = true
 	local nameLimit = Instance.new("UITextSizeConstraint")
 	nameLimit.MaxTextSize = UiConfig.CHEST_CARD_NAME_MAX_TEXT

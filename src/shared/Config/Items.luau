@@ -2,6 +2,9 @@
 -- Objets à déterrer, par couche. Chaque couche a au moins 2 objets de chaque rareté.
 -- Noms en français (langue source) ; l'anglais est dans src/shared/Locale/en.luau ("item.<id>").
 -- Semaine 5 : objets originaux d'inspiration anime (codes du genre, jamais une œuvre précise).
+-- icon (facultatif) : image affichée sur la carte de révélation et les cartes du coffre et du Marchand,
+-- au format "rbxassetid://<nombre>". Exemple : { id = "dragon_bone", ..., icon = "rbxassetid://123" }.
+-- Tant qu'elle manque, le jeu affiche l'initiale du nom sur la couleur de la rareté.
 
 local Types = require(script.Parent.Parent.Types)
 
@@ -61,6 +64,10 @@ local list: { Types.ItemDef } = {
 local byId: { [string]: Types.ItemDef } = {}
 for _, item in list do
 	assert(byId[item.id] == nil, "[Items] Identifiant en double : " .. item.id)
+	assert(
+		item.icon == nil or string.match(item.icon, "^rbxassetid://%d+$") ~= nil,
+		"[Items] Icône mal formée (attendu rbxassetid://<nombre>) : " .. item.id
+	)
 	byId[item.id] = table.freeze(item)
 end
 

@@ -151,6 +151,22 @@ local function testNewItemsRollable()
 	end
 end
 
+local function testIcons()
+	section("Icônes des objets")
+	local malformed = {}
+	local missing = {}
+	for _, item in Items.list do
+		if item.icon == nil then
+			table.insert(missing, item.id)
+		elseif string.match(item.icon, "^rbxassetid://%d+$") == nil then
+			table.insert(malformed, item.id)
+		end
+	end
+	check("icônes au format rbxassetid://<nombre>", #malformed == 0, table.concat(malformed, ", "))
+	-- Information seulement : le jeu affiche un repli tant qu'une icône manque.
+	table.insert(results, string.format("  (info) %d objets sans icône encore", #missing))
+end
+
 function ItemRules.run(): (string, number, number)
 	results = {}
 	passed = 0
@@ -160,6 +176,7 @@ function ItemRules.run(): (string, number, number)
 	testLayerCoverage()
 	testRolledDistribution()
 	testNewItemsRollable()
+	testIcons()
 	local report =
 		string.format("[ItemRules] %d réussis, %d échoués\n%s", passed, failed, table.concat(results, "\n"))
 	print(report)

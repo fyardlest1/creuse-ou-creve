@@ -15,6 +15,7 @@ local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local HudLayout = require(script.Parent.Parent.HudLayout)
+local RevealGate = require(script.Parent.Parent.RevealGate)
 
 type Kind = "Legendary" | "Secret" | "event"
 type Announcement = { text: string, kind: Kind }
@@ -29,10 +30,6 @@ local RAINBOW = ColorSequence.new({
 })
 local WHITE = Color3.new(1, 1, 1)
 local MAX_QUEUE = 5 -- au-delà, les plus anciennes sont abandonnées (serveur très actif)
--- Durée de la révélation spectaculaire (RevealController) : arrêt sur image, apparition, maintien.
-local REVEAL_TOTAL_TIME = UiConfig.REVEAL_FREEZE_TIME
-	+ UiConfig.REVEAL_APPEAR_TIME
-	+ UiConfig.REVEAL_SPECTACULAR_HOLD_TIME
 
 local player = Players.LocalPlayer
 
@@ -104,6 +101,8 @@ local function colorFor(kind: Kind): Color3
 end
 
 local function display(announcement: Announcement)
+	-- Une révélation Légendaire ou Secret passe devant l'annonce : on attend qu'elle soit terminée.
+	RevealGate.waitUntilFree()
 	label.Text = announcement.text
 	banner.BackgroundColor3 = colorFor(announcement.kind)
 	gradient.Enabled = announcement.kind == "Secret"
@@ -112,7 +111,17 @@ local function display(announcement: Announcement)
 	label.TextStrokeTransparency = 0.2
 	banner.Visible = true
 	sound:Play()
-	task.wait(UiConfig.ANNOUNCE_TIME)
+	-- Si une révélation commence pendant l'annonce, celle-ci se met en pause (masquée), puis reprend
+	-- pour le temps qui lui restait.
+	local remaining = UiConfig.ANNOUNCE_TIME
+	while remaining > 0 do
+		if RevealGate.isBusy() then
+			banner.Visible = false
+			RevealGate.waitUntilFree()
+			banner.Visible = true
+		end
+		remaining -= task.wait()
+	end
 	local fade = TweenInfo.new(UiConfig.ANNOUNCE_FADE_TIME)
 	TweenService:Create(banner, fade, { BackgroundTransparency = 1 }):Play()
 	local textFade = TweenService:Create(label, fade, { TextTransparency = 1, TextStrokeTransparency = 1 })
@@ -154,20 +163,15 @@ end
 
 function AnnouncementController.start()
 	Remotes.get(Remotes.Names.ItemAnnounced).OnClientEvent
-		:Connect(function(finderUserId: unknown, finderName: unknown, itemId: unknown, rarity: unknown)
+		:Connect(function(_finderUserId: unknown, finderName: unknown, itemId: unknown, rarity: unknown)
 			if typeof(finderName) ~= "string" or typeof(itemId) ~= "string" or Items.byId[itemId] == nil then
 				return
 			end
 			if rarity ~= "Legendary" and rarity ~= "Secret" then
 				return
 			end
-			local text = Locale.t("announce." .. rarity, finderName, Locale.item(itemId))
-			if finderUserId == player.UserId then
-				-- Le joueur qui a trouvé l'objet voit d'abord sa carte, qui cacherait l'annonce.
-				task.delay(REVEAL_TOTAL_TIME, announce, text, rarity :: Kind)
-			else
-				announce(text, rarity :: Kind)
-			end
+			-- Chez le joueur qui a trouvé l'objet, sa carte arrive juste avant : l'annonce l'attend (RevealGate).
+			announce(Locale.t("announce." .. rarity, finderName, Locale.item(itemId)), rarity :: Kind)
 		end)
 	-- Événement chance (semaine 4), harmonisé avec les annonces de trouvailles.
 	Remotes.get(Remotes.Names.LuckEventStarted).OnClientEvent:Connect(function(buyerName: unknown)
