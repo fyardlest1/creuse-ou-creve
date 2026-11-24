@@ -73,7 +73,7 @@ local UiConfig = {
 	SWING_RECOVER_TIME = 0.1,
 	-- Animation de creusage publiée par le propriétaire du jeu (plan semaine 5, section 5). Vide, ou
 	-- animation qui ne charge pas : le geste procédural ci-dessus sert de repli.
-	DIG_ANIMATION_ID = "", -- "rbxassetid://<nombre>"
+	DIG_ANIMATION_ID = "rbxassetid://114648799045635", -- CoC_Dig, publiée par Yardley
 	DIG_ANIMATION_IMPACT_TIME = 0.14, -- secondes : la lame touche la case (particules, son)
 	DIG_ANIMATION_LOAD_TIMEOUT = 3, -- secondes pour charger l'animation avant de passer au repli
 

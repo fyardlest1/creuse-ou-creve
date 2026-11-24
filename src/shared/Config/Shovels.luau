@@ -74,7 +74,9 @@ local MODEL = table.freeze({
 	MESH_HAND_FROM_TOP = 0.15,
 	-- Prise par rapport à la main (décalage dans la paume, pente vers le sol) ; le modèle est ensuite
 	-- avancé pour que la poignée soit dans la main.
-	MESH_GRIP = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-20), 0, 0),
+	-- -26° : à l'impact de l'animation CoC_Dig (0,14 s), la lame entre juste dans la case ; au repos,
+	-- elle reste au-dessus du sol.
+	MESH_GRIP = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-26), 0, 0),
 	-- Le modèle importé est debout (lame en bas, -Y) : on le couche vers l'avant (-Z), lame à plat.
 	MESH_ROTATION = CFrame.Angles(math.rad(90), 0, 0),
 })
