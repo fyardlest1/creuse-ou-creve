@@ -22,9 +22,10 @@ local DayNightConfig = {
 	}),
 	NIGHT_LIGHTING = table.freeze({
 		ClockTime = 19.6, -- crépuscule tardif : ciel bleu sombre (à 0 h le ciel est noir)
-		Brightness = 1.5,
-		Ambient = Color3.fromRGB(110, 120, 175), -- sombre et bleuté, jamais noir
-		OutdoorAmbient = Color3.fromRGB(105, 115, 175),
+		-- Éclaircie en semaine 5 après le test sur téléphone (avant : 1,5 ; 110/120/175 ; 105/115/175).
+		Brightness = 2,
+		Ambient = Color3.fromRGB(135, 145, 195), -- bleuté, on voit son personnage
+		OutdoorAmbient = Color3.fromRGB(130, 140, 195),
 	}),
 
 	-- Lanterne près de chaque coffre, allumée la nuit
