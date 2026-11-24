@@ -222,9 +222,12 @@ local function updateBlink()
 	for _, view in chests do
 		local picked = view.body.Parent ~= nil
 			and (view.body.Parent :: Instance):GetAttribute(WorldConfig.ATTRIBUTE_BEING_PICKED) == true
-		view.highlight.Enabled = picked
-		if picked then
-			view.highlight.FillTransparency = if on then 0.3 else 0.85
+		if view.highlight.Enabled ~= picked then
+			view.highlight.Enabled = picked
+		end
+		local transparency = if on then 0.3 else 0.85
+		if picked and view.highlight.FillTransparency ~= transparency then
+			view.highlight.FillTransparency = transparency
 		end
 	end
 end

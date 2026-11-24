@@ -302,12 +302,22 @@ local function buildProtection(gui: ScreenGui)
 	protectionLabel.Parent = protectionPill
 end
 
+-- Minutes de protection affichées : le texte n'est refait que quand elles changent.
+local shownProtectionMinutes = -1
+
 local function updateProtection()
 	local protectedUntil = player:GetAttribute("ProtectedUntil")
 	local remaining = if typeof(protectedUntil) == "number" then protectedUntil - Workspace:GetServerTimeNow() else 0
-	protectionPill.Visible = remaining > 0
-	if remaining > 0 then
-		protectionLabel.Text = Locale.t("hud.protected", math.ceil(remaining / 60))
+	local visible = remaining > 0
+	if protectionPill.Visible ~= visible then
+		protectionPill.Visible = visible
+	end
+	local minutes = if visible then math.ceil(remaining / 60) else -1
+	if minutes ~= shownProtectionMinutes then
+		shownProtectionMinutes = minutes
+		if visible then
+			protectionLabel.Text = Locale.t("hud.protected", minutes)
+		end
 	end
 end
 
@@ -755,7 +765,10 @@ local function updateMerchantArrow()
 	end
 	local target = if override ~= nil then override.position else merchantPosition
 	local reach = if override ~= nil then override.reachDistance else EconomyConfig.MERCHANT_MAX_DISTANCE
-	arrowCaption.Text = if override ~= nil then override.caption else Locale.t("hud.merchantArrow")
+	local caption = if override ~= nil then override.caption else Locale.t("hud.merchantArrow")
+	if arrowCaption.Text ~= caption then
+		arrowCaption.Text = caption
+	end
 	if target == nil then
 		arrowFrame.Visible = false
 		return

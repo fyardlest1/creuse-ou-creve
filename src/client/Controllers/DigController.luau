@@ -22,6 +22,7 @@ local AudioConfig = require(Shared.Config.AudioConfig)
 local AudioKit = require(script.Parent.Parent.AudioKit)
 local Remotes = require(Shared.Remotes)
 local ShovelController = require(script.Parent.ShovelController)
+local QualityController = require(script.Parent.QualityController)
 
 local RAY_LENGTH = 1000
 
@@ -130,7 +131,7 @@ local function emitDirt(cell: BasePart, count: number)
 	emitter.Parent = attachment
 
 	attachment.Parent = cell
-	emitter:Emit(count)
+	emitter:Emit(QualityController.count(count))
 	Debris:AddItem(attachment, UiConfig.EFFECT_LIFETIME)
 end
 

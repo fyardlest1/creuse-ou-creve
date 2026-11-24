@@ -11,11 +11,13 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local EventConfig = require(Shared.Config.EventConfig)
+local UiConfig = require(Shared.Config.UiConfig)
 local AudioConfig = require(Shared.Config.AudioConfig)
 local Remotes = require(Shared.Remotes)
 local Locale = require(Shared.Locale)
 local AnnouncementController = require(script.Parent.AnnouncementController)
 local AudioKit = require(script.Parent.Parent.AudioKit)
+local QualityController = require(script.Parent.QualityController)
 
 local IMPACT_COLOR = Color3.fromRGB(255, 200, 120)
 
@@ -86,7 +88,9 @@ local function impactFlash(position: Vector3)
 end
 
 local function spawnMeteor()
-	if active >= EventConfig.METEOR_MAX_ACTIVE then
+	-- Moins de météorites à la fois si le téléphone peine ; la lumière et le feu sont les plus coûteux.
+	local full = QualityController.scale() >= 1
+	if active >= QualityController.count(EventConfig.METEOR_MAX_ACTIVE) then
 		return
 	end
 	local target = randomImpactPoint()
@@ -109,14 +113,18 @@ local function spawnMeteor()
 	meteor.CanTouch = false
 	meteor.CastShadow = false
 	meteor.Position = start
-	local light = Instance.new("PointLight")
-	light.Color = EventConfig.METEOR_COLOR
-	light.Range = EventConfig.METEOR_LIGHT_RANGE
-	light.Parent = meteor
-	local fire = Instance.new("Fire")
-	fire.Size = EventConfig.METEOR_SIZE * 2
-	fire.Heat = 0 -- la traînée suit la chute, sans monter
-	fire.Parent = meteor
+	if full then
+		local light = Instance.new("PointLight")
+		light.Color = EventConfig.METEOR_COLOR
+		light.Range = EventConfig.METEOR_LIGHT_RANGE
+		light.Parent = meteor
+	end
+	if QualityController.scale() >= UiConfig.EFFECTS_LEVELS[2] then
+		local fire = Instance.new("Fire")
+		fire.Size = EventConfig.METEOR_SIZE * 2
+		fire.Heat = 0 -- la traînée suit la chute, sans monter
+		fire.Parent = meteor
+	end
 	meteor.Parent = effectsFolder
 	active += 1
 

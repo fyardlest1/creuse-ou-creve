@@ -98,6 +98,15 @@ local UiConfig = {
 	DIRT_COLOR = Color3.fromRGB(110, 75, 45),
 	EFFECT_LIFETIME = 1.5, -- secondes avant de nettoyer les émetteurs
 
+	-- Qualité des effets (plan semaine 5, section 12) : particules, auras et météorites réduites
+	-- automatiquement quand les images par seconde baissent (QualityController).
+	EFFECTS_LEVELS = { 1, 0.5, 0.25 }, -- part des effets gardée : complet, réduit, minimal
+	EFFECTS_SAMPLE_TIME = 1, -- secondes par mesure des images par seconde
+	EFFECTS_LOW_FPS = 30, -- en dessous : on descend d'un niveau...
+	EFFECTS_DOWNGRADE_SAMPLES = 2, -- ... après ce nombre de mesures de suite
+	EFFECTS_HIGH_FPS = 50, -- au-dessus : on remonte d'un niveau...
+	EFFECTS_UPGRADE_SAMPLES = 10, -- ... après ce nombre de mesures de suite (remonter prudemment)
+
 	-- Caméra tournée vers la parcelle à l'apparition
 	CAMERA_DISTANCE = 14, -- studs derrière le personnage
 	CAMERA_HEIGHT = 9, -- studs au-dessus du personnage

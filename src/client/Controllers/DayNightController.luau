@@ -131,9 +131,17 @@ local function buildTimer()
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 
+-- Dernier affichage du minuteur : le texte n'est refait que quand la seconde ou la phase change.
+local shownRemaining = -1
+local shownNight: boolean? = nil
+
 local function updateTimer()
 	local remaining = math.max(0, math.ceil(getEndsAt() - Workspace:GetServerTimeNow()))
 	local night = getPhase() == "Night"
+	if remaining == shownRemaining and night == shownNight then
+		return
+	end
+	shownRemaining, shownNight = remaining, night
 	timerLabel.Text =
 		Locale.t(if night then "daynight.untilDay" else "daynight.untilNight", remaining // 60, remaining % 60)
 	timerPill.BackgroundColor3 = if night then NIGHT_TIMER_BACKGROUND else DAY_TIMER_BACKGROUND

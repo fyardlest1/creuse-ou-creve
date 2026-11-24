@@ -14,6 +14,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local UiConfig = require(Shared.Config.UiConfig)
 local Remotes = require(Shared.Remotes)
+local QualityController = require(script.Parent.QualityController)
 
 local RAINBOW = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
@@ -54,7 +55,8 @@ local function createEmitter(
 	emitter.Texture = UiConfig.AURA_TEXTURE
 	emitter.Color = RAINBOW
 	emitter.LightEmission = 1
-	emitter.Rate = rate
+	emitter.Rate = rate * QualityController.scale() -- moins de particules si le téléphone peine
+	emitter:SetAttribute("FullRate", rate)
 	emitter.Lifetime = NumberRange.new(lifetime * 0.8, lifetime)
 	emitter.Speed = NumberRange.new(speed * 0.6, speed)
 	emitter.SpreadAngle = Vector2.new(25, 25)
@@ -115,7 +117,7 @@ local function refreshCollectors()
 	table.sort(candidates, function(a, b)
 		return a.distance < b.distance
 	end)
-	for index = 1, math.min(#candidates, UiConfig.COLLECTOR_AURA_MAX_COUNT) do
+	for index = 1, math.min(#candidates, QualityController.count(UiConfig.COLLECTOR_AURA_MAX_COUNT)) do
 		wanted[candidates[index].root] = true
 	end
 	for _, other in Players:GetPlayers() do
@@ -147,6 +149,18 @@ function AuraController.start()
 				burst(finderUserId)
 			end
 		end)
+	-- Niveau d'effets changé : les auras de collectionneur déjà affichées suivent.
+	QualityController.onChanged(function(scale: number)
+		for _, other in Players:GetPlayers() do
+			local root = getRoot(other)
+			local attachment = if root ~= nil then root:FindFirstChild(COLLECTOR_NAME) else nil
+			local emitter = if attachment ~= nil then attachment:FindFirstChildOfClass("ParticleEmitter") else nil
+			local fullRate = if emitter ~= nil then emitter:GetAttribute("FullRate") else nil
+			if emitter ~= nil and typeof(fullRate) == "number" then
+				emitter.Rate = fullRate * scale
+			end
+		end
+	end)
 	task.spawn(function()
 		while true do
 			refreshCollectors()

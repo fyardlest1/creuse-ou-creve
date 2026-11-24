@@ -9,6 +9,7 @@ type Controller = {
 local Controllers = script.Parent:WaitForChild("Controllers")
 
 local orderedControllers: { [number]: { name: string, module: Controller } } = {
+	{ name = "QualityController", module = require(Controllers:WaitForChild("QualityController")) :: any },
 	{ name = "LocaleController", module = require(Controllers:WaitForChild("LocaleController")) :: any },
 	{ name = "PromoCodeController", module = require(Controllers:WaitForChild("PromoCodeController")) :: any },
 	{
