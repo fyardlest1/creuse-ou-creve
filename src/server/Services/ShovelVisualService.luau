@@ -140,7 +140,9 @@ local function buildMeshShovel(shovel: Types.ShovelDef, hand: BasePart, template
 	if length > 0 then
 		model:ScaleTo(model:GetScale() * Shovels.MODEL.MESH_LENGTH / length)
 	end
-	model:PivotTo(hand.CFrame * Shovels.MODEL.MESH_GRIP * Shovels.MODEL.MESH_ROTATION)
+	-- Le centre est avancé d'une demi-longueur, moins la distance poignée-haut : la main tient le D.
+	local forward = Shovels.MODEL.MESH_LENGTH / 2 - Shovels.MODEL.MESH_HAND_FROM_TOP
+	model:PivotTo(hand.CFrame * Shovels.MODEL.MESH_GRIP * CFrame.new(0, 0, -forward) * Shovels.MODEL.MESH_ROTATION)
 	for _, descendant in model:GetDescendants() do
 		if descendant:IsA("BasePart") then
 			local joint = Instance.new("WeldConstraint")

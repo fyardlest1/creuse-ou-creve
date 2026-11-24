@@ -47,9 +47,9 @@ local list: { Types.ShovelDef } = {
 		appearance = {
 			handleColor = HANDLE_WOOD,
 			handleMaterial = Enum.Material.Wood,
-			bladeColor = Color3.fromRGB(215, 220, 230), -- argenté
+			bladeColor = Color3.fromRGB(140, 150, 163), -- gris acier bleuté, plus clair que le fer
 			bladeMaterial = Enum.Material.Metal,
-			bladeReflectance = 0.25, -- brille légèrement
+			bladeReflectance = 0.35, -- reflet métallique
 		},
 	},
 }
@@ -69,9 +69,12 @@ local MODEL = table.freeze({
 	-- Modèle absent ou refusé : les Parts ci-dessus servent de repli.
 	MESH_FOLDER = "ShovelModels",
 	MESH_PREFIX = "CoC_Shovel_",
-	MESH_LENGTH = 5, -- studs, du haut du manche au bout de la lame (comme la version en Parts)
-	-- Centre du modèle par rapport à la main : même prise que la version en Parts.
-	MESH_GRIP = CFrame.new(0, -0.15, -1.6) * CFrame.Angles(math.rad(-20), 0, 0),
+	MESH_LENGTH = 4.5, -- studs, du haut de la poignée en D au bout de la lame
+	-- La main tient la barre de la poignée en D : distance (studs) entre le haut du modèle et la main.
+	MESH_HAND_FROM_TOP = 0.15,
+	-- Prise par rapport à la main (décalage dans la paume, pente vers le sol) ; le modèle est ensuite
+	-- avancé pour que la poignée soit dans la main.
+	MESH_GRIP = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-20), 0, 0),
 	-- Le modèle importé est debout (lame en bas, -Y) : on le couche vers l'avant (-Z), lame à plat.
 	MESH_ROTATION = CFrame.Angles(math.rad(90), 0, 0),
 })
