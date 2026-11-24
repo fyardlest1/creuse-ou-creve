@@ -33,8 +33,9 @@ local timerPill: Frame
 local timerLabel: TextLabel
 local bell: Sound
 local bloodBell: Sound
-local dayMusic: Sound
-local nightMusic: Sound
+-- Musique en cours par phase : créée quand sa phase commence, détruite à la fin de son fondu de sortie,
+-- pour ne garder en mémoire que le morceau qui joue (réduction mémoire validée en semaine 5).
+local musics: { [string]: Sound? } = {}
 local lightingTween: Tween? = nil
 local clockTween: Tween? = nil
 local bloodTint: ColorCorrectionEffect -- teinte rouge pendant une Nuit de sang (blanche sinon)
@@ -148,23 +149,34 @@ local function updateTimer()
 end
 
 -- Musique de fond : celle de la phase, en fondu (ou tout de suite à l'arrivée du joueur).
+-- Le morceau de l'autre phase s'éteint en fondu puis est détruit : son son n'est plus gardé chargé.
 local function playMusic(phase: string, instant: boolean)
-	local playing = if phase == "Night" then nightMusic else dayMusic
-	local stopping = if phase == "Night" then dayMusic else nightMusic
+	local other = if phase == "Night" then "Day" else "Night"
 	local info = TweenInfo.new(if instant then 0 else AudioConfig.MUSIC_FADE_TIME)
-	local fadeOut = TweenService:Create(stopping, info, { Volume = 0 })
-	fadeOut.Completed:Connect(function()
-		if stopping.Volume == 0 then
-			stopping:Stop()
+	local stopping = musics[other]
+	if stopping ~= nil then
+		musics[other] = nil
+		if instant then
+			stopping:Destroy()
+		else
+			local fadeOut = TweenService:Create(stopping, info, { Volume = 0 })
+			fadeOut.Completed:Connect(function()
+				stopping:Destroy()
+			end)
+			fadeOut:Play()
 		end
-	end)
-	fadeOut:Play()
-	if not playing.IsPlaying then
-		playing.Volume = 0
-		playing:Play()
 	end
-	local target = if phase == "Night" then AudioConfig.MUSIC_NIGHT.volume else AudioConfig.MUSIC_DAY.volume
-	TweenService:Create(playing, info, { Volume = target }):Play()
+	local def = if phase == "Night" then AudioConfig.MUSIC_NIGHT else AudioConfig.MUSIC_DAY
+	local playing = musics[phase]
+	if playing == nil then
+		local created = AudioKit.create(if phase == "Night" then "NightMusic" else "DayMusic", def, "music")
+		created.Looped = true
+		created.Volume = 0
+		created:Play()
+		musics[phase] = created
+		playing = created
+	end
+	TweenService:Create(playing :: Sound, info, { Volume = def.volume }):Play()
 end
 
 local function onPhaseChanged(phase: unknown)
@@ -193,10 +205,6 @@ function DayNightController.init()
 	end)
 	bell = AudioKit.create("PhaseBell", AudioConfig.PHASE_BELL)
 	bloodBell = AudioKit.create("BloodNightBell", AudioConfig.BLOOD_NIGHT)
-	dayMusic = AudioKit.create("DayMusic", AudioConfig.MUSIC_DAY, "music")
-	dayMusic.Looped = true
-	nightMusic = AudioKit.create("NightMusic", AudioConfig.MUSIC_NIGHT, "music")
-	nightMusic.Looped = true
 end
 
 function DayNightController.start()
