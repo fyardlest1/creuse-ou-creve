@@ -72,7 +72,7 @@ return table.freeze({
 	["chest.title"] = "Chest",
 	["chest.titleSell"] = "Merchant",
 	["chest.sellOne"] = "Sell",
-	["chest.sellAll"] = "Sell all (%s Coins)",
+	["chest.sellAll"] = "Sell all except ★ (%s Coins)",
 	["chest.empty"] = "Your chest is empty. Go dig!",
 	["chest.stolenFrom"] = "Stolen from %s",
 
