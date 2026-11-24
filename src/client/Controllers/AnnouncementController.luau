@@ -56,11 +56,16 @@ local function buildUi()
 	banner.BackgroundColor3 = UiConfig.ANNOUNCE_LEGENDARY_COLOR
 	banner.Visible = false
 	banner.Parent = gui
-	-- Sous les bandeaux du HUD, dans la même colonne (hors liste des joueurs et flèche).
-	HudLayout.observe(function(layout: HudLayout.Layout)
-		local width = layout.bannerRight - layout.bannerLeft
-		banner.Position = UDim2.fromOffset((layout.bannerLeft + layout.bannerRight) / 2, layout.announceTop)
-		banner.Size = UDim2.fromOffset(math.min(UiConfig.ANNOUNCE_SIZE.X, width), layout.announceHeight)
+	-- Sous les bandeaux du HUD, dans la même colonne (hors liste des joueurs et flèche). Sur téléphone,
+	-- l'annonce descend sous les boutons quand un badge est affiché (HudLayout.announceArea).
+	local function place(layout: HudLayout.Layout)
+		local left, right, top = HudLayout.announceArea(layout)
+		banner.Position = UDim2.fromOffset((left + right) / 2, top)
+		banner.Size = UDim2.fromOffset(math.min(UiConfig.ANNOUNCE_SIZE.X, right - left), layout.announceHeight)
+	end
+	HudLayout.observe(place)
+	HudLayout.onStatusRowChanged(function()
+		place(HudLayout.get())
 	end)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.3, 0)

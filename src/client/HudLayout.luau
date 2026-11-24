@@ -44,6 +44,7 @@ local listeners: { (Layout) -> () } = {}
 local current: Layout? = nil
 local started = false
 local statusRowVisible = false
+local statusListeners: { (boolean) -> () } = {}
 
 local function compute(viewport: Vector2, guiHeight: number): Layout
 	local compact = viewport.Y < UiConfig.COMPACT_SCREEN_HEIGHT
@@ -182,7 +183,32 @@ end
 
 -- Le HUD signale si sa ligne d'état (protection, bonus actifs) affiche quelque chose.
 function HudLayout.setStatusRowVisible(visible: boolean)
+	if visible == statusRowVisible then
+		return
+	end
 	statusRowVisible = visible
+	for _, callback in statusListeners do
+		task.spawn(callback, visible)
+	end
+end
+
+-- Appelé quand la ligne d'état s'affiche ou se vide.
+function HudLayout.onStatusRowChanged(callback: (visible: boolean) -> ())
+	table.insert(statusListeners, callback)
+end
+
+-- Zone des annonces (gauche, droite, haut). Sur téléphone, elles passent à la hauteur de la ligne d'état
+-- quand elle est vide. Quand un badge y est affiché (Nuit de sang, bonus), elles descendent sous la rangée
+-- Coffre, Quêtes, Index, à droite de la colonne du Coffre (où se trouve le bouton Creusage auto), pour ne
+-- recouvrir ni le badge ni un bouton.
+function HudLayout.announceArea(layout: Layout): (number, number, number)
+	if layout.compact and statusRowVisible then
+		local size = UiConfig.HUD_CHEST_BUTTON_SIZE
+		local left = layout.margin + size + UiConfig.HUD_SPACING
+		local top = layout.sideButtonsCenterY + size / 2 + layout.spacing
+		return left, layout.freeRight, top
+	end
+	return layout.bannerLeft, layout.bannerRight, layout.announceTop
 end
 
 -- Bas du HUD du haut en pixels d'écran (barre de Roblox comprise), pour WorldToViewportPoint.
