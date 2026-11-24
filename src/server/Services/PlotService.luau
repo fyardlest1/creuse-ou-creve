@@ -68,20 +68,26 @@ local function getCellOffset(cellIndex: number): Vector3
 	)
 end
 
-local function randomCellColor(baseColor: Color3): Color3
+-- Couleur d'une case : damier clair/foncé (les cases se touchent, c'est lui qui dessine la grille)
+-- et petite variation aléatoire.
+local function cellColor(baseColor: Color3, cellIndex: number): Color3
 	local h, s, v = baseColor:ToHSV()
+	local zeroBased = cellIndex - 1
+	local isLight = (zeroBased % PlotConfig.GRID_SIZE + zeroBased // PlotConfig.GRID_SIZE) % 2 == 0
+	local shade = if isLight then PlotConfig.CELL_CHECKER_SHADE else -PlotConfig.CELL_CHECKER_SHADE
 	local variation = rng:NextNumber(-PlotConfig.CELL_COLOR_VARIATION, PlotConfig.CELL_COLOR_VARIATION)
-	return Color3.fromHSV(h, s, math.clamp(v * (1 + variation), 0, 1))
+	return Color3.fromHSV(h, s, math.clamp(v * (1 + shade + variation), 0, 1))
 end
 
--- Remet une case à neuf, colorée selon la couche (petite variation aléatoire pour lire la grille).
+-- Remet une case à neuf, colorée selon la couche.
 local function restoreCell(cell: BasePart, baseColor: Color3)
 	cell:SetAttribute(HITS_ATTRIBUTE, PlotConfig.HITS_PER_CELL)
 	cell.Transparency = 0
 	cell.CanCollide = true
 	cell.CanQuery = true
 	cell.CanTouch = false
-	cell.Color = randomCellColor(baseColor)
+	local cellIndex = cell:GetAttribute("CellIndex")
+	cell.Color = cellColor(baseColor, if typeof(cellIndex) == "number" then cellIndex else 1)
 end
 
 -- Couleur des cases pour la profondeur actuelle du joueur (Terre par défaut).
@@ -141,7 +147,7 @@ local function createPlot(index: number, parent: Instance): PlotState
 	cellsFolder.Name = "Cells"
 	cellsFolder.Parent = model
 
-	local cellSize = PlotConfig.CELL_SIZE - PlotConfig.CELL_GAP
+	local cellSize = PlotConfig.CELL_SIZE
 	local cells: { BasePart } = {}
 	for cellIndex = 1, CELL_COUNT do
 		local cell = createPart(

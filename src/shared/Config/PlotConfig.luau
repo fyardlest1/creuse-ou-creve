@@ -6,8 +6,10 @@ local PlotConfig = {
 	PLOTS_PER_ROW = 4, -- 2 rangées de 4 parcelles
 	GRID_SIZE = 8, -- 8 x 8 cases
 	CELL_SIZE = 4, -- studs
-	CELL_HEIGHT = 2, -- épaisseur d'une case, studs
-	CELL_GAP = 0.15, -- petit joint entre les cases pour lire la grille
+	-- Épaisseur d'une case, studs. Les cases se touchent (aucun joint : le capteur de sol du Humanoid
+	-- tombait dans la fente) et l'épaisseur reste sous la HipHeight R15 (2) : depuis le socle ou un trou
+	-- creusé, la marche vers une case se monte sans sauter, au clavier comme au joystick.
+	CELL_HEIGHT = 1.5,
 	BASE_HEIGHT = 1, -- socle sous les cases, visible quand une case est creusée
 	PLOT_SPACING = 12, -- studs entre deux parcelles d'une même rangée
 	ROW_SPACING = 28, -- studs entre les deux rangées : la place centrale du Marchand et de la Forge
@@ -23,7 +25,9 @@ local PlotConfig = {
 	SPAWN_OFFSET = 4, -- studs entre le bord de la parcelle et le point d'apparition
 	SPAWN_HEIGHT = 3, -- hauteur du HumanoidRootPart au-dessus du sol
 
-	CELL_COLOR_VARIATION = 0.08, -- variation de luminosité aléatoire par case
+	-- La grille se lit avec un damier : une case sur deux plus claire, l'autre plus foncée.
+	CELL_CHECKER_SHADE = 0.09, -- écart de luminosité du damier (+/-)
+	CELL_COLOR_VARIATION = 0.035, -- petite variation aléatoire par case, en plus du damier
 	CELL_MATERIAL = Enum.Material.Ground,
 	BASE_COLOR = Color3.fromRGB(60, 42, 30),
 	BASE_MATERIAL = Enum.Material.Slate,
